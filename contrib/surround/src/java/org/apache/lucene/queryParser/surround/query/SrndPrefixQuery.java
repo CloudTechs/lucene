@@ -59,7 +59,6 @@ public class SrndPrefixQuery extends SimpleTerm {
   {
     /* inspired by PrefixQuery.rewrite(): */
     Terms terms = MultiFields.getTerms(reader, fieldName);
-    boolean expanded = false;
     if (terms != null) {
       TermsEnum termsEnum = terms.iterator();
 
@@ -67,11 +66,9 @@ public class SrndPrefixQuery extends SimpleTerm {
       TermsEnum.SeekStatus status = termsEnum.seek(new BytesRef(getPrefix()));
       if (status == TermsEnum.SeekStatus.FOUND) {
         mtv.visitMatchingTerm(getLucenePrefixTerm(fieldName));
-        expanded = true;
       } else if (status == TermsEnum.SeekStatus.NOT_FOUND) {
         if (termsEnum.term().startsWith(prefixRef)) {
           mtv.visitMatchingTerm(new Term(fieldName, termsEnum.term().utf8ToString()));
-          expanded = true;
         } else {
           skip = true;
         }
@@ -85,16 +82,11 @@ public class SrndPrefixQuery extends SimpleTerm {
           BytesRef text = termsEnum.next();
           if (text != null && text.startsWith(prefixRef)) {
             mtv.visitMatchingTerm(new Term(fieldName, text.utf8ToString()));
-            expanded = true;
           } else {
             break;
           }
         }
       }
-    }
-
-    if (! expanded) {
-      System.out.println("No terms in " + fieldName + " field for: " + toString());
     }
   }
 }

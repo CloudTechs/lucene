@@ -43,7 +43,7 @@ import org.apache.lucene.util.LuceneTestCase;
  * Adapted from org.apache.lucene.StoreTest with larger files and random bytes.
  */
 public class DbStoreTest extends LuceneTestCase {
-    protected File dbHome = new File(System.getProperty("java.io.tmpdir"),"index");
+    protected File dbHome = new File(TEMP_DIR,"index");
     protected Environment env;
     protected Database index, blocks;
     
@@ -129,7 +129,7 @@ public class DbStoreTest extends LuceneTestCase {
         Transaction txn = env.beginTransaction(null, null);
         Directory store = null;
 
-        System.out.println("Writing files byte by byte");
+        if (VERBOSE) System.out.println("Writing files byte by byte");
 
         try {
             store = new DbDirectory(txn, index, blocks);
@@ -161,11 +161,13 @@ public class DbStoreTest extends LuceneTestCase {
 
         end = new Date();
 
+        if (VERBOSE) {
         duration = (int) (end.getTime() - start.getTime());
         System.out.print(duration);
         System.out.print(" total milliseconds to create, ");
         System.out.print(totalLength / duration);
         System.out.println(" kb/s");
+        }
 
         try {
             txn = env.beginTransaction(null, null);
@@ -211,11 +213,13 @@ public class DbStoreTest extends LuceneTestCase {
 
         end = new Date();
 
+        if (VERBOSE) {
         duration = (int) (end.getTime() - start.getTime());
         System.out.print(duration);
         System.out.print(" total milliseconds to read, ");
         System.out.print(totalLength / duration);
         System.out.println(" kb/s");
+        }
 
         try {
             txn = env.beginTransaction(null, null);
@@ -248,11 +252,13 @@ public class DbStoreTest extends LuceneTestCase {
 
         end = new Date();
 
+        if (VERBOSE) {
         System.out.print(end.getTime() - start.getTime());
         System.out.println(" total milliseconds to delete");
 
         System.out.print(end.getTime() - veryStart.getTime());
         System.out.println(" total milliseconds");
+    }
     }
 
     public void testArrays()
@@ -274,7 +280,7 @@ public class DbStoreTest extends LuceneTestCase {
         Transaction txn = env.beginTransaction(null, null);
         Directory store = null;
 
-        System.out.println("Writing files as one byte array");
+        if (VERBOSE) System.out.println("Writing files as one byte array");
 
         try {
             store = new DbDirectory(txn, index, blocks);
@@ -304,11 +310,13 @@ public class DbStoreTest extends LuceneTestCase {
 
         end = new Date();
 
+        if (VERBOSE) {
         duration = (int) (end.getTime() - start.getTime());
         System.out.print(duration);
         System.out.print(" total milliseconds to create, ");
         System.out.print(totalLength / duration);
         System.out.println(" kb/s");
+        }
 
         try {
             txn = env.beginTransaction(null, null);
@@ -355,11 +363,13 @@ public class DbStoreTest extends LuceneTestCase {
 
         end = new Date();
 
+        if (VERBOSE) {
         duration = (int) (end.getTime() - start.getTime());
         System.out.print(duration);
         System.out.print(" total milliseconds to read, ");
         System.out.print(totalLength / duration);
         System.out.println(" kb/s");
+        }
 
         try {
             txn = env.beginTransaction(null, null);
@@ -392,10 +402,12 @@ public class DbStoreTest extends LuceneTestCase {
 
         end = new Date();
 
+        if (VERBOSE) {
         System.out.print(end.getTime() - start.getTime());
         System.out.println(" total milliseconds to delete");
 
         System.out.print(end.getTime() - veryStart.getTime());
         System.out.println(" total milliseconds");
+    }
     }
 }

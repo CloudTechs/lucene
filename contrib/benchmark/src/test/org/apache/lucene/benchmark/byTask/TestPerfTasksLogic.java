@@ -53,7 +53,6 @@ import org.apache.lucene.util.LuceneTestCase;
  */
 public class TestPerfTasksLogic extends LuceneTestCase {
 
-  private static final boolean DEBUG = false;
   static final String NEW_LINE = System.getProperty("line.separator");
   
   // properties in effect in all tests here
@@ -373,7 +372,7 @@ public class TestPerfTasksLogic extends LuceneTestCase {
    * Test WriteLineDoc and LineDocSource.
    */
   public void testLineDocFile() throws Exception {
-    File lineFile = new File(System.getProperty("tempDir"), "test.reuters.lines.txt");
+    File lineFile = new File(TEMP_DIR, "test.reuters.lines.txt");
 
     // We will call WriteLineDocs this many times
     final int NUM_TRY_DOCS = 50;
@@ -547,7 +546,7 @@ public class TestPerfTasksLogic extends LuceneTestCase {
   }
 
   private static void logTstLogic (String txt) {
-    if (!DEBUG) 
+    if (!VERBOSE) 
       return;
     System.out.println("Test logic of:");
     System.out.println(txt);

@@ -31,8 +31,6 @@ import org.apache.lucene.document.Field;
 
 public class TestIndexWriterExceptions extends LuceneTestCase {
 
-  final private static boolean DEBUG = false;
-
   private class IndexerThread extends Thread {
 
     IndexWriter writer;
@@ -73,7 +71,7 @@ public class TestIndexWriterExceptions extends LuceneTestCase {
         try {
           writer.updateDocument(idTerm, doc);
         } catch (RuntimeException re) {
-          if (DEBUG) {
+          if (VERBOSE) {
             System.out.println("EXC: ");
             re.printStackTrace(System.out);
           }
@@ -121,7 +119,7 @@ public class TestIndexWriterExceptions extends LuceneTestCase {
     @Override
     boolean testPoint(String name) {
       if (doFail.get() != null && !name.equals("startDoFlush") && r.nextInt(20) == 17) {
-        if (DEBUG) {
+        if (VERBOSE) {
           System.out.println(Thread.currentThread().getName() + ": NOW FAIL: " + name);
           //new Throwable().printStackTrace(System.out);
         }
@@ -139,7 +137,7 @@ public class TestIndexWriterExceptions extends LuceneTestCase {
     //writer.setMaxBufferedDocs(10);
     writer.setRAMBufferSizeMB(0.1);
 
-    if (DEBUG)
+    if (VERBOSE)
       writer.setInfoStream(System.out);
 
     IndexerThread thread = new IndexerThread(0, writer);
@@ -177,7 +175,7 @@ public class TestIndexWriterExceptions extends LuceneTestCase {
     //writer.setMaxBufferedDocs(10);
     writer.setRAMBufferSizeMB(0.2);
 
-    if (DEBUG)
+    if (VERBOSE)
       writer.setInfoStream(System.out);
 
     final int NUM_THREADS = 4;

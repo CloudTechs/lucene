@@ -46,7 +46,7 @@ import com.sleepycat.je.Transaction;
  *
  */
 public class JEStoreTest extends LuceneTestCase {
-    protected File dbHome = new File(System.getProperty("java.io.tmpdir"),"index");
+    protected File dbHome = new File(TEMP_DIR,"index");
 
     protected Environment env;
 
@@ -127,7 +127,7 @@ public class JEStoreTest extends LuceneTestCase {
         Transaction txn = env.beginTransaction(null, null);
         Directory store = null;
 
-        System.out.println("Writing files byte by byte");
+        if (VERBOSE) System.out.println("Writing files byte by byte");
 
         try {
             store = new JEDirectory(txn, index, blocks);
@@ -159,11 +159,13 @@ public class JEStoreTest extends LuceneTestCase {
 
         end = new Date();
 
+        if (VERBOSE) {
         duration = (int) (end.getTime() - start.getTime());
         System.out.print(duration);
         System.out.print(" total milliseconds to create, ");
         System.out.print(totalLength / duration);
         System.out.println(" kb/s");
+        }
 
         try {
             txn = env.beginTransaction(null, null);
@@ -208,11 +210,13 @@ public class JEStoreTest extends LuceneTestCase {
 
         end = new Date();
 
+        if (VERBOSE) {
         duration = (int) (end.getTime() - start.getTime());
         System.out.print(duration);
         System.out.print(" total milliseconds to read, ");
         System.out.print(totalLength / duration);
         System.out.println(" kb/s");
+        }
 
         try {
             txn = env.beginTransaction(null, null);
@@ -244,11 +248,13 @@ public class JEStoreTest extends LuceneTestCase {
 
         end = new Date();
 
+        if (VERBOSE) {
         System.out.print(end.getTime() - start.getTime());
         System.out.println(" total milliseconds to delete");
 
         System.out.print(end.getTime() - veryStart.getTime());
         System.out.println(" total milliseconds");
+    }
     }
 
     public void testDelete() throws Exception {
@@ -267,7 +273,7 @@ public class JEStoreTest extends LuceneTestCase {
         Transaction txn = env.beginTransaction(null, null);
         Directory store = null;
 
-        System.out.println("Writing files byte by byte");
+        if (VERBOSE) System.out.println("Writing files byte by byte");
 
         try {
             store = new JEDirectory(txn, index, blocks);
@@ -299,11 +305,13 @@ public class JEStoreTest extends LuceneTestCase {
 
         end = new Date();
 
+        if (VERBOSE) {
         duration = (int) (end.getTime() - start.getTime());
         System.out.print(duration);
         System.out.print(" total milliseconds to read, ");
         System.out.print(totalLength / duration);
         System.out.println(" kb/s");
+        }
 
         try {
             txn = env.beginTransaction(null, null);
@@ -337,6 +345,7 @@ public class JEStoreTest extends LuceneTestCase {
 
         end = new Date();
 
+        if (VERBOSE) {
         System.out.print(end.getTime() - start.getTime());
         System.out.println(" total milliseconds to delete even files");
 
@@ -345,6 +354,7 @@ public class JEStoreTest extends LuceneTestCase {
         System.out.print(" total milliseconds to create, ");
         System.out.print(totalLength / duration);
         System.out.println(" kb/s");
+        }
 
         try {
             txn = env.beginTransaction(null, null);
@@ -395,11 +405,13 @@ public class JEStoreTest extends LuceneTestCase {
 
         end = new Date();
 
+        if (VERBOSE) {
         duration = (int) (end.getTime() - start.getTime());
         System.out.print(duration);
         System.out.print(" total milliseconds to read, ");
         System.out.print(totalLength / duration);
         System.out.println(" kb/s");
+        }
 
         try {
             txn = env.beginTransaction(null, null);
@@ -434,11 +446,13 @@ public class JEStoreTest extends LuceneTestCase {
 
         end = new Date();
 
+        if (VERBOSE) {
         System.out.print(end.getTime() - start.getTime());
         System.out.println(" total milliseconds to delete");
 
         System.out.print(end.getTime() - veryStart.getTime());
         System.out.println(" total milliseconds");
+        }
 
         Cursor cursor = null;
         try {
@@ -491,7 +505,7 @@ public class JEStoreTest extends LuceneTestCase {
         Transaction txn = env.beginTransaction(null, null);
         Directory store = null;
 
-        System.out.println("Writing files as one byte array");
+        if (VERBOSE) System.out.println("Writing files as one byte array");
 
         try {
             store = new JEDirectory(txn, index, blocks);
@@ -521,11 +535,13 @@ public class JEStoreTest extends LuceneTestCase {
 
         end = new Date();
 
+        if (VERBOSE) {
         duration = (int) (end.getTime() - start.getTime());
         System.out.print(duration);
         System.out.print(" total milliseconds to create, ");
         System.out.print(totalLength / duration);
         System.out.println(" kb/s");
+        }
 
         try {
             txn = env.beginTransaction(null, null);
@@ -571,11 +587,13 @@ public class JEStoreTest extends LuceneTestCase {
 
         end = new Date();
 
+        if (VERBOSE) {
         duration = (int) (end.getTime() - start.getTime());
         System.out.print(duration);
         System.out.print(" total milliseconds to read, ");
         System.out.print(totalLength / duration);
         System.out.println(" kb/s");
+        }
 
         try {
             txn = env.beginTransaction(null, null);
@@ -607,10 +625,12 @@ public class JEStoreTest extends LuceneTestCase {
 
         end = new Date();
 
+        if (VERBOSE) {
         System.out.print(end.getTime() - start.getTime());
         System.out.println(" total milliseconds to delete");
 
         System.out.print(end.getTime() - veryStart.getTime());
         System.out.println(" total milliseconds");
+    }
     }
 }

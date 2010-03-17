@@ -113,6 +113,9 @@ API Changes
   with FuzzyQuery to ensure that exact matches are always scored higher, 
   because only the boost will be used in scoring.  (Robert Muir)
   
+* LUCENE-2015: Add a static method foldToASCII to ASCIIFoldingFilter to 
+  expose its folding logic.  (Cédrik Lime via Robert Muir)
+  
 Bug fixes
 
 * LUCENE-2119: Don't throw NegativeArraySizeException if you pass
@@ -185,6 +188,11 @@ New features
 * LUCENE-2247: Added a CharArrayMap<V> for performance improvements
   in some stemmers and synonym filters. (Uwe Schindler)
 
+* LUCENE-2314: Added AttributeSource.copyTo(AttributeSource) that
+  allows to use cloneAttributes() and this method as a replacement
+  for captureState()/restoreState(), if the state itsself
+  needs to be inspected/modified.  (Uwe Schindler)
+
 Optimizations
 
 * LUCENE-2075: Terms dict cache is now shared across threads instead
@@ -246,9 +254,13 @@ Optimizations
 
 Build
 
- * LUCENE-2124: Moved the JDK-based collation support from contrib/collation 
+* LUCENE-2124: Moved the JDK-based collation support from contrib/collation 
    into core, and moved the ICU-based collation support into contrib/icu.  
    (Robert Muir)
+
+* LUCENE-2326: Removed SVN checkouts for backwards tests. The backwards branch
+  is now included in the svn repository using "svn copy" after release.
+  (Uwe Schindler)
 
 Test Cases
 
@@ -270,6 +282,19 @@ Test Cases
   Version.LUCENE_CURRENT, but instead use a global static value
   from LuceneTestCase(J4), that contains the release version.
   (Uwe Schindler, Simon Willnauer, Shai Erera)
+
+* LUCENE-2313, LUCENE-2322: Add VERBOSE to LuceneTestCase(J4) to control
+  verbosity of tests. If VERBOSE==false (default) tests should not print
+  anything other than errors to System.(out|err). The setting can be
+  changed with -Dtests.verbose=true on test invokation.
+  (Shai Erera, Paul Elschot, Uwe Schindler)
+
+* LUCENE-2318: Remove inconsistent system property code for retrieving
+  temp and data directories inside test cases. It is now centralized in
+  LuceneTestCase(J4). Also changed lots of tests to use
+  getClass().getResourceAsStream() to retrieve test data. Tests needing
+  access to "real" files from the test folder itsself, can use
+  LuceneTestCase(J4).getDataFile().  (Uwe Schindler)
 
 ================== Release 2.9.2 / 3.0.1 2010-02-26 ====================
 

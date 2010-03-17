@@ -269,7 +269,7 @@ public class TestIndexReader extends LuceneTestCase
     for (Iterator<TermVectorEntry> iterator = set.iterator(); iterator.hasNext();) {
       TermVectorEntry entry =  iterator.next();
       assertTrue("entry is null and it shouldn't be", entry != null);
-      System.out.println("Entry: " + entry);
+      if (VERBOSE) System.out.println("Entry: " + entry);
     }
 
 
@@ -512,9 +512,7 @@ public class TestIndexReader extends LuceneTestCase
     // Make sure you can set norms & commit even if a reader
     // is open against the index:
     public void testWritingNorms() throws IOException {
-        String tempDir = "target/test";
-
-        File indexDir = new File(tempDir, "lucenetestnormwriter");
+        File indexDir = new File(TEMP_DIR, "lucenetestnormwriter");
         Directory dir = FSDirectory.open(indexDir);
         IndexWriter writer;
         IndexReader reader;
@@ -695,13 +693,13 @@ public class TestIndexReader extends LuceneTestCase
     }
 
   private Directory getDirectory() throws IOException {
-    return FSDirectory.open(new File(System.getProperty("tempDir"), "testIndex"));
+    return FSDirectory.open(new File(TEMP_DIR, "testIndex"));
   }
 
   public void testFilesOpenClose() throws IOException
     {
         // Create initial data set
-        File dirFile = new File(System.getProperty("tempDir"), "testIndex");
+        File dirFile = new File(TEMP_DIR, "testIndex");
         Directory dir = getDirectory();
         IndexWriter writer  = new IndexWriter(dir, new WhitespaceAnalyzer(TEST_VERSION_CURRENT), true, IndexWriter.MaxFieldLength.LIMITED);
         addDoc(writer, "test");
@@ -730,7 +728,7 @@ public class TestIndexReader extends LuceneTestCase
     }
 
     public void testLastModified() throws Exception {
-      final File fileDir = new File(System.getProperty("tempDir"), "testIndex");
+      final File fileDir = new File(TEMP_DIR, "testIndex");
       for(int i=0;i<2;i++) {
         try {
           final Directory dir;
@@ -880,7 +878,6 @@ public class TestIndexReader extends LuceneTestCase
      */
     public void testDiskFull() throws IOException {
 
-      boolean debug = false;
       Term searchTerm = new Term("content", "aaa");
       int START_COUNT = 157;
       int END_COUNT = 144;
@@ -940,14 +937,14 @@ public class TestIndexReader extends LuceneTestCase
             if (diskRatio >= 6.0) {
               rate = 0.0;
             }
-            if (debug) {
+            if (VERBOSE) {
               System.out.println("\ncycle: " + diskFree + " bytes");
             }
             testName = "disk full during reader.close() @ " + thisDiskFree + " bytes";
           } else {
             thisDiskFree = 0;
             rate = 0.0;
-            if (debug) {
+            if (VERBOSE) {
               System.out.println("\ncycle: same writer: unlimited disk space");
             }
             testName = "reader re-use after disk full";
@@ -971,7 +968,7 @@ public class TestIndexReader extends LuceneTestCase
               done = true;
             }
           } catch (IOException e) {
-            if (debug) {
+            if (VERBOSE) {
               System.out.println("  hit IOException: " + e);
               e.printStackTrace(System.out);
             }
@@ -1132,8 +1129,7 @@ public class TestIndexReader extends LuceneTestCase
     }
 
     public void testOpenReaderAfterDelete() throws IOException {
-      File dirFile = new File(System.getProperty("tempDir"),
-                          "deletetest");
+      File dirFile = new File(TEMP_DIR, "deletetest");
       Directory dir = FSDirectory.open(dirFile);
       try {
         IndexReader.open(dir, false);

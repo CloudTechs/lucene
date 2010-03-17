@@ -173,8 +173,6 @@ public class TestIndexWriter extends LuceneTestCase {
       int NUM_DIR = 50;
       int END_COUNT = START_COUNT + NUM_DIR*25;
 
-      boolean debug = false;
-
       // Build up a bunch of dirs that have indexes which we
       // will then merge together by calling addIndexesNoOptimize(*):
       Directory[] dirs = new Directory[NUM_DIR];
@@ -234,7 +232,7 @@ public class TestIndexWriter extends LuceneTestCase {
 
       for(int iter=0;iter<3;iter++) {
 
-        if (debug)
+        if (VERBOSE)
           System.out.println("TEST: iter=" + iter);
 
         // Start with 100 bytes more than we are currently using:
@@ -293,16 +291,16 @@ public class TestIndexWriter extends LuceneTestCase {
               if (diskRatio >= 6.0) {
                 rate = 0.0;
               }
-              if (debug)
+              if (VERBOSE)
                 testName = "disk full test " + methodName + " with disk full at " + diskFree + " bytes";
             } else {
               thisDiskFree = 0;
               rate = 0.0;
-              if (debug)
+              if (VERBOSE)
                 testName = "disk full test " + methodName + " with unlimited disk space";
             }
 
-            if (debug)
+            if (VERBOSE)
               System.out.println("\ncycle: " + testName);
 
             dir.setMaxSizeInBytes(thisDiskFree);
@@ -330,7 +328,7 @@ public class TestIndexWriter extends LuceneTestCase {
               }
 
               success = true;
-              if (debug) {
+              if (VERBOSE) {
                 System.out.println("  success!");
               }
 
@@ -341,7 +339,7 @@ public class TestIndexWriter extends LuceneTestCase {
             } catch (IOException e) {
               success = false;
               err = e;
-              if (debug) {
+              if (VERBOSE) {
                 System.out.println("  hit IOException: " + e);
                 e.printStackTrace(System.out);
               }
@@ -356,7 +354,7 @@ public class TestIndexWriter extends LuceneTestCase {
             // ConcurrentMergeScheduler are done
             _TestUtil.syncConcurrentMerges(writer);
 
-            if (debug) {
+            if (VERBOSE) {
               System.out.println("  now test readers");
             }
 
@@ -407,7 +405,7 @@ public class TestIndexWriter extends LuceneTestCase {
 
             searcher.close();
             reader.close();
-            if (debug) {
+            if (VERBOSE) {
               System.out.println("  count is " + result);
             }
 
@@ -416,7 +414,7 @@ public class TestIndexWriter extends LuceneTestCase {
             }
           }
 
-          if (debug) {
+          if (VERBOSE) {
             System.out.println("  start disk = " + startDiskUsage + "; input disk = " + inputDiskUsage + "; max used = " + dir.getMaxUsedSizeInBytes());
           }
 
@@ -458,15 +456,13 @@ public class TestIndexWriter extends LuceneTestCase {
      */
     public void testAddDocumentOnDiskFull() throws IOException {
 
-      boolean debug = false;
-
       for(int pass=0;pass<2;pass++) {
-        if (debug)
+        if (VERBOSE)
           System.out.println("TEST: pass=" + pass);
         boolean doAbort = pass == 1;
         long diskFree = 200;
         while(true) {
-          if (debug)
+          if (VERBOSE)
             System.out.println("TEST: cycle: diskFree=" + diskFree);
           MockRAMDirectory dir = new MockRAMDirectory();
           dir.setMaxSizeInBytes(diskFree);
@@ -485,7 +481,7 @@ public class TestIndexWriter extends LuceneTestCase {
               addDoc(writer);
             }
           } catch (IOException e) {
-            if (debug) {
+            if (VERBOSE) {
               System.out.println("TEST: exception on addDoc");
               e.printStackTrace(System.out);
             }
@@ -499,7 +495,7 @@ public class TestIndexWriter extends LuceneTestCase {
               try {
                 writer.close();
               } catch (IOException e) {
-                if (debug) {
+                if (VERBOSE) {
                   System.out.println("TEST: exception on close");
                   e.printStackTrace(System.out);
                 }
@@ -4329,7 +4325,7 @@ public class TestIndexWriter extends LuceneTestCase {
   // create=true does not remove non-index files
   
   public void testOtherFiles() throws Throwable {
-    File indexDir = new File(System.getProperty("tempDir"), "otherfiles");
+    File indexDir = new File(TEMP_DIR, "otherfiles");
     Directory dir = FSDirectory.open(indexDir);
     try {
       // Create my own random file:

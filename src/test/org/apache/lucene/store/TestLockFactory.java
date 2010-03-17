@@ -175,7 +175,7 @@ public class TestLockFactory extends LuceneTestCase {
     // Verify: NativeFSLockFactory works correctly
     public void testNativeFSLockFactory() throws IOException {
 
-      NativeFSLockFactory f = new NativeFSLockFactory(System.getProperty("tempDir"));
+      NativeFSLockFactory f = new NativeFSLockFactory(TEMP_DIR);
 
       f.setLockPrefix("test");
       Lock l = f.makeLock("commit");
@@ -199,7 +199,7 @@ public class TestLockFactory extends LuceneTestCase {
 
     public void testNativeFSLockReleaseByOtherLock() throws IOException {
 
-      NativeFSLockFactory f = new NativeFSLockFactory(System.getProperty("tempDir"));
+      NativeFSLockFactory f = new NativeFSLockFactory(TEMP_DIR);
 
       f.setLockPrefix("test");
       Lock l = f.makeLock("commit");

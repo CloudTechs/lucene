@@ -88,7 +88,6 @@ public class SrndTruncQuery extends SimpleTerm {
     String fieldName,
     MatchingTermVisitor mtv) throws IOException
   {
-    boolean expanded = false;
     int prefixLength = prefix.length();
     Terms terms = MultiFields.getTerms(reader, fieldName);
     if (terms != null) {
@@ -112,7 +111,6 @@ public class SrndTruncQuery extends SimpleTerm {
             matcher.reset(textString.substring(prefixLength));
             if (matcher.matches()) {
               mtv.visitMatchingTerm(new Term(fieldName, textString));
-              expanded = true;
             }
           } else {
             break;
@@ -122,10 +120,6 @@ public class SrndTruncQuery extends SimpleTerm {
       } finally {
         matcher.reset();
       }
-    }
-      
-    if (! expanded) {
-      System.out.println("No terms in " + fieldName + " field for: " + toString());
     }
   }
 }
