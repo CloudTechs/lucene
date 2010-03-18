@@ -82,6 +82,12 @@ public final class IndexWriterConfig implements Cloneable {
   /** Default {@link CodecProvider}. */
   public final static CodecProvider DEFAULT_CODEC_PROVIDER = CodecProvider.getDefault();
 
+  /** The maximum number of simultaneous threads that may be
+   *  indexing documents at once in IndexWriter; if more
+   *  than this many threads arrive they will wait for
+   *  others to finish. */
+  public final static int DEFAULT_MAX_THREAD_STATES = 8;
+
   /**
    * Sets the default (for any instance) maximum time to wait for a write lock
    * (in milliseconds).
@@ -115,6 +121,7 @@ public final class IndexWriterConfig implements Cloneable {
   private IndexingChain indexingChain;
   private IndexReaderWarmer mergedSegmentWarmer;
   private CodecProvider codecProvider;
+  private int maxThreadStates;
   
   // required for clone
   private Version matchVersion;
@@ -143,6 +150,7 @@ public final class IndexWriterConfig implements Cloneable {
     indexingChain = DocumentsWriter.defaultIndexingChain;
     mergedSegmentWarmer = null;
     codecProvider = DEFAULT_CODEC_PROVIDER;
+    maxThreadStates = DEFAULT_MAX_THREAD_STATES;
   }
   
   @Override
@@ -500,6 +508,19 @@ public final class IndexWriterConfig implements Cloneable {
     return codecProvider;
   }
 
+  /** Sets the max number of simultaneous threads that may
+   *  be indexing documents at once in IndexWriter. */
+  public IndexWriterConfig setMaxThreadStates(int maxThreadStates) {
+    this.maxThreadStates = maxThreadStates;
+    return this;
+  }
+
+  /** Returns the max number of simultaneous threads that
+   *  may be indexing documents at once in IndexWriter. */
+  public int getMaxThreadStates() {
+    return maxThreadStates;
+  }
+
   /** Expert: sets the {@link DocConsumer} chain to be used to process documents. */
   IndexWriterConfig setIndexingChain(IndexingChain indexingChain) {
     this.indexingChain = indexingChain == null ? DocumentsWriter.defaultIndexingChain : indexingChain;
@@ -530,6 +551,7 @@ public final class IndexWriterConfig implements Cloneable {
     sb.append("maxBufferedDocs=").append(maxBufferedDocs).append("\n");
     sb.append("mergedSegmentWarmer=").append(mergedSegmentWarmer).append("\n");
     sb.append("codecProvider=").append(codecProvider).append("\n");
+    sb.append("maxThreadStates=").append(maxThreadStates).append("\n");
     return sb.toString();
   }
 }
