@@ -17,6 +17,7 @@ package org.apache.lucene.search;
  * limitations under the License.
  */
 
+import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.index.IndexReader;
@@ -48,7 +49,7 @@ public class TestMultiPhraseQuery extends LuceneTestCase
 
     public void testPhrasePrefix() throws IOException {
         MockRAMDirectory indexStore = new MockRAMDirectory();
-        IndexWriter writer = new IndexWriter(indexStore, new SimpleAnalyzer(TEST_VERSION_CURRENT), true, IndexWriter.MaxFieldLength.LIMITED);
+        IndexWriter writer = new IndexWriter(indexStore, new IndexWriterConfig(TEST_VERSION_CURRENT, new SimpleAnalyzer(TEST_VERSION_CURRENT)));
         add("blueberry pie", writer);
         add("blueberry strudel", writer);
         add("blueberry pizza", writer);
@@ -143,7 +144,7 @@ public class TestMultiPhraseQuery extends LuceneTestCase
       // The contained PhraseMultiQuery must contain exactly one term array.
 
       MockRAMDirectory indexStore = new MockRAMDirectory();
-      IndexWriter writer = new IndexWriter(indexStore, new SimpleAnalyzer(TEST_VERSION_CURRENT), true, IndexWriter.MaxFieldLength.LIMITED);
+      IndexWriter writer = new IndexWriter(indexStore, new IndexWriterConfig(TEST_VERSION_CURRENT, new SimpleAnalyzer(TEST_VERSION_CURRENT)));
       add("blueberry pie", writer);
       add("blueberry chewing gum", writer);
       add("blue raspberry pie", writer);
@@ -172,7 +173,9 @@ public class TestMultiPhraseQuery extends LuceneTestCase
     
   public void testPhrasePrefixWithBooleanQuery() throws IOException {
     MockRAMDirectory indexStore = new MockRAMDirectory();
-    IndexWriter writer = new IndexWriter(indexStore, new StandardAnalyzer(TEST_VERSION_CURRENT, Collections.emptySet()), true, IndexWriter.MaxFieldLength.LIMITED);
+    IndexWriter writer = new IndexWriter(indexStore, new IndexWriterConfig(
+        TEST_VERSION_CURRENT, new StandardAnalyzer(
+        TEST_VERSION_CURRENT, Collections.emptySet())));
     add("This is a test", "object", writer);
     add("a note", "note", writer);
     writer.close();

@@ -62,7 +62,7 @@ public class TestOmitTf extends LuceneTestCase {
   public void testOmitTermFreqAndPositions() throws Exception {
     Directory ram = new MockRAMDirectory();
     Analyzer analyzer = new StandardAnalyzer(TEST_VERSION_CURRENT);
-    IndexWriter writer = new IndexWriter(ram, analyzer, true, IndexWriter.MaxFieldLength.LIMITED);
+    IndexWriter writer = new IndexWriter(ram, new IndexWriterConfig(TEST_VERSION_CURRENT, analyzer));
     Document d = new Document();
         
     // this field will have Tf
@@ -114,9 +114,9 @@ public class TestOmitTf extends LuceneTestCase {
   public void testMixedMerge() throws Exception {
     Directory ram = new MockRAMDirectory();
     Analyzer analyzer = new StandardAnalyzer(TEST_VERSION_CURRENT);
-    IndexWriter writer = new IndexWriter(ram, analyzer, true, IndexWriter.MaxFieldLength.LIMITED);
-    writer.setMaxBufferedDocs(3);
-    writer.setMergeFactor(2);
+    IndexWriter writer = new IndexWriter(ram, new IndexWriterConfig(
+        TEST_VERSION_CURRENT, analyzer).setMaxBufferedDocs(3));
+    ((LogMergePolicy) writer.getMergePolicy()).setMergeFactor(2);
     Document d = new Document();
         
     // this field will have Tf
@@ -171,9 +171,9 @@ public class TestOmitTf extends LuceneTestCase {
   public void testMixedRAM() throws Exception {
     Directory ram = new MockRAMDirectory();
     Analyzer analyzer = new StandardAnalyzer(TEST_VERSION_CURRENT);
-    IndexWriter writer = new IndexWriter(ram, analyzer, true, IndexWriter.MaxFieldLength.LIMITED);
-    writer.setMaxBufferedDocs(10);
-    writer.setMergeFactor(2);
+    IndexWriter writer = new IndexWriter(ram, new IndexWriterConfig(
+        TEST_VERSION_CURRENT, analyzer).setMaxBufferedDocs(10));
+    ((LogMergePolicy) writer.getMergePolicy()).setMergeFactor(2);
     Document d = new Document();
         
     // this field will have Tf
@@ -219,10 +219,12 @@ public class TestOmitTf extends LuceneTestCase {
   public void testNoPrxFile() throws Throwable {
     Directory ram = new MockRAMDirectory();
     Analyzer analyzer = new StandardAnalyzer(TEST_VERSION_CURRENT);
-    IndexWriter writer = new IndexWriter(ram, analyzer, true, IndexWriter.MaxFieldLength.LIMITED);
-    writer.setMaxBufferedDocs(3);
-    writer.setMergeFactor(2);
-    writer.setUseCompoundFile(false);
+    IndexWriter writer = new IndexWriter(ram, new IndexWriterConfig(
+        TEST_VERSION_CURRENT, analyzer).setMaxBufferedDocs(3));
+    LogMergePolicy lmp = (LogMergePolicy) writer.getMergePolicy();
+    lmp.setMergeFactor(2);
+    lmp.setUseCompoundFile(false);
+    lmp.setUseCompoundDocStore(false);
     Document d = new Document();
         
     Field f1 = new Field("f1", "This field has term freqs", Field.Store.NO, Field.Index.ANALYZED);
@@ -250,10 +252,10 @@ public class TestOmitTf extends LuceneTestCase {
   public void testBasic() throws Exception {
     Directory dir = new MockRAMDirectory();  
     Analyzer analyzer = new StandardAnalyzer(TEST_VERSION_CURRENT);
-    IndexWriter writer = new IndexWriter(dir, analyzer, true, IndexWriter.MaxFieldLength.LIMITED);
-    writer.setMergeFactor(2);
-    writer.setMaxBufferedDocs(2);
-    writer.setSimilarity(new SimpleSimilarity());
+    IndexWriter writer = new IndexWriter(dir, new IndexWriterConfig(
+        TEST_VERSION_CURRENT, analyzer).setMaxBufferedDocs(2)
+        .setSimilarity(new SimpleSimilarity()));
+    ((LogMergePolicy) writer.getMergePolicy()).setMergeFactor(2);
         
         
     StringBuilder sb = new StringBuilder(265);
