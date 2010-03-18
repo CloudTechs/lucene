@@ -17,11 +17,16 @@ package org.apache.lucene.analysis.tokenattributes;
  * limitations under the License.
  */
 
+import org.apache.lucene.util.Attribute;
+import org.apache.lucene.util.BytesRef;
+
 /**
- * The term text of a Token.
- * @deprecated This class is only available for AttributeSource
- * to be able to load an old TermAttribute implementation class.
+ * This attribute is requested by TermsHashPerField to index the contents.
+ * This attribute has no real state, it should be implemented in addition to
+ * {@link CharTermAttribute}, to support indexing the term text as
+ * UTF-8 bytes.
  */
-@Deprecated
-public class TermAttributeImpl extends CharTermAttributeImpl {
+public interface TermToBytesRefAttribute extends Attribute {
+  /** Copies the token's term text into the given {@link BytesRef}. It returns the hashCode for TermsHash */
+  public int toBytesRef(BytesRef bytes);
 }

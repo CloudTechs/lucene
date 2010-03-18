@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
+import org.apache.lucene.analysis.tokenattributes.TermToBytesRefAttribute;
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.util.UnicodeUtil;
 import org.apache.lucene.util.BytesRef;
@@ -33,7 +34,7 @@ final class TermsHashPerField extends InvertedDocConsumerPerField {
   final TermsHashPerThread perThread;
   final DocumentsWriter.DocState docState;
   final FieldInvertState fieldState;
-  TermAttribute termAtt;
+  TermToBytesRefAttribute termAtt;
 
   // Copied from our perThread
   final IntBlockPool intPool;
@@ -259,7 +260,14 @@ final class TermsHashPerField extends InvertedDocConsumerPerField {
 
   @Override
   void start(Fieldable f) {
-    termAtt = fieldState.attributeSource.addAttribute(TermAttribute.class);
+    if (fieldState.attributeSource.hasAttribute(TermToBytesRefAttribute.class)) {
+      termAtt = fieldState.attributeSource.getAttribute(TermToBytesRefAttribute.class);
+    } else if (fieldState.attributeSource.hasAttribute(TermAttribute.class)) {
+      perThread.legacyTermAttributeWrapper.setTermAttribute(fieldState.attributeSource.getAttribute(TermAttribute.class));
+      termAtt = perThread.legacyTermAttributeWrapper;
+    } else {
+      throw new IllegalArgumentException("Could not find a term attribute (that implements TermToBytesRefAttribute) in the TokenStream");
+    }
     consumer.start(f);
     if (nextPerField != null) {
       nextPerField.start(f);
@@ -358,13 +366,8 @@ final class TermsHashPerField extends InvertedDocConsumerPerField {
     // We are first in the chain so we must "intern" the
     // term text into textStart address
 
-    // Get the text of this term.
-    final char[] tokenText = termAtt.termBuffer();
-    final int tokenTextLen = termAtt.termLength();
-    
-    //System.out.println("\nfield=" + fieldInfo.name + " add text=" + new String(tokenText, 0, tokenTextLen) + " len=" + tokenTextLen);
-    
-    int code = UnicodeUtil.UTF16toUTF8WithHash(tokenText, 0, tokenTextLen, utf8);
+    // Get the text & hash of this term.
+    int code = termAtt.toBytesRef(utf8);
 
     int hashPos = code & postingsHashMask;
 
@@ -399,7 +402,13 @@ final class TermsHashPerField extends InvertedDocConsumerPerField {
           // other behavior is wanted (pruning the term
           // to a prefix, throwing an exception, etc).
           if (docState.maxTermPrefix == null) {
-            docState.maxTermPrefix = new String(tokenText, 0, 30);
+            final int saved = utf8.length;
+            try {
+              utf8.length = Math.min(30, DocumentsWriter.MAX_TERM_LENGTH_UTF8);
+              docState.maxTermPrefix = utf8.toString();
+            } finally {
+              utf8.length = saved;
+            }
           }
 
           consumer.skippingLongTerm();
