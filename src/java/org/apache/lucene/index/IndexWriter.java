@@ -1087,6 +1087,8 @@ public class IndexWriter implements Closeable {
     mergedSegmentWarmer = conf.getMergedSegmentWarmer();
     codecs = conf.getCodecProvider();
     
+    poolReaders = conf.getReaderPooling();
+
     OpenMode mode = conf.getOpenMode();
     boolean create;
     if (mode == OpenMode.CREATE) {
