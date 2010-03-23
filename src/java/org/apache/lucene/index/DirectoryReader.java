@@ -54,7 +54,6 @@ class DirectoryReader extends IndexReader implements Cloneable {
   IndexWriter writer;
 
   private IndexDeletionPolicy deletionPolicy;
-  private final HashSet<String> synced = new HashSet<String>();
   private Lock writeLock;
   private SegmentInfos segmentInfos;
   private boolean stale;
@@ -115,12 +114,6 @@ class DirectoryReader extends IndexReader implements Cloneable {
     } else {
       this.codecs = codecs;
     }
-    
-    if (!readOnly) {
-      // We assume that this segments_N was previously
-      // properly sync'd:
-      synced.addAll(sis.files(directory, true));
-    }
 
     // To reduce the chance of hitting FileNotFound
     // (and having to retry), we open segments in
@@ -160,13 +153,6 @@ class DirectoryReader extends IndexReader implements Cloneable {
       this.codecs = CodecProvider.getDefault();
     } else {
       this.codecs = codecs;
-    }
-
-    
-    if (!readOnly) {
-      // We assume that this segments_N was previously
-      // properly sync'd:
-      synced.addAll(infos.files(directory, true));
     }
 
     // IndexWriter synchronizes externally before calling
@@ -224,11 +210,6 @@ class DirectoryReader extends IndexReader implements Cloneable {
       this.codecs = codecs;
     }
     
-    if (!readOnly) {
-      // We assume that this segments_N was previously
-      // properly sync'd:
-      synced.addAll(infos.files(directory, true));
-    }
 
     // we put the old SegmentReaders in a map, that allows us
     // to lookup a reader using its segment name
@@ -867,14 +848,7 @@ class DirectoryReader extends IndexReader implements Cloneable {
           subReaders[i].commit();
 
         // Sync all files we just wrote
-        final Collection<String> files = segmentInfos.files(directory, false);
-        for (final String fileName : files) { 
-          if (!synced.contains(fileName)) {
-            assert directory.fileExists(fileName);
-            directory.sync(fileName);
-            synced.add(fileName);
-          }
-        }
+        directory.sync(segmentInfos.files(directory, false));
 
         segmentInfos.commit(directory);
         success = true;
