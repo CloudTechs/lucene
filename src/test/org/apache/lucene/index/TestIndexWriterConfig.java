@@ -82,6 +82,8 @@ public class TestIndexWriterConfig extends LuceneTestCaseJ4 {
     assertTrue(DocumentsWriter.defaultIndexingChain == conf.getIndexingChain());
     assertNull(conf.getMergedSegmentWarmer());
     assertEquals(IndexWriterConfig.DEFAULT_CODEC_PROVIDER, CodecProvider.getDefault());
+    assertEquals(IndexWriterConfig.DEFAULT_MAX_THREAD_STATES, conf.getMaxThreadStates());
+    assertEquals(LogByteSizeMergePolicy.class, conf.getMergePolicy().getClass());
     
     // Sanity check - validate that all getters are covered.
     Set<String> getters = new HashSet<String>();
@@ -101,6 +103,7 @@ public class TestIndexWriterConfig extends LuceneTestCaseJ4 {
     getters.add("getIndexingChain");
     getters.add("getMergedSegmentWarmer");
     getters.add("getCodecProvider");
+    getters.add("getMergePolicy");
     getters.add("getMaxThreadStates");
     for (Method m : IndexWriterConfig.class.getDeclaredMethods()) {
       if (m.getDeclaringClass() == IndexWriterConfig.class && m.getName().startsWith("get")) {
@@ -133,6 +136,7 @@ public class TestIndexWriterConfig extends LuceneTestCaseJ4 {
     assertEquals(IndexWriterConfig.DISABLE_AUTO_FLUSH, IndexWriterConfig.DEFAULT_MAX_BUFFERED_DELETE_TERMS);
     assertEquals(IndexWriterConfig.DISABLE_AUTO_FLUSH, IndexWriterConfig.DEFAULT_MAX_BUFFERED_DOCS);
     assertEquals(16.0, IndexWriterConfig.DEFAULT_RAM_BUFFER_SIZE_MB, 0.0);
+    assertEquals(8, IndexWriterConfig.DEFAULT_MAX_THREAD_STATES);
   }
   
   @Test
@@ -228,7 +232,19 @@ public class TestIndexWriterConfig extends LuceneTestCaseJ4 {
     } catch (IllegalArgumentException e) {
       // this is expected
     }
+
+    assertEquals(IndexWriterConfig.DEFAULT_MAX_THREAD_STATES, conf.getMaxThreadStates());
+    conf.setMaxThreadStates(5);
+    assertEquals(5, conf.getMaxThreadStates());
+    conf.setMaxThreadStates(0);
+    assertEquals(IndexWriterConfig.DEFAULT_MAX_THREAD_STATES, conf.getMaxThreadStates());
     
+    // Test MergePolicy
+    assertEquals(LogByteSizeMergePolicy.class, conf.getMergePolicy().getClass());
+    conf.setMergePolicy(new LogDocMergePolicy());
+    assertEquals(LogDocMergePolicy.class, conf.getMergePolicy().getClass());
+    conf.setMergePolicy(null);
+    assertEquals(LogByteSizeMergePolicy.class, conf.getMergePolicy().getClass());
   }
 
   /**
@@ -271,5 +287,9 @@ public class TestIndexWriterConfig extends LuceneTestCaseJ4 {
     
     writer.setMergedSegmentWarmer(new MyWarmer());
     assertEquals(MyWarmer.class, writer.getConfig().getMergedSegmentWarmer().getClass());
+    
+    writer.setMergePolicy(new LogDocMergePolicy());
+    assertEquals(LogDocMergePolicy.class, writer.getConfig().getMergePolicy().getClass());
   }
+
 }

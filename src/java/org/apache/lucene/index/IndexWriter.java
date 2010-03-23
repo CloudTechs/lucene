@@ -292,7 +292,7 @@ public class IndexWriter implements Closeable {
   // merges
   private HashSet<SegmentInfo> mergingSegments = new HashSet<SegmentInfo>();
 
-  private MergePolicy mergePolicy = new LogByteSizeMergePolicy(this);
+  private MergePolicy mergePolicy;
   // TODO 4.0: this should be made final once the setter is removed
   private /*final*/MergeScheduler mergeScheduler;
   private LinkedList<MergePolicy.OneMerge> pendingMerges = new LinkedList<MergePolicy.OneMerge>();
@@ -873,8 +873,8 @@ public class IndexWriter implements Closeable {
   public void setTermIndexInterval(int interval) {
     ensureOpen();
     this.termIndexInterval = interval;
-    // Required so config.getSimilarity returns the right value. But this will
-    // go away together with the method in 4.0.
+    // Required so config.getTermIndexInterval returns the right value. But this
+    // will go away together with the method in 4.0.
     config.setTermIndexInterval(interval);
   }
 
@@ -1081,6 +1081,8 @@ public class IndexWriter implements Closeable {
     termIndexInterval = conf.getTermIndexInterval();
     writeLockTimeout = conf.getWriteLockTimeout();
     similarity = conf.getSimilarity();
+    mergePolicy = conf.getMergePolicy();
+    mergePolicy.setIndexWriter(this);
     mergeScheduler = conf.getMergeScheduler();
     mergedSegmentWarmer = conf.getMergedSegmentWarmer();
     codecs = conf.getCodecProvider();
@@ -1216,6 +1218,8 @@ public class IndexWriter implements Closeable {
   
   /**
    * Expert: set the merge policy used by this writer.
+   * 
+   * @deprecated use {@link IndexWriterConfig#setMergePolicy(MergePolicy)} instead.
    */
   public void setMergePolicy(MergePolicy mp) {
     ensureOpen();
@@ -1225,14 +1229,20 @@ public class IndexWriter implements Closeable {
     if (mergePolicy != mp)
       mergePolicy.close();
     mergePolicy = mp;
+    mergePolicy.setIndexWriter(this);
     pushMaxBufferedDocs();
     if (infoStream != null)
       message("setMergePolicy " + mp);
+    // Required so config.getMergePolicy returns the right value. But this will
+    // go away together with the method in 4.0.
+    config.setMergePolicy(mp);
   }
 
   /**
    * Expert: returns the current MergePolicy in use by this writer.
    * @see #setMergePolicy
+   * 
+   * @deprecated use {@link IndexWriterConfig#getMergePolicy()} instead
    */
   public MergePolicy getMergePolicy() {
     ensureOpen();
@@ -1255,7 +1265,7 @@ public class IndexWriter implements Closeable {
     this.mergeScheduler = mergeScheduler;
     if (infoStream != null)
       message("setMergeScheduler " + mergeScheduler);
-    // Required so config.getSimilarity returns the right value. But this will
+    // Required so config.getMergeScheduler returns the right value. But this will
     // go away together with the method in 4.0.
     config.setMergeScheduler(mergeScheduler);
   }
@@ -1333,8 +1343,8 @@ public class IndexWriter implements Closeable {
     docWriter.setMaxFieldLength(maxFieldLength);
     if (infoStream != null)
       message("setMaxFieldLength " + maxFieldLength);
-    // Required so config.getSimilarity returns the right value. But this will
-    // go away together with the method in 4.0.
+    // Required so config.getMaxFieldLength returns the right value. But this
+    // will go away together with the method in 4.0.
     config.setMaxFieldLength(maxFieldLength);
   }
 
@@ -1382,8 +1392,8 @@ public class IndexWriter implements Closeable {
     pushMaxBufferedDocs();
     if (infoStream != null)
       message("setMaxBufferedDocs " + maxBufferedDocs);
-    // Required so config.getSimilarity returns the right value. But this will
-    // go away together with the method in 4.0.
+    // Required so config.getMaxBufferedDocs returns the right value. But this
+    // will go away together with the method in 4.0.
     config.setMaxBufferedDocs(maxBufferedDocs);
   }
 
@@ -1470,8 +1480,8 @@ public class IndexWriter implements Closeable {
     docWriter.setRAMBufferSizeMB(mb);
     if (infoStream != null)
       message("setRAMBufferSizeMB " + mb);
-    // Required so config.getSimilarity returns the right value. But this will
-    // go away together with the method in 4.0.
+    // Required so config.getRAMBufferSizeMB returns the right value. But this
+    // will go away together with the method in 4.0.
     config.setRAMBufferSizeMB(mb);
   }
 
@@ -1505,8 +1515,8 @@ public class IndexWriter implements Closeable {
     docWriter.setMaxBufferedDeleteTerms(maxBufferedDeleteTerms);
     if (infoStream != null)
       message("setMaxBufferedDeleteTerms " + maxBufferedDeleteTerms);
-    // Required so config.getSimilarity returns the right value. But this will
-    // go away together with the method in 4.0.
+    // Required so config.getMaxBufferedDeleteTerms returns the right value. But
+    // this will go away together with the method in 4.0.
     config.setMaxBufferedDeleteTerms(maxBufferedDeleteTerms);
   }
 
@@ -1618,8 +1628,8 @@ public class IndexWriter implements Closeable {
   public void setWriteLockTimeout(long writeLockTimeout) {
     ensureOpen();
     this.writeLockTimeout = writeLockTimeout;
-    // Required so config.getSimilarity returns the right value. But this will
-    // go away together with the method in 4.0.
+    // Required so config.getWriteLockTimeout returns the right value. But this
+    // will go away together with the method in 4.0.
     config.setWriteLockTimeout(writeLockTimeout);
   }
 
@@ -4978,8 +4988,8 @@ public class IndexWriter implements Closeable {
    */
   public void setMergedSegmentWarmer(IndexReaderWarmer warmer) {
     mergedSegmentWarmer = warmer;
-    // Required so config.getSimilarity returns the right value. But this will
-    // go away together with the method in 4.0.
+    // Required so config.getMergedSegmentWarmer returns the right value. But
+    // this will go away together with the method in 4.0.
     config.setMergedSegmentWarmer(mergedSegmentWarmer);
   }
 

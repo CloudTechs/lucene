@@ -615,7 +615,7 @@ public class TestIndexWriter extends LuceneTestCase {
 
       for(int numDocs=38;numDocs<500;numDocs += 38) {
         IndexWriter writer  = new IndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-        LogDocMergePolicy ldmp = new LogDocMergePolicy(writer);
+        LogDocMergePolicy ldmp = new LogDocMergePolicy();
         ldmp.setMinMergeDocs(1);
         writer.setMergePolicy(ldmp);
         writer.setMergeFactor(5);
@@ -629,6 +629,8 @@ public class TestIndexWriter extends LuceneTestCase {
         final int segCount = sis.size();
 
         writer  = new IndexWriter(dir, new WhitespaceAnalyzer(), IndexWriter.MaxFieldLength.LIMITED);
+        ldmp = new LogDocMergePolicy();
+        ldmp.setMinMergeDocs(1);
         writer.setMergePolicy(ldmp);
         writer.setMergeFactor(5);
         writer.optimize(3);
@@ -652,7 +654,7 @@ public class TestIndexWriter extends LuceneTestCase {
       doc.add(new Field("content", "aaa", Field.Store.YES, Field.Index.ANALYZED));
 
       IndexWriter writer  = new IndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
-      LogDocMergePolicy ldmp = new LogDocMergePolicy(writer);
+      LogDocMergePolicy ldmp = new LogDocMergePolicy();
       ldmp.setMinMergeDocs(1);
       writer.setMergePolicy(ldmp);
       writer.setMergeFactor(4);
@@ -2764,7 +2766,7 @@ public class TestIndexWriter extends LuceneTestCase {
       writer.setMaxBufferedDocs(2);
       writer.setRAMBufferSizeMB(IndexWriter.DISABLE_AUTO_FLUSH);
       writer.setMergeScheduler(new SerialMergeScheduler());
-      writer.setMergePolicy(new LogDocMergePolicy(writer));
+      writer.setMergePolicy(new LogDocMergePolicy());
 
       Document document = new Document();
 
@@ -2797,7 +2799,7 @@ public class TestIndexWriter extends LuceneTestCase {
       writer.setMaxBufferedDocs(2);
       writer.setRAMBufferSizeMB(IndexWriter.DISABLE_AUTO_FLUSH);
       writer.setMergeScheduler(new SerialMergeScheduler());
-      writer.setMergePolicy(new LogDocMergePolicy(writer));
+      writer.setMergePolicy(new LogDocMergePolicy());
 
       Directory[] indexDirs = {new MockRAMDirectory(dir)};
       writer.addIndexesNoOptimize(indexDirs);
@@ -2816,7 +2818,7 @@ public class TestIndexWriter extends LuceneTestCase {
       writer.setMaxBufferedDocs(2);
       writer.setRAMBufferSizeMB(IndexWriter.DISABLE_AUTO_FLUSH);
       writer.setMergeScheduler(new SerialMergeScheduler());
-      writer.setMergePolicy(new LogDocMergePolicy(writer));
+      writer.setMergePolicy(new LogDocMergePolicy());
 
       Document document = new Document();
 
@@ -2854,7 +2856,7 @@ public class TestIndexWriter extends LuceneTestCase {
     writer.setMaxBufferedDocs(2);
     writer.setRAMBufferSizeMB(IndexWriter.DISABLE_AUTO_FLUSH);
     writer.setMergeScheduler(new SerialMergeScheduler());
-    writer.setMergePolicy(new LogDocMergePolicy(writer));
+    writer.setMergePolicy(new LogDocMergePolicy());
 
     Document document = new Document();
 
@@ -2876,7 +2878,7 @@ public class TestIndexWriter extends LuceneTestCase {
     writer.setMaxBufferedDocs(2);
     writer.setRAMBufferSizeMB(IndexWriter.DISABLE_AUTO_FLUSH);
     writer.setMergeScheduler(new SerialMergeScheduler());
-    writer.setMergePolicy(new LogDocMergePolicy(writer));
+    writer.setMergePolicy(new LogDocMergePolicy());
     for(int i=0;i<6;i++)
       writer.addDocument(document);
 

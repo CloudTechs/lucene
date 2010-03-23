@@ -116,7 +116,7 @@ public class TestOmitTf extends LuceneTestCase {
     Analyzer analyzer = new StandardAnalyzer(TEST_VERSION_CURRENT);
     IndexWriter writer = new IndexWriter(ram, new IndexWriterConfig(
         TEST_VERSION_CURRENT, analyzer).setMaxBufferedDocs(3));
-    ((LogMergePolicy) writer.getMergePolicy()).setMergeFactor(2);
+    ((LogMergePolicy) writer.getConfig().getMergePolicy()).setMergeFactor(2);
     Document d = new Document();
         
     // this field will have Tf
@@ -173,7 +173,7 @@ public class TestOmitTf extends LuceneTestCase {
     Analyzer analyzer = new StandardAnalyzer(TEST_VERSION_CURRENT);
     IndexWriter writer = new IndexWriter(ram, new IndexWriterConfig(
         TEST_VERSION_CURRENT, analyzer).setMaxBufferedDocs(10));
-    ((LogMergePolicy) writer.getMergePolicy()).setMergeFactor(2);
+    ((LogMergePolicy) writer.getConfig().getMergePolicy()).setMergeFactor(2);
     Document d = new Document();
         
     // this field will have Tf
@@ -221,7 +221,7 @@ public class TestOmitTf extends LuceneTestCase {
     Analyzer analyzer = new StandardAnalyzer(TEST_VERSION_CURRENT);
     IndexWriter writer = new IndexWriter(ram, new IndexWriterConfig(
         TEST_VERSION_CURRENT, analyzer).setMaxBufferedDocs(3));
-    LogMergePolicy lmp = (LogMergePolicy) writer.getMergePolicy();
+    LogMergePolicy lmp = (LogMergePolicy) writer.getConfig().getMergePolicy();
     lmp.setMergeFactor(2);
     lmp.setUseCompoundFile(false);
     lmp.setUseCompoundDocStore(false);
@@ -255,8 +255,7 @@ public class TestOmitTf extends LuceneTestCase {
     IndexWriter writer = new IndexWriter(dir, new IndexWriterConfig(
         TEST_VERSION_CURRENT, analyzer).setMaxBufferedDocs(2)
         .setSimilarity(new SimpleSimilarity()));
-    ((LogMergePolicy) writer.getMergePolicy()).setMergeFactor(2);
-        
+    ((LogMergePolicy) writer.getConfig().getMergePolicy()).setMergeFactor(2);
         
     StringBuilder sb = new StringBuilder(265);
     String term = "term";
