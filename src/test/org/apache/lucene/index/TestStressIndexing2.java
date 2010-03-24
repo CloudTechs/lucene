@@ -290,14 +290,20 @@ public class TestStressIndexing2 extends MultiCodecTestCase {
 
     // create mapping from id2 space to id2 based on idField
     idField = StringHelper.intern(idField);
-    final TermsEnum termsEnum = MultiFields.getFields(r1).terms(idField).iterator();
+    final Fields f1 = MultiFields.getFields(r1);
+    if (f1 == null) {
+      // make sure r2 is empty
+      assertNull(MultiFields.getFields(r2));
+      return;
+    }
+    final TermsEnum termsEnum = f1.terms(idField).iterator();
 
     final Bits delDocs1 = MultiFields.getDeletedDocs(r1);
     final Bits delDocs2 = MultiFields.getDeletedDocs(r2);
     
     Fields fields = MultiFields.getFields(r2);
     if (fields == null) {
-      // make sure r1 is in fract empty (eg has only all
+      // make sure r1 is in fact empty (eg has only all
       // deleted docs):
       DocsEnum docs = null;
       while(termsEnum.next() != null) {

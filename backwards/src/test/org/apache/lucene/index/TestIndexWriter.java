@@ -4338,12 +4338,6 @@ public class TestIndexWriter extends LuceneTestCase {
 
       assertTrue(dir.fileExists("myrandomfile"));
 
-      // Make sure this does not copy myrandomfile:
-      // nocommit -- Directory.copy now copies all files --
-      // how to fix?
-      //Directory dir2 = new RAMDirectory(dir);
-      //assertTrue(!dir2.fileExists("myrandomfile"));
-
     } finally {
       dir.close();
       _TestUtil.rmDir(indexDir);

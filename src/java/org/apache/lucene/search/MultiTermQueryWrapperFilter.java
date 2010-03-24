@@ -139,11 +139,12 @@ public class MultiTermQueryWrapperFilter<Q extends MultiTermQuery> extends Filte
           // System.out.println("  iter termCount=" + termCount + " term=" +
           // enumerator.term().toBytesString());
           docsEnum = termsEnum.docs(delDocs, docsEnum);
+          final DocsEnum.BulkReadResult result = docsEnum.getBulkResult();
           while (true) {
-            final DocsEnum.BulkReadResult result = docsEnum.read();
-            if (result.count != 0) {
+            final int count = docsEnum.read();
+            if (count != 0) {
               final int[] docs = result.docs.ints;
-              for (int i = 0; i < result.count; i++) {
+              for (int i = 0; i < count; i++) {
                 bitSet.set(docs[i]);
               }
             } else {

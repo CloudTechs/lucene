@@ -281,11 +281,10 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
     }
 
     @Override
-    public BulkReadResult read() throws IOException {
+    public int read() throws IOException {
       if (Codec.DEBUG) {
         Codec.debug("sdr.bulk read: ord=" + ord + " df=" + limit + " omitTF=" + omitTF + " ord=" + ord + " of " + limit + " freq.fp=" + freqIn.getFilePointer(), desc);
       }
-      initBulkResult();
       final int[] docs = bulkResult.docs.ints;
       final int[] freqs = bulkResult.freqs.ints;
       int i = 0;
@@ -319,8 +318,7 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
         System.out.println("  return " + i);
       }
 
-      bulkResult.count = i;
-      return bulkResult;
+      return i;
     }
 
     @Override

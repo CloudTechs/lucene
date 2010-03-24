@@ -417,14 +417,13 @@ public class PreFlexFields extends FieldsProducer {
     }
 
     @Override
-    public BulkReadResult read() throws IOException {
+    public int read() throws IOException {
       if (bulkResult == null) {
         initBulkResult();
         bulkResult.docs.ints = new int[32];
         bulkResult.freqs.ints = new int[32];
       }
-      bulkResult.count = this.docs.read(bulkResult.docs.ints, bulkResult.freqs.ints);
-      return bulkResult;
+      return this.docs.read(bulkResult.docs.ints, bulkResult.freqs.ints);
     }
   }
 

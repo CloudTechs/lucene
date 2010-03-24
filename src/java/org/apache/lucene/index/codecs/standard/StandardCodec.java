@@ -41,8 +41,10 @@ public class StandardCodec extends Codec {
   public FieldsConsumer fieldsConsumer(SegmentWriteState state) throws IOException {
     StandardPostingsWriter docs = new StandardPostingsWriterImpl(state);
 
-    // nocommit -- how to gracefully upgrade to a new terms
-    // index impl?  could just make a new named codec...
+    // TODO: should we make the terms index more easily
+    // pluggable?  Ie so that this codec would record which
+    // index impl was used, and switch on loading?
+    // Or... you must make a new Codec for this?
     StandardTermsIndexWriter indexWriter;
     boolean success = false;
     try {

@@ -69,9 +69,10 @@ public final class BytesRef {
    * unpaired surrogates or invalid UTF16 code units.
    */
   public void copy(CharSequence text) {
-    // nocommit -- new byte[10] is waste of resources,
-    // it should simply allocate text.length()*4 like UnicodeUtil.
-    // Ideally, I would remove this here and add a null-check in UnicodeUtil. (Uwe)
+    // TODO: new byte[10] is waste of resources; it should
+    // simply allocate text.length()*4 like UnicodeUtil.
+    // Ideally, I would remove this here and add a
+    // null-check in UnicodeUtil. (Uwe)
     if (bytes == null) {
       bytes = new byte[10];
     }

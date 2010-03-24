@@ -264,35 +264,38 @@ public class FlexTestUtil {
               if (rand.nextBoolean()) {
                 // use bulk read API
                 termDocs.seek(t);
-                DocsEnum.BulkReadResult result1 = null;
+                DocsEnum.BulkReadResult result1 = docs.getBulkResult();
+                int result1Count = 0;
                 int count2 = 0;
                 while(true) {
-                  if (result1 == null || result1.count == 0) {
-                    result1 = docs.read();
+                  if (result1Count == 0) {
+                    result1Count = docs.read();
                   }
                   if (count2 == 0) {
                     count2 = termDocs.read(docs2, freqs2);
                   }
 
-                  if (result1.count == 0 || count2 == 0) {
+                  if (result1Count == 0 || count2 == 0) {
                     assertEquals(0, count2);
-                    assertEquals(0, result1.count);
+                    assertEquals(0, result1Count);
                     break;
                   }
-                  final int limit = Math.min(result1.count, count2);
+                  final int limit = Math.min(result1Count, count2);
                   for(int i=0;i<limit;i++) {
                     assertEquals(result1.docs.ints[i], docs2[i]);
                     assertEquals(result1.freqs.ints[i], freqs2[i]);
                   }
-                  if (result1.count > limit) {
+                  if (result1Count > limit) {
                     // copy down
-                    // nocommit -- hmm in general I should
-                    // not muck w/ the int[]'s returned to
-                    // me like this...?
-                    System.arraycopy(result1.docs.ints, limit, result1.docs.ints, 0, result1.count-limit);
-                    System.arraycopy(result1.freqs.ints, limit, result1.freqs.ints, 0, result1.count-limit);
+                    // TODO: in general I should not muck w/
+                    // the int[]'s returned to me like
+                    // this... this could mess up codecs
+                    // that have persistent RAM storage of
+                    // these int[]'s
+                    System.arraycopy(result1.docs.ints, limit, result1.docs.ints, 0, result1Count-limit);
+                    System.arraycopy(result1.freqs.ints, limit, result1.freqs.ints, 0, result1Count-limit);
                   }
-                  result1.count -= limit;
+                  result1Count -= limit;
 
                   if (count2 > limit) {
                     // copy down

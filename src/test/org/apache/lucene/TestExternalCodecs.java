@@ -478,9 +478,9 @@ public class TestExternalCodecs extends LuceneTestCase {
    *  You must ensure every field you index has a Codec, or
    *  the defaultCodec is non null.  Also, the separate
    *  codecs cannot conflict on file names.*/
-  // nocommit -- promote to core
+  // TODO: promote to core
   public static class PerFieldCodecWrapper extends Codec {
-    private final Map<String,Codec> fields = new HashMap<String,Codec>();
+    private final Map<String,Codec> fields = new IdentityHashMap<String,Codec>();
     private final Codec defaultCodec;
 
     public PerFieldCodecWrapper(Codec defaultCodec) {

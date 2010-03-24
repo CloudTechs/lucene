@@ -48,8 +48,7 @@ class AllDocsEnum extends DocsEnum {
   }
 
   @Override
-  public BulkReadResult read() throws IOException {
-    initBulkResult();
+  public int read() throws IOException {
     final int[] docs = bulkResult.docs.ints;
     final int[] freqs = bulkResult.freqs.ints;
     int i = 0;
@@ -61,8 +60,7 @@ class AllDocsEnum extends DocsEnum {
       }
       doc++;
     }
-    bulkResult.count = i;
-    return bulkResult;
+    return i;
   }
 
   @Override

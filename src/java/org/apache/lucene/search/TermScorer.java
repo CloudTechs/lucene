@@ -38,6 +38,7 @@ final class TermScorer extends Scorer {
   private float[] scoreCache = new float[SCORE_CACHE_SIZE];
   private int[] docs;
   private int[] freqs;
+  private final DocsEnum.BulkReadResult bulkResult;
 
   /**
    * Construct a <code>TermScorer</code>.
@@ -59,6 +60,7 @@ final class TermScorer extends Scorer {
     this.docsEnum = td;
     this.norms = norms;
     this.weightValue = weight.getValue();
+    bulkResult = td.getBulkResult();
 
     for (int i = 0; i < SCORE_CACHE_SIZE; i++)
       scoreCache[i] = getSimilarity().tf(i) * weightValue;
@@ -70,10 +72,9 @@ final class TermScorer extends Scorer {
   }
 
   private final void refillBuffer() throws IOException {
-    final DocsEnum.BulkReadResult result = docsEnum.read();  // refill
-    pointerMax = result.count;
-    docs = result.docs.ints;
-    freqs = result.freqs.ints;
+    pointerMax = docsEnum.read();  // refill
+    docs = bulkResult.docs.ints;
+    freqs = bulkResult.freqs.ints;
   }
 
   // firstDocID is ignored since nextDoc() sets 'doc'

@@ -361,9 +361,8 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
     }
 
     @Override
-    public BulkReadResult read() throws IOException {
+    public int read() throws IOException {
       // TODO: -- switch to bulk read api in IntIndexInput
-      initBulkResult();
       final int[] docs = bulkResult.docs.ints;
       final int[] freqs = bulkResult.freqs.ints;
       int i = 0;
@@ -382,8 +381,7 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
           i++;
         }
       }
-      bulkResult.count = i;
-      return bulkResult;
+      return i;
     }
 
     @Override

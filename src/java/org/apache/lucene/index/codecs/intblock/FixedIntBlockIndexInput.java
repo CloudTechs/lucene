@@ -49,7 +49,7 @@ public abstract class FixedIntBlockIndexInput extends IntIndexInput {
   public Reader reader() throws IOException {
     final int[] buffer = new int[blockSize];
     final IndexInput clone = (IndexInput) in.clone();
-    // nocommit -- awkward
+    // TODO: can this be simplified?
     return new Reader(clone, buffer, this.getBlockReader(clone, buffer));
   }
 

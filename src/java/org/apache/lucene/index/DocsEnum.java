@@ -51,7 +51,6 @@ public abstract class DocsEnum extends DocIdSetIterator {
   public static class BulkReadResult {
     public final IntsRef docs = new IntsRef();
     public final IntsRef freqs = new IntsRef();
-    public int count;
   }
 
   protected BulkReadResult bulkResult;
@@ -63,21 +62,22 @@ public abstract class DocsEnum extends DocIdSetIterator {
       bulkResult.freqs.ints = new int[64];
     }
   }
+
+  public BulkReadResult getBulkResult() {
+    initBulkResult();
+    return bulkResult;
+  }
   
   /** Bulk read (docs and freqs).  After this is called,
-   * {@link #doc} and {@link #freq} are undefined.  You must
-   * refer to the count member of BulkResult to determine
-   * how many docs were loaded (the IntsRef for docs and
-   * freqs will not have their length set).  This method
-   * will not return null.  The end has been reached when
-   * .count is 0.
+   * {@link #doc} and {@link #freq} are undefined.  This
+   * returns the count read, or 0 if the end is reached.
+   * The IntsRef for docs and freqs will not have their
+   * length set.
    * 
    *  <p>NOTE: the default impl simply delegates to {@link
    *  #nextDoc}, but subclasses may do this more
    *  efficiently. */
-  // nocommit -- maybe pre-share the BulkReadResult.... hmm
-  public BulkReadResult read() throws IOException {
-    initBulkResult();
+  public int read() throws IOException {
     int count = 0;
     final int[] docs = bulkResult.docs.ints;
     final int[] freqs = bulkResult.freqs.ints;
@@ -91,7 +91,6 @@ public abstract class DocsEnum extends DocIdSetIterator {
         break;
       }
     }
-    bulkResult.count = count;
-    return bulkResult;
+    return count;
   }
 }

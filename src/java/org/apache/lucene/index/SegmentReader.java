@@ -1514,6 +1514,7 @@ public class SegmentReader extends IndexReader implements Cloneable {
       if (terms.seek(new BytesRef(term.text)) == TermsEnum.SeekStatus.FOUND) {
         // Term exists
         any = true;
+        pendingBulkResult = null;
         docsEnum = terms.docs(deletedDocs, docsEnum);
         if (Codec.DEBUG) {
           System.out.println("  init docs enum");
@@ -1534,13 +1535,17 @@ public class SegmentReader extends IndexReader implements Cloneable {
     }
 
     private DocsEnum.BulkReadResult pendingBulkResult;
+    private int bulkCount;
     private int pendingBulk;
 
     public int read(int[] docs, int[] freqs) throws IOException {
+      if (any && pendingBulkResult == null) {
+        pendingBulkResult = docsEnum.getBulkResult();
+      }
       if (!any) {
         return 0;
       } else if (pendingBulk > 0) {
-        final int left = pendingBulkResult.count - pendingBulk;
+        final int left = bulkCount - pendingBulk;
         if (docs.length >= left) {
           // read all pending
           System.arraycopy(pendingBulkResult.docs.ints, pendingBulk, docs, 0, left);
@@ -1556,11 +1561,11 @@ public class SegmentReader extends IndexReader implements Cloneable {
         }
       } else {
         // nothing pending
-        pendingBulkResult = docsEnum.read();
-        if (docs.length >= pendingBulkResult.count) {
-          System.arraycopy(pendingBulkResult.docs.ints, 0, docs, 0, pendingBulkResult.count);
-          System.arraycopy(pendingBulkResult.freqs.ints, 0, freqs, 0, pendingBulkResult.count);
-          return pendingBulkResult.count;
+        bulkCount = docsEnum.read();
+        if (docs.length >= bulkCount) {
+          System.arraycopy(pendingBulkResult.docs.ints, 0, docs, 0, bulkCount);
+          System.arraycopy(pendingBulkResult.freqs.ints, 0, freqs, 0, bulkCount);
+          return bulkCount;
         } else {
           System.arraycopy(pendingBulkResult.docs.ints, 0, docs, 0, docs.length);
           System.arraycopy(pendingBulkResult.freqs.ints, 0, freqs, 0, docs.length);

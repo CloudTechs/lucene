@@ -270,7 +270,7 @@ public class PulsingPostingsReaderImpl extends StandardPostingsReader {
     }
 
     @Override
-    public BulkReadResult read() {
+    public int read() {
       int i=0;
       // TODO: -- ob1?
       initBulkResult();
@@ -284,8 +284,7 @@ public class PulsingPostingsReaderImpl extends StandardPostingsReader {
           i++;
         }
       }
-      bulkResult.count = i;
-      return bulkResult;
+      return i;
     }
 
     @Override
