@@ -110,6 +110,9 @@ public class FlexTestUtil {
 
   private static void testBogusFieldTerms(Random rand, IndexReader r) throws Exception {
     final Fields fields = MultiFields.getFields(r);
+    if (fields == null) {
+      return;
+    }
     for(int i=0;i<10;i++) {
       final String f = "bogus" + rand.nextInt() + "reallybogus";
       Terms terms = fields.terms(f);

@@ -17,6 +17,10 @@ Bug Fixes
 
 * LUCENE-2222: FixedIntBlockIndexInput incorrectly read one block of
   0s before the actual data.  (Renaud Delbru via Mike McCandless)
+
+* LUCENE-2344: PostingsConsumer.merge was failing to call finishDoc,
+  which caused corruption for sep codec.  Also fixed several tests to
+  test all 4 core codecs.  (Renaud Delbru via Mike McCandless)
   
 New features
 

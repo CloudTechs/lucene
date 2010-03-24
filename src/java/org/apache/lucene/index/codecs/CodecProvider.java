@@ -43,6 +43,10 @@ public abstract class CodecProvider {
 
   private final Set<String> knownExtensions = new HashSet<String>();
 
+  private static String defaultCodec = "Standard";
+
+  public final static String[] CORE_CODECS = new String[] {"Standard", "Sep", "Pulsing", "IntBlock"};
+
   public void register(Codec codec) {
     if (codec.name == null) {
       throw new IllegalArgumentException("code.name is null");
@@ -74,6 +78,15 @@ public abstract class CodecProvider {
   public static CodecProvider getDefault() {
     return defaultCodecs;
   }
+
+  /** Used for testing. @lucene.internal */
+  public static void setDefaultCodec(String s) {
+    defaultCodec = s;
+  }
+  /** Used for testing. @lucene.internal */
+  public static String getDefaultCodec() {
+    return defaultCodec;
+  }
 }
 
 class DefaultCodecProvider extends CodecProvider {
@@ -87,7 +100,7 @@ class DefaultCodecProvider extends CodecProvider {
 
   @Override
   public Codec getWriter(SegmentWriteState state) {
-    return lookup("Standard");
+    return lookup(CodecProvider.getDefaultCodec());
     //return lookup("Pulsing");
     //return lookup("Sep");
     //return lookup("IntBlock");

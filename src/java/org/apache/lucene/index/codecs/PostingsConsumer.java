@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import org.apache.lucene.index.DocsAndPositionsEnum;
 import org.apache.lucene.index.DocsEnum;
+import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.util.BytesRef;
 
 /**
@@ -56,28 +57,29 @@ public abstract class PostingsConsumer {
 
   /** Default merge impl: append documents, mapping around
    *  deletes */
-  public int merge(MergeState mergeState, DocsEnum postings) throws IOException {
+  public int merge(final MergeState mergeState, final DocsEnum postings) throws IOException {
 
     int df = 0;
 
     if (mergeState.fieldInfo.omitTermFreqAndPositions) {
       while(true) {
         final int doc = postings.nextDoc();
-        if (doc == DocsAndPositionsEnum.NO_MORE_DOCS) {
+        if (doc == DocIdSetIterator.NO_MORE_DOCS) {
           break;
         }
-        startDoc(doc, postings.freq());
+        this.startDoc(doc, postings.freq());
+        this.finishDoc();
         df++;
       }
     } else {
       final DocsAndPositionsEnum postingsEnum = (DocsAndPositionsEnum) postings;
       while(true) {
         final int doc = postingsEnum.nextDoc();
-        if (doc == DocsAndPositionsEnum.NO_MORE_DOCS) {
+        if (doc == DocIdSetIterator.NO_MORE_DOCS) {
           break;
         }
         final int freq = postingsEnum.freq();
-        startDoc(doc, freq);
+        this.startDoc(doc, freq);
         for(int i=0;i<freq;i++) {
           final int position = postingsEnum.nextPosition();
           final int payloadLength = postingsEnum.getPayloadLength();
@@ -87,8 +89,9 @@ public abstract class PostingsConsumer {
           } else {
             payload = null;
           }
-          addPosition(position, payload);
+          this.addPosition(position, payload);
         }
+        this.finishDoc();
         df++;
       }
     }

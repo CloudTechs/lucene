@@ -26,7 +26,7 @@ import org.apache.lucene.search.*;
 import java.util.Random;
 import java.io.File;
 
-public class TestStressIndexing extends LuceneTestCase {
+public class TestStressIndexing extends MultiCodecTestCase {
   private Random RANDOM;
 
   private static abstract class TimedThread extends Thread {

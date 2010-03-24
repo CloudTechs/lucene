@@ -37,7 +37,7 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.MockRAMDirectory;
 
-public class TestStressIndexing2 extends LuceneTestCase {
+public class TestStressIndexing2 extends MultiCodecTestCase {
   static int maxFields=4;
   static int bigFieldSize=10;
   static boolean sameFieldOrder=false;
