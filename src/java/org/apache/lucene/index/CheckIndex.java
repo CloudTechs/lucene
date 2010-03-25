@@ -125,6 +125,9 @@ public class CheckIndex {
       /** Name of the segment. */
       public String name;
 
+      /** Name of codec used to read this segment. */
+      public String codec;
+
       /** Document count (does not take deletions into account). */
       public int docCount;
 
@@ -418,6 +421,9 @@ public class CheckIndex {
       SegmentReader reader = null;
 
       try {
+        final String codec = info.getCodec().name;
+        msg("    codec=" + codec);
+        segInfoStat.codec = codec;
         msg("    compound=" + info.getUseCompoundFile());
         segInfoStat.compound = info.getUseCompoundFile();
         msg("    hasProx=" + info.getHasProx());
@@ -441,6 +447,7 @@ public class CheckIndex {
           msg("    docStoreIsCompoundFile=" + info.getDocStoreIsCompoundFile());
           segInfoStat.docStoreCompoundFile = info.getDocStoreIsCompoundFile();
         }
+
         final String delFileName = info.getDelFileName();
         if (delFileName == null){
           msg("    no deletions");

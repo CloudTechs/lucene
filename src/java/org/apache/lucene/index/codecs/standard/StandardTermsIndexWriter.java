@@ -29,6 +29,7 @@ public abstract class StandardTermsIndexWriter {
 
   public abstract class FieldWriter {
     public abstract boolean checkIndexTerm(BytesRef text, int docFreq) throws IOException;
+    public abstract void finish() throws IOException;
   }
 
   public abstract FieldWriter addField(FieldInfo fieldInfo);

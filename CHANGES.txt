@@ -34,6 +34,10 @@ New features
   bounded, for example for storing the terms dict index Toke Toke
   Eskildsen via Mike McCandless)
 
+* LUCENE-2321: Cutover to a more RAM efficient packed-ints based
+  representation for the in-memory terms dict index.  (Mike
+  McCandless)
+
 ======================= Trunk (not yet released) =======================
 
 Changes in backwards compatibility policy

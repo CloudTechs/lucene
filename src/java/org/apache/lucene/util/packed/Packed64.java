@@ -148,6 +148,7 @@ class Packed64 extends PackedInts.ReaderImpl implements PackedInts.Mutable {
     super(valueCount, bitsPerValue);
     int size = size(valueCount, bitsPerValue);
     blocks = new long[size+1]; // +1 due to non-conditional tricks
+    // TODO: find a faster way to bulk-read longs...
     for(int i=0;i<size;i++) {
       blocks[i] = in.readLong();
     }

@@ -71,15 +71,27 @@ public class TestPackedInts extends LuceneTestCase {
           w.add(values[i]);
         }
         w.finish();
+        final long fp = out.getFilePointer();
         out.close();
 
         IndexInput in = d.openInput("out.bin");
         PackedInts.Reader r = PackedInts.getReader(in);
+        assertEquals(fp, in.getFilePointer());
         for(int i=0;i<valueCount;i++) {
           assertEquals("index=" + i + " ceil=" + ceil + " valueCount="
                   + valueCount + " nbits=" + nbits + " for "
                   + r.getClass().getSimpleName(), values[i], r.get(i));
         }
+        in.close();
+
+        in = d.openInput("out.bin");
+        PackedInts.ReaderIterator r2 = PackedInts.getReaderIterator(in);
+        for(int i=0;i<valueCount;i++) {
+          assertEquals("index=" + i + " ceil=" + ceil + " valueCount="
+                  + valueCount + " nbits=" + nbits + " for "
+                  + r.getClass().getSimpleName(), values[i], r2.next());
+        }
+        assertEquals(fp, in.getFilePointer());
         in.close();
         ceil *= 2;
       }
@@ -192,5 +204,22 @@ public class TestPackedInts extends LuceneTestCase {
                 base.get(i), packedInts.get(j).get(i));
       }
     }
+  }
+
+  public void testSingleValue() throws Exception {
+    Directory dir = new MockRAMDirectory();
+    IndexOutput out = dir.createOutput("out");
+    PackedInts.Writer w = PackedInts.getWriter(out, 1, 8);
+    w.add(17);
+    w.finish();
+    final long end = out.getFilePointer();
+    out.close();
+
+    IndexInput in = dir.openInput("out");
+    PackedInts.Reader r = PackedInts.getReader(in);
+    assertEquals(end, in.getFilePointer());
+    in.close();
+
+    dir.close();
   }
 }

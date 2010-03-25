@@ -93,5 +93,7 @@ public abstract class TermsConsumer {
         }
       }
     }
+
+    finish();
   }
 }

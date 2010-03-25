@@ -25,6 +25,8 @@ import org.apache.lucene.index.SegmentWriteState;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.index.codecs.Codec;
 import org.apache.lucene.util.CodecUtil;
+import org.apache.lucene.util.ArrayUtil;
+import org.apache.lucene.util.packed.PackedInts;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -58,7 +60,6 @@ public class SimpleStandardTermsIndexWriter extends StandardTermsIndexWriter {
     // Placeholder for dir offset
     out.writeLong(0);
     out.writeInt(termIndexInterval);
-    termWriter = new DeltaBytesWriter(out);
   }
 
   @Override
@@ -66,8 +67,6 @@ public class SimpleStandardTermsIndexWriter extends StandardTermsIndexWriter {
     this.termsOut = termsOut;
   }
   
-  final private DeltaBytesWriter termWriter;
-
   @Override
   public FieldWriter addField(FieldInfo field) {
     SimpleFieldWriter writer = new SimpleFieldWriter(field);
@@ -78,32 +77,98 @@ public class SimpleStandardTermsIndexWriter extends StandardTermsIndexWriter {
   private class SimpleFieldWriter extends FieldWriter {
     final FieldInfo fieldInfo;
     int numIndexTerms;
-    private long lastTermsPointer;
     final long indexStart;
+    final long termsStart;
+    long packedIndexStart;
+    long packedOffsetsStart;
     private int numTerms;
+
+    // TODO: we could conceivably make a PackedInts wrapper
+    // that auto-grows... then we wouldn't force 6 bytes RAM
+    // per index term:
+    private short[] termLengths;
+    private int[] termsPointerDeltas;
+    private long lastTermsPointer;
+    private long totTermLength;
 
     SimpleFieldWriter(FieldInfo fieldInfo) {
       this.fieldInfo = fieldInfo;
       indexStart = out.getFilePointer();
-      termWriter.reset();
+      termsStart = lastTermsPointer = termsOut.getFilePointer();
+      termLengths = new short[0];
+      termsPointerDeltas = new int[0];
     }
 
     @Override
     public boolean checkIndexTerm(BytesRef text, int docFreq) throws IOException {
       // First term is first indexed term:
       if (0 == (numTerms++ % termIndexInterval)) {
-        final long termsPointer = termsOut.getFilePointer();
+
         if (Codec.DEBUG) {
-          Codec.debug("sstiw.checkIndexTerm write index field=" + fieldInfo.name + " term=" + text + " termsFP=" + termsPointer + " numIndexTerms=" + numIndexTerms + " outFP=" + out.getFilePointer());
+          Codec.debug("sstiw.checkIndexTerm write index field=" + fieldInfo.name + " term=" + text.utf8ToString() + " numIndexTerms=" + numIndexTerms + " outFP=" + out.getFilePointer());
         }
-        termWriter.write(text);
-        out.writeVLong(termsPointer - lastTermsPointer);
-        lastTermsPointer = termsPointer;
+
+        // write full bytes
+        out.writeBytes(text.bytes, text.offset, text.length);
+
+        if (termLengths.length == numIndexTerms) {
+          termLengths = ArrayUtil.grow(termLengths);
+        }
+        if (termsPointerDeltas.length == numIndexTerms) {
+          termsPointerDeltas = ArrayUtil.grow(termsPointerDeltas);
+        }
+
+        // save delta terms pointer
+        final long fp = termsOut.getFilePointer();
+        termsPointerDeltas[numIndexTerms] = (int) (fp - lastTermsPointer);
+        lastTermsPointer = fp;
+
+        // save term length (in bytes)
+        assert text.length <= Short.MAX_VALUE;
+        termLengths[numIndexTerms] = (short) text.length;
+
+        totTermLength += text.length;
+
         numIndexTerms++;
         return true;
       } else {
         return false;
       }
+    }
+
+    @Override
+    public void finish() throws IOException {
+
+      // write primary terms dict offsets
+      packedIndexStart = out.getFilePointer();
+
+      final long maxValue = termsOut.getFilePointer();
+      PackedInts.Writer w = PackedInts.getWriter(out, numIndexTerms, PackedInts.bitsRequired(maxValue));
+
+      // relative to our indexStart
+      long upto = 0;
+      for(int i=0;i<numIndexTerms;i++) {
+        upto += termsPointerDeltas[i];
+        w.add(upto);
+      }
+      w.finish();
+
+      packedOffsetsStart = out.getFilePointer();
+
+      // write offsets into the byte[] terms
+      w = PackedInts.getWriter(out, 1+numIndexTerms, PackedInts.bitsRequired(totTermLength));
+      upto = 0;
+      for(int i=0;i<numIndexTerms;i++) {
+        w.add(upto);
+        upto += termLengths[i];
+      }
+      w.add(upto);
+      w.finish();
+
+      // our referrer holds onto us, while other fields are
+      // being written, so don't tie up this RAM:
+      termLengths = null;
+      termsPointerDeltas = null;
     }
   }
 
@@ -123,7 +188,10 @@ public class SimpleStandardTermsIndexWriter extends StandardTermsIndexWriter {
       }
       out.writeInt(field.fieldInfo.number);
       out.writeInt(field.numIndexTerms);
+      out.writeLong(field.termsStart);
       out.writeLong(field.indexStart);
+      out.writeLong(field.packedIndexStart);
+      out.writeLong(field.packedOffsetsStart);
     }
     out.seek(CodecUtil.headerLength(CODEC_NAME));
     out.writeLong(dirStart);

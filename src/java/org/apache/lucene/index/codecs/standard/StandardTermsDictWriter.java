@@ -205,7 +205,8 @@ public class StandardTermsDictWriter extends FieldsConsumer {
 
     // Finishes all terms in this field
     @Override
-    public void finish() {
+    public void finish() throws IOException {
+      fieldIndexWriter.finish();
     }
   }
 }

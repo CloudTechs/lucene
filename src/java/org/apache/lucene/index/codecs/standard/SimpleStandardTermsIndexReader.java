@@ -28,6 +28,7 @@ import org.apache.lucene.index.codecs.Codec;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.util.ArrayUtil;
 import org.apache.lucene.util.CodecUtil;
+import org.apache.lucene.util.packed.PackedInts;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -63,7 +64,7 @@ import org.apache.lucene.index.IndexFileNames;
 /** @lucene.experimental */
 public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
 
-  final private int totalIndexInterval;
+  private int totalIndexInterval;
   private int indexDivisor;
   final private int indexInterval;
 
@@ -72,6 +73,12 @@ public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
   private volatile boolean indexLoaded;
 
   private final Comparator<BytesRef> termComp;
+  private final String segment;
+
+  private final static int PAGED_BYTES_BITS = 15;
+
+  // all fields share this single logical byte[]
+  private final PagedBytes termBytes = new PagedBytes(PAGED_BYTES_BITS);
 
   final HashMap<FieldInfo,FieldIndexReader> fields = new HashMap<FieldInfo,FieldIndexReader>();
 
@@ -79,6 +86,8 @@ public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
     throws IOException {
 
     this.termComp = termComp;
+
+    this.segment = segment;
 
     IndexInput in = dir.openInput(IndexFileNames.segmentFileName(segment, StandardCodec.TERMS_INDEX_EXTENSION));
     
@@ -118,10 +127,14 @@ public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
           System.out.println("  read field number=" + field);
         }
         final int numIndexTerms = in.readInt();
+        final long termsStart = in.readLong();
         final long indexStart = in.readLong();
+        final long packedIndexStart = in.readLong();
+        final long packedOffsetsStart = in.readLong();
+        assert packedIndexStart >= indexStart: "packedStart=" + packedIndexStart + " indexStart=" + indexStart + " numIndexTerms=" + numIndexTerms + " seg=" + segment;
         if (numIndexTerms > 0) {
           final FieldInfo fieldInfo = fieldInfos.fieldInfo(field);
-          fields.put(fieldInfo, new FieldIndexReader(in, fieldInfo, numIndexTerms, indexStart));
+          fields.put(fieldInfo, new FieldIndexReader(in, fieldInfo, numIndexTerms, indexStart, termsStart, packedIndexStart, packedOffsetsStart));
         }
       }
       success = true;
@@ -130,55 +143,13 @@ public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
         in.close();
         this.in = null;
         if (success) {
-          trimByteBlock();
           indexLoaded = true;
         }
+        termBytes.finish();
       } else {
         this.in = in;
       }
     }
-  }
-
-  /* Called when index is fully loaded.  We know we will use
-   * no more bytes in the final byte[], so trim it down to
-   * its actual usagee.  This substantially reduces memory
-   * usage of SegmentReader searching a tiny segment. */
-  private final void trimByteBlock() {
-    if (blockOffset == 0) {
-      // There were no fields in this segment:
-      if (blocks != null) {
-        blocks[blockUpto] = null;
-      }
-    } else {
-      byte[] last = new byte[blockOffset];
-      System.arraycopy(blocks[blockUpto], 0, last, 0, blockOffset);
-      blocks[blockUpto] = last;
-    }
-  }
-
-  // TODO: we can record precisely how many bytes are
-  // required during indexing, save that into file, and be
-  // precise when we allocate the blocks; we even don't need
-  // to use blocks anymore (though my still want to, to
-  // prevent allocation failure due to mem fragmentation on
-  // 32bit)
-
-  // Fixed size byte blocks, to hold all term bytes; these
-  // blocks are shared across fields
-  private byte[][] blocks;
-  int blockUpto;
-  int blockOffset;
-
-  private static final int BYTE_BLOCK_SHIFT = 15;
-  private static final int BYTE_BLOCK_SIZE = 1 << BYTE_BLOCK_SHIFT;
-  private static final int BYTE_BLOCK_MASK = BYTE_BLOCK_SIZE - 1;
-
-  static {
-    // Make sure DW can't ever write a term whose length
-    // cannot be encoded with short (because we use short[]
-    // to hold the length of each term).
-    assert IndexWriter.MAX_TERM_LENGTH < Short.MAX_VALUE;
-    assert BYTE_BLOCK_SIZE >= IndexWriter.MAX_TERM_LENGTH;
   }
 
   private final class FieldIndexReader extends FieldReader {
@@ -190,14 +161,21 @@ public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
     private final IndexInput in;
 
     private final long indexStart;
+    private final long termsStart;
+    private final long packedIndexStart;
+    private final long packedOffsetsStart;
 
     private final int numIndexTerms;
 
-    public FieldIndexReader(IndexInput in, FieldInfo fieldInfo, int numIndexTerms, long indexStart) throws IOException {
+    public FieldIndexReader(IndexInput in, FieldInfo fieldInfo, int numIndexTerms, long indexStart, long termsStart, long packedIndexStart,
+                            long packedOffsetsStart) throws IOException {
 
       this.fieldInfo = fieldInfo;
       this.in = in;
+      this.termsStart = termsStart;
       this.indexStart = indexStart;
+      this.packedIndexStart = packedIndexStart;
+      this.packedOffsetsStart = packedOffsetsStart;
       this.numIndexTerms = numIndexTerms;
 
       // We still create the indexReader when indexDivisor
@@ -210,6 +188,9 @@ public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
         }
 
         coreIndex = new CoreFieldIndex(indexStart,
+                                       termsStart,
+                                       packedIndexStart,
+                                       packedOffsetsStart,
                                        numIndexTerms);
       
       } else {
@@ -221,7 +202,7 @@ public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
 
     public void loadTermsIndex() throws IOException {
       if (coreIndex == null) {
-        coreIndex = new CoreFieldIndex(indexStart, numIndexTerms);
+        coreIndex = new CoreFieldIndex(indexStart, termsStart, packedIndexStart, packedOffsetsStart, numIndexTerms);
       }
     }
 
@@ -263,149 +244,114 @@ public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
 
     private final class CoreFieldIndex {
 
-      // TODO: used packed ints here
-      // Pointer into terms dict file that we are indexing
-      final long[] fileOffset;
+      final private long termBytesStart;
 
-      // TODO: used packed ints here
-      // For each term, points to start of term's bytes within
-      // block.
-      // TODO: wasteful that this is always long; many terms
-      // dict indexes obviously don't require so much address
-      // space; since we know up front during indexing how
-      // much space is needed we could pack this to the
-      // precise # bits
-      final long[] blockPointer;
-    
-      // TODO: used packed ints here: we know max term
-      // length; often its small
+      // offset into index termBytes
+      final PackedInts.Reader termOffsets;
 
-      // TODO: can we inline this w/ the bytes?  like
-      // DW.  vast majority of terms only need 1 byte, not 2
-
-      // Length of each term
-      final short[] termLength;
+      // index pointers into main terms dict
+      final PackedInts.Reader termsDictOffsets;
 
       final int numIndexTerms;
 
-      CoreFieldIndex(long indexStart, int numIndexTerms) throws IOException {
+      final long termsStart;
+
+      public CoreFieldIndex(long indexStart, long termsStart, long packedIndexStart, long packedOffsetsStart, int numIndexTerms) throws IOException {
+
+        this.termsStart = termsStart;
+        termBytesStart = termBytes.getPointer();
 
         IndexInput clone = (IndexInput) in.clone();
         clone.seek(indexStart);
 
-        if (indexDivisor == -1) {
-          // Special case: we are being loaded inside
-          // IndexWriter because a SegmentReader that at
-          // first was opened for merging, is now being
-          // opened to perform deletes or for an NRT reader
-          this.numIndexTerms = numIndexTerms;
-        } else {
-          this.numIndexTerms = 1+(numIndexTerms-1) / indexDivisor;
-        }
+        // -1 is passed to mean "don't load term index", but
+        // if we are then later loaded it's overwritten with
+        // a real value
+        assert indexDivisor > 0;
+
+        this.numIndexTerms = 1+(numIndexTerms-1) / indexDivisor;
 
         assert this.numIndexTerms  > 0: "numIndexTerms=" + numIndexTerms + " indexDivisor=" + indexDivisor;
 
-        if (blocks == null) {
-          blocks = new byte[1][];
-          blocks[0] = new byte[BYTE_BLOCK_SIZE];
-        }
+        if (indexDivisor == 1) {
+          // Default (load all index terms) is fast -- slurp in the images from disk:
+          
+          try {
+            final long numTermBytes = packedIndexStart - indexStart;
+            termBytes.copy(clone, numTermBytes);
 
-        byte[] lastBlock = blocks[blockUpto];
-        int lastBlockOffset = blockOffset;
+            // records offsets into main terms dict file
+            termsDictOffsets = PackedInts.getReader(clone);
+            assert termsDictOffsets.size() == numIndexTerms;
 
-        fileOffset = new long[this.numIndexTerms];
-        blockPointer = new long[this.numIndexTerms];
-        termLength = new short[this.numIndexTerms];
-        
-        final byte[] skipBytes;
-        if (indexDivisor != 1) {
-          // only need skipBytes (below) if we are not
-          // loading all index terms
-          skipBytes = new byte[128];
+            // records offsets into byte[] term data
+            termOffsets = PackedInts.getReader(clone);
+            assert termOffsets.size() == 1+numIndexTerms;
+          } finally {
+            clone.close();
+          }
         } else {
-          skipBytes = null;
-        }
+          // Get packed iterators
+          final IndexInput clone1 = (IndexInput) in.clone();
+          final IndexInput clone2 = (IndexInput) in.clone();
 
-        int upto = 0;
-        long pointer = 0;
-      
-        for(int i=0;i<numIndexTerms;i++) {
-          final int start = clone.readVInt();
-          final int suffix = clone.readVInt();
-          final int thisTermLength = start + suffix;
+          try {
+            // Subsample the index terms
+            clone1.seek(packedIndexStart);
+            final PackedInts.ReaderIterator termsDictOffsetsIter = PackedInts.getReaderIterator(clone1);
 
-          assert thisTermLength <= BYTE_BLOCK_SIZE;
+            clone2.seek(packedOffsetsStart);
+            final PackedInts.ReaderIterator termOffsetsIter = PackedInts.getReaderIterator(clone2);
 
-          if (i%indexDivisor == 0) {
-            // Keeper
-            if (blockOffset + thisTermLength > BYTE_BLOCK_SIZE) {
-              // New block
-              final byte[] newBlock = new byte[BYTE_BLOCK_SIZE];
-              if (blocks.length == blockUpto+1) {
-                final int newSize = ArrayUtil.oversize(blockUpto+2, RamUsageEstimator.NUM_BYTES_OBJECT_REF);
-                final byte[][] newBlocks = new byte[newSize][];
-                System.arraycopy(blocks, 0, newBlocks, 0, blocks.length);
-                blocks = newBlocks;
-              }
-              blockUpto++;
-              blocks[blockUpto] = newBlock;
-              blockOffset = 0;
-            }
+            // TODO: often we can get by w/ fewer bits per
+            // value, below.. .but this'd be more complex:
+            // we'd have to try @ fewer bits and then grow
+            // if we overflowed it.
 
-            final byte[] block = blocks[blockUpto];
+            PackedInts.Mutable termsDictOffsetsM = PackedInts.getMutable(this.numIndexTerms, termsDictOffsetsIter.getBitsPerValue());
+            PackedInts.Mutable termOffsetsM = PackedInts.getMutable(this.numIndexTerms+1, termOffsetsIter.getBitsPerValue());
 
-            // Copy old prefix
-            assert lastBlock != null || start == 0;
-            assert block != null;
-            System.arraycopy(lastBlock, lastBlockOffset, block, blockOffset, start);
+            termsDictOffsets = termsDictOffsetsM;
+            termOffsets = termOffsetsM;
 
-            // Read new suffix
-            clone.readBytes(block, blockOffset+start, suffix);
+            int upto = 0;
 
-            // Advance file offset
-            pointer += clone.readVLong();
+            long lastTermOffset = 0;
+            long termOffsetUpto = 0;
 
-            assert thisTermLength < Short.MAX_VALUE;
+            while(upto < this.numIndexTerms) {
+              // main file offset copies straight over
+              termsDictOffsetsM.set(upto, termsDictOffsetsIter.next());
 
-            termLength[upto] = (short) thisTermLength;
-            fileOffset[upto] = pointer;
-            blockPointer[upto] = blockUpto * BYTE_BLOCK_SIZE + blockOffset;
+              termOffsetsM.set(upto, termOffsetUpto);
+              upto++;
 
-            /*
-            BytesRef tr = new BytesRef();
-            tr.bytes = blocks[blockUpto];
-            tr.offset = blockOffset;
-            tr.length = thisTermLength;
+              long termOffset = termOffsetsIter.next();
+              long nextTermOffset = termOffsetsIter.next();
+              final int numTermBytes = (int) (nextTermOffset - termOffset);
 
-            //System.out.println("    read index term=" + new String(blocks[blockUpto], blockOffset, thisTermLength, "UTF-8") + " this=" + this + " bytes=" + block + " (vs=" + blocks[blockUpto] + ") offset=" + blockOffset);
-            //System.out.println("    read index term=" + tr.toBytesString() + " this=" + this + " bytes=" + block + " (vs=" + blocks[blockUpto] + ") offset=" + blockOffset);
-            */
+              clone.seek(indexStart + termOffset);
+              assert indexStart + termOffset < clone.length() : "indexStart=" + indexStart + " termOffset=" + termOffset + " len=" + clone.length();
+              assert indexStart + termOffset + numTermBytes < clone.length();
 
-            lastBlock = block;
-            lastBlockOffset = blockOffset;
-            blockOffset += thisTermLength;
-            upto++;
-          } else {
-            // Skip bytes
-            int toSkip = suffix;
-            while(true) {
-              if (toSkip > skipBytes.length) {
-                clone.readBytes(skipBytes, 0, skipBytes.length);
-                toSkip -= skipBytes.length;
-              } else {
-                clone.readBytes(skipBytes, 0, toSkip);
-                break;
+              termBytes.copy(clone, numTermBytes);
+              termOffsetUpto += numTermBytes;
+
+              // skip terms:
+              termsDictOffsetsIter.next();
+              for(int i=0;i<indexDivisor-2;i++) {
+                termOffsetsIter.next();
+                termsDictOffsetsIter.next();
               }
             }
+            termOffsetsM.set(upto, termOffsetUpto);
 
-            // Advance file offset
-            pointer += clone.readVLong();
+          } finally {
+            clone1.close();
+            clone2.close();
+            clone.close();
           }
         }
-
-        clone.close();
-
-        assert upto == this.numIndexTerms;
 
         if (Codec.DEBUG) {
           System.out.println("  done read");
@@ -423,30 +369,28 @@ public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
       }
 
       private final void fillResult(int idx, TermsIndexResult result) {
-        final long loc = blockPointer[idx];
-        result.term.bytes = blocks[(int) (loc >> BYTE_BLOCK_SHIFT)];
-        result.term.offset = (int) (loc & BYTE_BLOCK_MASK);
-        result.term.length = termLength[idx];
+        final long offset = termOffsets.get(idx);
+        final int length = (int) (termOffsets.get(1+idx) - offset);
+        termBytes.fill(result.term, termBytesStart + offset, length);
         result.position = idx * totalIndexInterval;
-        result.offset = fileOffset[idx];
+        result.offset = termsStart + termsDictOffsets.get(idx);
       }
 
       public final void getIndexOffset(BytesRef term, TermsIndexResult result) throws IOException {
 
         if (Codec.DEBUG) {
-          System.out.println("getIndexOffset field=" + fieldInfo.name + " term=" + term + " indexLen = " + blockPointer.length + " numIndexTerms=" + fileOffset.length + " numIndexedTerms=" + fileOffset.length);
+          System.out.println("getIndexOffset field=" + fieldInfo.name + " term=" + term.utf8ToString());
         }
 
         int lo = 0;					  // binary search
-        int hi = fileOffset.length - 1;
+        int hi = numIndexTerms - 1;
 
         while (hi >= lo) {
           int mid = (lo + hi) >>> 1;
 
-          final long loc = blockPointer[mid];
-          result.term.bytes = blocks[(int) (loc >> BYTE_BLOCK_SHIFT)];
-          result.term.offset = (int) (loc & BYTE_BLOCK_MASK);
-          result.term.length = termLength[mid];
+          final long offset = termOffsets.get(mid);
+          final int length = (int) (termOffsets.get(1+mid) - offset);
+          termBytes.fill(result.term, termBytesStart + offset, length);
 
           int delta = termComp.compare(term, result.term);
           if (delta < 0) {
@@ -456,7 +400,7 @@ public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
           } else {
             assert mid >= 0;
             result.position = mid*totalIndexInterval;
-            result.offset = fileOffset[mid];
+            result.offset = termsStart + termsDictOffsets.get(mid);
             return;
           }
         }
@@ -465,13 +409,12 @@ public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
           hi = 0;
         }
 
-        final long loc = blockPointer[hi];
-        result.term.bytes = blocks[(int) (loc >> BYTE_BLOCK_SHIFT)];
-        result.term.offset = (int) (loc & BYTE_BLOCK_MASK);
-        result.term.length = termLength[hi];
+        final long offset = termOffsets.get(hi);
+        final int length = (int) (termOffsets.get(1+hi) - offset);
+        termBytes.fill(result.term, termBytesStart + offset, length);
 
         result.position = hi*totalIndexInterval;
-        result.offset = fileOffset[hi];
+        result.offset = termsStart + termsDictOffsets.get(hi);
       }
 
       public final void getIndexOffset(long ord, TermsIndexResult result) throws IOException {
@@ -488,6 +431,7 @@ public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
     if (!indexLoaded) {
 
       this.indexDivisor = indexDivisor;
+      this.totalIndexInterval = indexInterval * indexDivisor;
 
       // mxx
       if (Codec.DEBUG) {
@@ -498,10 +442,10 @@ public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
       while(it.hasNext()) {
         it.next().loadTermsIndex();
       }
-      trimByteBlock();
 
       indexLoaded = true;
       in.close();
+      termBytes.finish();
     }
   }
 

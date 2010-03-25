@@ -372,7 +372,7 @@ public class StandardTermsDictReader extends FieldsProducer {
           indexReader.getIndexOffset(term, indexResult);
 
           if (Codec.DEBUG) {
-            Codec.debug(" index pos=" + indexResult.position + " termFP=" + indexResult.offset + " term=" + indexResult.term + " this=" + this);
+            Codec.debug(" index pos=" + indexResult.position + " termFP=" + indexResult.offset + " term=" + indexResult.term.utf8ToString() + " this=" + this);
           }
 
           in.seek(indexResult.offset);
@@ -507,6 +507,9 @@ public class StandardTermsDictReader extends FieldsProducer {
         }
         
         if (state.ord >= numTerms-1) {
+          if (Codec.DEBUG) {
+            Codec.debug("  return null ord=" + state.ord + " vs numTerms-1=" + (numTerms-1));
+          }
           return null;
         }
 
@@ -514,7 +517,7 @@ public class StandardTermsDictReader extends FieldsProducer {
         state.docFreq = in.readVInt();
 
         if (Codec.DEBUG) {
-          Codec.debug("  text=" + bytesReader.term + " freq=" + state.docFreq + " tis=" + in);
+          Codec.debug("  text=" + bytesReader.term.utf8ToString() + " freq=" + state.docFreq + " tis=" + in);
         }
 
         // TODO: would be cleaner, but space-wasting, to

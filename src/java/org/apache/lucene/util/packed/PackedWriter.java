@@ -45,7 +45,7 @@ class PackedWriter extends PackedInts.Writer {
     pendingBitPos = 64;
     masks = new long[bitsPerValue - 1];
 
-    int v = 1;
+    long v = 1;
     for (int i = 0; i < bitsPerValue - 1; i++) {
       v *= 2;
       masks[i] = v - 1;
@@ -104,7 +104,6 @@ class PackedWriter extends PackedInts.Writer {
     if (pendingBitPos != 64) {
       out.writeLong(pending);
     }
-    out.writeLong(0L); // Dummy to compensate for not using conditionals
   }
 
   public String toString() {

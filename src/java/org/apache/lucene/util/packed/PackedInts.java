@@ -17,6 +17,8 @@ package org.apache.lucene.util.packed;
  * limitations under the License.
  */
 
+import java.io.Closeable;
+
 import org.apache.lucene.store.IndexOutput;
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.util.CodecUtil;
@@ -61,6 +63,18 @@ public class PackedInts {
     /**
      * @return the number of values.
      */
+    int size();
+  }
+
+  /**
+   * Run-once iterator interface, to decode previously saved PackedInts.
+   */
+  public static interface ReaderIterator extends Closeable {
+    /** Returns next value */
+    long next() throws IOException;
+    /** Returns number of bits per value */
+    int getBitsPerValue();
+    /** Returns number of values */
     int size();
   }
 
@@ -167,6 +181,22 @@ public class PackedInts {
   }
 
   /**
+   * Retrieve PackedInts as a {@link ReaderIterator}
+   * @param in positioned at the beginning of a stored packed int structure.
+   * @return an iterator to access the values
+   * @throws IOException if the structure could not be retrieved.
+   * @lucene.internal
+   */
+  public static ReaderIterator getReaderIterator(IndexInput in) throws IOException {
+    CodecUtil.checkHeader(in, CODEC_NAME, VERSION_START);
+    final int bitsPerValue = in.readVInt();
+    assert bitsPerValue > 0 && bitsPerValue <= 64: "bitsPerValue=" + bitsPerValue;
+    final int valueCount = in.readVInt();
+
+    return new PackedReaderIterator(bitsPerValue, valueCount, in);
+  }
+
+  /**
    * Create a packed integer array with the given amount of values initialized
    * to 0. the valueCount and the bitsPerValue cannot be changed after creation.
    * All Mutables known by this factory are kept fully in RAM.
@@ -228,7 +258,7 @@ public class PackedInts {
     } if (maxValue > 0x1FFFFFFFFFFFFFFFL) {
       return 62;
     }
-    return (int) Math.ceil(Math.log(1+maxValue)/Math.log(2.0));
+    return Math.max(1, (int) Math.ceil(Math.log(1+maxValue)/Math.log(2.0)));
   }
 
   /**

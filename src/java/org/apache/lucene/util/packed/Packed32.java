@@ -129,6 +129,7 @@ class Packed32 extends PackedInts.ReaderImpl implements PackedInts.Mutable {
     super(valueCount, bitsPerValue);
     int size = size(bitsPerValue, valueCount);
     blocks = new int[size + 1]; // +1 due to non-conditional tricks
+    // TODO: find a faster way to bulk-read ints...
     for(int i = 0 ; i < size ; i++) {
       blocks[i] = in.readInt();
     }

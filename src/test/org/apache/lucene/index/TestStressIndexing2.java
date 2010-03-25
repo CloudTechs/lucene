@@ -296,7 +296,13 @@ public class TestStressIndexing2 extends MultiCodecTestCase {
       assertNull(MultiFields.getFields(r2));
       return;
     }
-    final TermsEnum termsEnum = f1.terms(idField).iterator();
+    final Terms terms1 = f1.terms(idField);
+    if (terms1 == null) {
+      assertTrue(MultiFields.getFields(r2) == null ||
+                 MultiFields.getFields(r2).terms(idField) == null);
+      return;
+    }
+    final TermsEnum termsEnum = terms1.iterator();
 
     final Bits delDocs1 = MultiFields.getDeletedDocs(r1);
     final Bits delDocs2 = MultiFields.getDeletedDocs(r2);
