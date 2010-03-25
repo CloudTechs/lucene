@@ -566,8 +566,6 @@ public final class SegmentInfo {
     output.writeByte(isCompoundFile);
     output.writeInt(delCount);
     output.writeByte((byte) (hasProx ? 1:0));
-    // mxx
-    //System.out.println(Thread.currentThread().getName() + ": si.write hasProx=" + hasProx + " seg=" + name);
     output.writeString(codec.name);
     output.writeStringStringMap(diagnostics);
   }

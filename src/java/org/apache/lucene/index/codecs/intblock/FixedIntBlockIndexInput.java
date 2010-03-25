@@ -142,11 +142,6 @@ public abstract class FixedIntBlockIndexInput extends IntIndexInput {
 
       return bulkResult;
     }
-
-    @Override
-    public String descFilePointer() {
-      return in.getFilePointer() + ":" + upto;
-    }
   }
 
   private class Index extends IntIndexInput.Index {

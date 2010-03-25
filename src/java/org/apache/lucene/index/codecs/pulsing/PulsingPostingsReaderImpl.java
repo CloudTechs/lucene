@@ -22,7 +22,6 @@ import java.io.IOException;
 import org.apache.lucene.index.DocsEnum;
 import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.DocsAndPositionsEnum;
-import org.apache.lucene.index.codecs.Codec;
 import org.apache.lucene.index.codecs.standard.TermState;
 import org.apache.lucene.index.codecs.standard.StandardPostingsReader;
 import org.apache.lucene.index.codecs.pulsing.PulsingPostingsWriterImpl.Document;
@@ -102,17 +101,9 @@ public class PulsingPostingsReaderImpl extends StandardPostingsReader {
 
     PulsingTermState termState = (PulsingTermState) _termState;
 
-    if (Codec.DEBUG) {
-      System.out.println("pulsr.readTerm docFreq=" + termState.docFreq + " indexTerm=" + isIndexTerm);
-    }
-
     termState.pendingIndexTerm |= isIndexTerm;
 
     if (termState.docFreq <= maxPulsingDocFreq) {
-
-      if (Codec.DEBUG) {
-        System.out.println("  pulsed");
-      }
 
       // Inlined into terms dict -- read everything in
 
@@ -136,9 +127,6 @@ public class PulsingPostingsReaderImpl extends StandardPostingsReader {
         if (fieldInfo.omitTermFreqAndPositions) {
           docID += code;
           doc.numPositions = 1;
-          if (Codec.DEBUG) {
-            System.out.println("  doc=" + docID);
-          }
         } else {
           docID += code>>>1;
           if ((code & 1) != 0) {
@@ -147,10 +135,6 @@ public class PulsingPostingsReaderImpl extends StandardPostingsReader {
             doc.numPositions = termsIn.readVInt();
           }
             
-          if (Codec.DEBUG) {
-            System.out.println("  doc=" + docID + " numPos=" + doc.numPositions);
-          }
-
           if (doc.numPositions > doc.positions.length) {
             doc.reallocPositions(doc.numPositions);
           }
@@ -188,9 +172,6 @@ public class PulsingPostingsReaderImpl extends StandardPostingsReader {
         doc.docID = docID;
       }
     } else {
-      if (Codec.DEBUG) {
-        System.out.println("  not pulsed pass isIndex=" + termState.pendingIndexTerm);
-      }
       termState.wrappedTermState.docFreq = termState.docFreq;
       wrappedPostingsReader.readTerm(termsIn, fieldInfo, termState.wrappedTermState, termState.pendingIndexTerm);
       termState.pendingIndexTerm = false;

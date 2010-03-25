@@ -39,9 +39,6 @@ public abstract class IntIndexInput implements Closeable {
   // TODO: -- can we simplify this?
   public abstract static class Index {
 
-    // nocommit -- debugging
-    public String desc;
-
     public abstract void read(IndexInput indexIn, boolean absolute) throws IOException;
 
     /** Seeks primary stream to the last read offset */
@@ -74,8 +71,5 @@ public abstract class IntIndexInput implements Closeable {
       bulkResult.length = count;
       return bulkResult;
     }
-
-    // nocommit -- debugging
-    public abstract String descFilePointer() throws IOException;
   }
 }

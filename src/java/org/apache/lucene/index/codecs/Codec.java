@@ -28,8 +28,6 @@ import org.apache.lucene.store.Directory;
 /** @lucene.experimental */
 public abstract class Codec {
 
-  public static boolean DEBUG = false;
-
   /** Unique name that's used to retrieve this codec when
    *  reading the index */
   public String name;

@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.lucene.store.IndexOutput;
-import org.apache.lucene.index.codecs.Codec;
 import org.apache.lucene.index.codecs.MultiLevelSkipListWriter;
 
 
@@ -76,12 +75,6 @@ public class DefaultSkipListWriter extends MultiLevelSkipListWriter {
     Arrays.fill(lastSkipFreqPointer, freqOutput.getFilePointer());
     if (proxOutput != null)
       Arrays.fill(lastSkipProxPointer, proxOutput.getFilePointer());
-    if (Codec.DEBUG) {
-      if (proxOutput != null)
-        System.out.println("    skip writer base freqFP=" + freqOutput.getFilePointer() + " proxFP=" + proxOutput.getFilePointer());
-      else
-        System.out.println("    skip writer base freqFP=" + freqOutput.getFilePointer());
-    }
   }
   
   @Override
@@ -127,7 +120,6 @@ public class DefaultSkipListWriter extends MultiLevelSkipListWriter {
     skipBuffer.writeVInt((int) (curProxPointer - lastSkipProxPointer[level]));
 
     lastSkipDoc[level] = curDoc;
-    //System.out.println("write doc at level " + level + ": " + curDoc);
     
     lastSkipFreqPointer[level] = curFreqPointer;
     lastSkipProxPointer[level] = curProxPointer;

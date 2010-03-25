@@ -23,7 +23,6 @@ import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.IndexFileNames;
 import org.apache.lucene.index.SegmentWriteState;
 import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.index.codecs.Codec;
 import org.apache.lucene.util.CodecUtil;
 import org.apache.lucene.util.ArrayUtil;
 import org.apache.lucene.util.packed.PackedInts;
@@ -46,12 +45,9 @@ public class SimpleStandardTermsIndexWriter extends StandardTermsIndexWriter {
   private final FieldInfos fieldInfos; // unread
   private IndexOutput termsOut;
 
-  final private String segment;
-
   public SimpleStandardTermsIndexWriter(SegmentWriteState state) throws IOException {
     final String indexFileName = IndexFileNames.segmentFileName(state.segmentName, StandardCodec.TERMS_INDEX_EXTENSION);
     state.flushedFiles.add(indexFileName);
-    this.segment = state.segmentName;
     termIndexInterval = state.termIndexInterval;
     out = state.directory.createOutput(indexFileName);
     CodecUtil.writeHeader(out, CODEC_NAME, VERSION_CURRENT);
@@ -103,10 +99,6 @@ public class SimpleStandardTermsIndexWriter extends StandardTermsIndexWriter {
     public boolean checkIndexTerm(BytesRef text, int docFreq) throws IOException {
       // First term is first indexed term:
       if (0 == (numTerms++ % termIndexInterval)) {
-
-        if (Codec.DEBUG) {
-          Codec.debug("sstiw.checkIndexTerm write index field=" + fieldInfo.name + " term=" + text.utf8ToString() + " numIndexTerms=" + numIndexTerms + " outFP=" + out.getFilePointer());
-        }
 
         // write full bytes
         out.writeBytes(text.bytes, text.offset, text.length);
@@ -175,17 +167,11 @@ public class SimpleStandardTermsIndexWriter extends StandardTermsIndexWriter {
   @Override
   public void close() throws IOException {
     final long dirStart = out.getFilePointer();
-    if (Codec.DEBUG) {
-      System.out.println("sstiw.close seg=" + segment + " dirStart=" + dirStart);
-    }
     final int fieldCount = fields.size();
 
     out.writeInt(fieldCount);
     for(int i=0;i<fieldCount;i++) {
       SimpleFieldWriter field = fields.get(i);
-      if (Codec.DEBUG) {
-        System.out.println("sstiw.close save field=" + field.fieldInfo.name + " numIndexTerms=" + field.numIndexTerms);
-      }
       out.writeInt(field.fieldInfo.number);
       out.writeInt(field.numIndexTerms);
       out.writeLong(field.termsStart);
@@ -195,9 +181,6 @@ public class SimpleStandardTermsIndexWriter extends StandardTermsIndexWriter {
     }
     out.seek(CodecUtil.headerLength(CODEC_NAME));
     out.writeLong(dirStart);
-    if (Codec.DEBUG) {
-      System.out.println(" writeDirStart " + dirStart + " @ " + CodecUtil.headerLength(CODEC_NAME));
-    }
     out.close();
   }
 }

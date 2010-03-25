@@ -25,7 +25,6 @@ import org.apache.lucene.index.SegmentInfo;
 import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.DocsEnum;
 import org.apache.lucene.index.DocsAndPositionsEnum;
-import org.apache.lucene.index.codecs.Codec;
 import org.apache.lucene.index.IndexFileNames;
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.util.Bits;
@@ -130,18 +129,10 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
 
     final DocTermState docTermState = (DocTermState) termState;
 
-    if (Codec.DEBUG) {
-      Codec.debug("  sdr.readTerm tis.fp=" + termsIn.getFilePointer() + " df=" + termState.docFreq + " isIndex?=" + isIndexTerm + " tis=" + termsIn);
-    }
-
     if (isIndexTerm) {
       docTermState.freqOffset = termsIn.readVLong();
     } else {
       docTermState.freqOffset += termsIn.readVLong();
-    }
-
-    if (Codec.DEBUG) {
-      Codec.debug("    frq.fp=" + docTermState.freqOffset + " vs len=" + freqIn.length());
     }
 
     if (docTermState.docFreq >= skipInterval) {
@@ -205,16 +196,10 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
     DefaultSkipListReader skipper;
 
     public SegmentDocsEnum(IndexInput freqIn) throws IOException {
-      if (Codec.DEBUG) {
-        System.out.println("new docs enum");
-      }
       this.freqIn = (IndexInput) freqIn.clone();
     }
 
     public SegmentDocsEnum reset(FieldInfo fieldInfo, DocTermState termState, Bits skipDocs) throws IOException {
-      if (Codec.DEBUG) {
-        System.out.println("[" + desc + "] dr.reset freqIn seek " + termState.freqOffset + " docCount=" + termState.docFreq);
-      }
       omitTF = fieldInfo.omitTermFreqAndPositions;
       if (omitTF) {
         freq = 1;
@@ -239,10 +224,6 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
 
     @Override
     public int nextDoc() throws IOException {
-      if (Codec.DEBUG) {
-        Codec.debug("sdr.next [" + desc + "] ord=" + ord + " vs df=" + limit + " freq.fp=" + freqIn.getFilePointer() + " + has skip docs=" + (skipDocs != null));
-      }
-
       while(true) {
         if (ord == limit) {
           return doc = NO_MORE_DOCS;
@@ -252,9 +233,6 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
 
         // Decode next doc/freq pair
         final int code = freqIn.readVInt();
-        if (Codec.DEBUG) {
-          System.out.println("  read code=" + code);
-        }
         if (omitTF) {
           doc += code;
         } else {
@@ -268,13 +246,7 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
 
         if (skipDocs == null || !skipDocs.get(doc)) {
           break;
-        } else if (Codec.DEBUG) {
-          System.out.println("  doc=" + doc + " is skipped");
         }
-      }
-
-      if (Codec.DEBUG) {
-        System.out.println("  result doc=" + doc + " freq=" + freq);
       }
 
       return doc;
@@ -282,9 +254,7 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
 
     @Override
     public int read() throws IOException {
-      if (Codec.DEBUG) {
-        Codec.debug("sdr.bulk read: ord=" + ord + " df=" + limit + " omitTF=" + omitTF + " ord=" + ord + " of " + limit + " freq.fp=" + freqIn.getFilePointer(), desc);
-      }
+
       final int[] docs = bulkResult.docs.ints;
       final int[] freqs = bulkResult.freqs.ints;
       int i = 0;
@@ -305,19 +275,12 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
         }
 
         if (skipDocs == null || !skipDocs.get(doc)) {
-          if (Codec.DEBUG) {
-            Codec.debug("  " + i + ": doc=" + doc + " freq=" + freq, desc);
-          }
           docs[i] = doc;
           freqs[i] = freq;
           ++i;
         }
       }
       
-      if (Codec.DEBUG) {
-        System.out.println("  return " + i);
-      }
-
       return i;
     }
 
@@ -336,10 +299,6 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
 
       // TODO: jump right to next() if target is < X away
       // from where we are now?
-
-      if (Codec.DEBUG) {
-        System.out.println("dr [" + desc + "]: skip to target=" + target);
-      }
 
       if (skipOffset > 0) {
 
@@ -361,10 +320,6 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
                        freqOffset, 0,
                        limit, storePayloads);
 
-          if (Codec.DEBUG) {
-            System.out.println("    skipper init  skipFP=" + (freqOffset+skipOffset) + " freqFP=" + freqOffset);
-          }
-
           skipped = true;
         }
 
@@ -376,16 +331,7 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
           ord = newOrd;
           doc = skipper.getDoc();
           freqIn.seek(skipper.getFreqPointer());
-
-          if (Codec.DEBUG) {
-            System.out.println("dr [" + desc + "]: skipper moved to newOrd=" + newOrd + " freqFP=" + skipper.getFreqPointer() + " doc=" + doc + "; now scan...");
-          }
-
-        } else if (Codec.DEBUG) {
-          System.out.println("  no skipping to be done");
         }
-      } else if (Codec.DEBUG) {
-        System.out.println("  no skip data (#docs is too low)");
       }
         
       // scan for the rest:
@@ -426,17 +372,11 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
     private long lazyProxPointer;
 
     public SegmentDocsAndPositionsEnum(IndexInput freqIn, IndexInput proxIn) throws IOException {
-      if (Codec.DEBUG) {
-        System.out.println("new docs enum");
-      }
       this.freqIn = (IndexInput) freqIn.clone();
       this.proxIn = (IndexInput) proxIn.clone();
     }
 
     public SegmentDocsAndPositionsEnum reset(FieldInfo fieldInfo, DocTermState termState, Bits skipDocs) throws IOException {
-      if (Codec.DEBUG) {
-        System.out.println("[" + desc + "] dr.init freqIn seek freq.fp=" + termState.freqOffset + " prox.fp=" + termState.proxOffset + " docCount=" + termState.docFreq);
-      }
       assert !fieldInfo.omitTermFreqAndPositions;
       storePayloads = fieldInfo.storePayloads;
       if (storePayloads && payload == null) {
@@ -470,10 +410,6 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
 
     @Override
     public int nextDoc() throws IOException {
-      if (Codec.DEBUG) {
-        Codec.debug("sdr.next [" + desc + "] ord=" + ord + " vs df=" + limit + " freq.fp=" + freqIn.getFilePointer() + " + has skip docs=" + (skipDocs != null));
-      }
-
       while(true) {
         if (ord == limit) {
           return doc = NO_MORE_DOCS;
@@ -483,9 +419,7 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
 
         // Decode next doc/freq pair
         final int code = freqIn.readVInt();
-        if (Codec.DEBUG) {
-          System.out.println("  read code=" + code);
-        }
+
         doc += code >>> 1;              // shift off low bit
         if ((code & 1) != 0) {          // if low bit is set
           freq = 1;                     // freq is one
@@ -496,14 +430,9 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
 
         if (skipDocs == null || !skipDocs.get(doc)) {
           break;
-        } else if (Codec.DEBUG) {
-          System.out.println("  doc=" + doc + " is skipped");
         }
       }
 
-      if (Codec.DEBUG) {
-        System.out.println("  result doc=" + doc + " freq=" + freq);
-      }
       position = 0;
 
       return doc;
@@ -525,10 +454,6 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
       // TODO: jump right to next() if target is < X away
       // from where we are now?
 
-      if (Codec.DEBUG) {
-        System.out.println("dr [" + desc + "]: skip to target=" + target);
-      }
-
       if (skipOffset > 0) {
 
         // There are enough docs in the posting to have
@@ -549,10 +474,6 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
                        freqOffset, proxOffset,
                        limit, storePayloads);
 
-          if (Codec.DEBUG) {
-            Codec.debug("    skip reader base freqFP=" + (freqOffset+skipOffset) + " freqFP=" + freqOffset + " prox.fp=" + proxOffset);
-          }
-
           skipped = true;
         }
 
@@ -568,16 +489,7 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
           position = 0;
           payloadPending = false;
           payloadLength = skipper.getPayloadLength();
-
-          if (Codec.DEBUG) {
-            Codec.debug("dr [" + desc + "]: skipper moved to newOrd=" + newOrd + " freq.fp=" + skipper.getFreqPointer() + " prox.fp=" + skipper.getProxPointer() + " doc=" + doc);
-          }
-
-        } else if (Codec.DEBUG) {
-          System.out.println("  no skipping to be done");
         }
-      } else if (Codec.DEBUG) {
-        System.out.println("  no skip data (#docs is too low)");
       }
         
       // Now, linear scan for the rest:
@@ -595,25 +507,14 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
         lazyProxPointer = -1;
       }
       
-      if (Codec.DEBUG) {
-        System.out.println("nextPos [" + desc + "] payloadPending=" + payloadPending + " payloadLen=" + payloadLength + " posPendingCount=" + posPendingCount + " freq=" + freq);
-      }
-
       if (payloadPending && payloadLength > 0) {
         // payload of last position as never retrieved -- skip it
-        if (Codec.DEBUG) {
-          System.out.println("      skip payload len=" + payloadLength);
-        }
         proxIn.seek(proxIn.getFilePointer() + payloadLength);
         payloadPending = false;
       }
 
       // scan over any docs that were iterated without their positions
       while(posPendingCount > freq) {
-
-        if (Codec.DEBUG) {
-          System.out.println("      skip position");
-        }
 
         final int code = proxIn.readVInt();
 
@@ -622,15 +523,9 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
             // new payload length
             payloadLength = proxIn.readVInt();
             assert payloadLength >= 0;
-            if (Codec.DEBUG) {
-              System.out.println("        new payloadLen=" + payloadLength);
-            }
           }
           assert payloadLength != -1;
           proxIn.seek(proxIn.getFilePointer() + payloadLength);
-          if (Codec.DEBUG) {
-            System.out.println("        skip payloadLen=" + payloadLength + " bytes");
-          }
         }
 
         posPendingCount--;
@@ -643,9 +538,6 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
 
         if (payloadPending && payloadLength > 0) {
           // payload wasn't retrieved for last position
-          if (Codec.DEBUG) {
-            System.out.println("      payload pending: skip " + payloadLength + " bytes");
-          }
           proxIn.seek(proxIn.getFilePointer()+payloadLength);
         }
 
@@ -654,9 +546,6 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
           // new payload length
           payloadLength = proxIn.readVInt();
           assert payloadLength >= 0;
-          if (Codec.DEBUG) {
-            System.out.println("      new payloadLen=" + payloadLength);
-          }
         }
         assert payloadLength != -1;
           
@@ -670,9 +559,6 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
 
       assert posPendingCount >= 0: "nextPosition() was called too many times (more than freq() times) posPendingCount=" + posPendingCount;
 
-      if (Codec.DEBUG) {
-        System.out.println("   proxFP=" + proxIn.getFilePointer() + " return pos=" + position);
-      }
       return position;
     }
 
@@ -688,9 +574,6 @@ public class StandardPostingsReaderImpl extends StandardPostingsReader {
     public BytesRef getPayload() throws IOException {
       assert lazyProxPointer == -1;
       assert posPendingCount < freq;
-      if (Codec.DEBUG) {
-        System.out.println("      read payload: " + payloadLength);
-      }
       if (!payloadPending) {
         throw new IOException("Either no payload exists at this term position or an attempt was made to load it more than once.");
       }

@@ -52,9 +52,6 @@ final class DeltaBytesWriter {
     }
 
     final int suffix = length - start;
-    // mxx
-    //System.out.println(Thread.currentThread().getName() + ":  dbw start=" + start + " suffix=" + suffix + " outFP=" + out.getFilePointer());
-
     out.writeVInt(start);                       // prefix
     out.writeVInt(suffix);                      // suffix
     out.writeBytes(bytes, upto, suffix);

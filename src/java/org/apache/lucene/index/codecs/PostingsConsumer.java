@@ -30,9 +30,6 @@ import org.apache.lucene.util.BytesRef;
 
 public abstract class PostingsConsumer {
 
-  // nocommit -- debugging
-  public String desc;
-
   /** Adds a new doc in this term.  Return null if this
    *  consumer doesn't need to see the positions for this
    *  doc. */

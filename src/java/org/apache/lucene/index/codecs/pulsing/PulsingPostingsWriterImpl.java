@@ -21,7 +21,6 @@ import java.io.IOException;
 
 import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.util.CodecUtil;
-import org.apache.lucene.index.codecs.Codec;
 import org.apache.lucene.index.codecs.standard.StandardPostingsWriter;
 import org.apache.lucene.store.IndexOutput;
 import org.apache.lucene.util.ArrayUtil;
@@ -52,9 +51,6 @@ public final class PulsingPostingsWriterImpl extends StandardPostingsWriter {
 
   // Starts a new term
   FieldInfo fieldInfo;
-
-  // nocommit -- debugging
-  String desc;
 
   /** @lucene.experimental */
   public static class Document {
@@ -163,25 +159,15 @@ public final class PulsingPostingsWriterImpl extends StandardPostingsWriter {
 
     assert docID >= 0: "got docID=" + docID;
         
-    if (Codec.DEBUG) {
-      System.out.println("PW.addDoc: docID=" + docID + " pendingDocCount=" + pendingDocCount + " vs " + pendingDocs.length + " pulsed=" + pulsed);
-    }
-
     if (!pulsed && pendingDocCount == pendingDocs.length) {
       
       // OK we just crossed the threshold, this term should
       // now be written with our wrapped codec:
       wrappedPostingsWriter.startTerm();
       
-      if (Codec.DEBUG) {
-        System.out.println("  now flush buffer");
-      }
-
       // Flush all buffered docs
       for(int i=0;i<pendingDocCount;i++) {
         final Document doc = pendingDocs[i];
-        if (Codec.DEBUG)
-          System.out.println("  docID=" + doc.docID);
 
         wrappedPostingsWriter.startDoc(doc.docID, doc.termDocFreq);
 
@@ -256,10 +242,6 @@ public final class PulsingPostingsWriterImpl extends StandardPostingsWriter {
   public void finishTerm(int docCount, boolean isIndexTerm) throws IOException {
 
     assert docCount > 0;
-
-    if (Codec.DEBUG) {
-      System.out.println("PW: finishTerm pendingDocCount=" + pendingDocCount);
-    }
 
     pendingIsIndexTerm |= isIndexTerm;
 

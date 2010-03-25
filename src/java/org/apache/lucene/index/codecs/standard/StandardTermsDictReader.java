@@ -33,7 +33,6 @@ import org.apache.lucene.index.IndexFileNames;
 import org.apache.lucene.index.SegmentInfo;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
-import org.apache.lucene.index.codecs.Codec;
 import org.apache.lucene.index.codecs.FieldsProducer;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.IndexInput;
@@ -64,8 +63,6 @@ public class StandardTermsDictReader extends FieldsProducer {
   private final StandardPostingsReader postingsReader;
 
   private final TreeMap<String,FieldReader> fields = new TreeMap<String,FieldReader>();
-
-  private final String segment;
 
   // Comparator that orders our terms
   private final Comparator<BytesRef> termComp;
@@ -103,7 +100,6 @@ public class StandardTermsDictReader extends FieldsProducer {
                                  Comparator<BytesRef> termComp, int termsCacheSize)
     throws IOException {
     
-    this.segment = segment;
     this.postingsReader = postingsReader;
     termsCache = new DoubleBarrelLRUCache<FieldAndTerm,TermState>(termsCacheSize);
 
@@ -126,19 +122,12 @@ public class StandardTermsDictReader extends FieldsProducer {
 
       final int numFields = in.readInt();
 
-      if (Codec.DEBUG) {
-        System.out.println(Thread.currentThread().getName() + ": stdr create seg=" + segment + " numFields=" + numFields + " hasProx?=" + fieldInfos.hasProx());
-      }
-
       for(int i=0;i<numFields;i++) {
         final int field = in.readInt();
         final long numTerms = in.readLong();
         final long termsStartPointer = in.readLong();
         final StandardTermsIndexReader.FieldReader fieldIndexReader;
         final FieldInfo fieldInfo = fieldInfos.fieldInfo(field);
-        if (Codec.DEBUG) {
-          System.out.println("  stdr: load field=" + fieldInfo.name + " numTerms=" + numTerms);
-        }
         fieldIndexReader = indexReader.getField(fieldInfo);
         if (numTerms > 0) {
           assert !fields.containsKey(fieldInfo.name);
@@ -204,9 +193,6 @@ public class StandardTermsDictReader extends FieldsProducer {
 
   @Override
   public Terms terms(String field) throws IOException {
-    if (Codec.DEBUG) {
-      System.out.println("stdr.terms field=" + field + " found=" + fields.get(field));
-    }
     return fields.get(field);
   }
 
@@ -221,15 +207,8 @@ public class StandardTermsDictReader extends FieldsProducer {
 
     @Override
     public String next() {
-      if (Codec.DEBUG) {
-        System.out.println("stdr.tfe.next seg=" + segment);
-        //new Throwable().printStackTrace(System.out);
-      }
       if (it.hasNext()) {
         current = it.next();
-        if (Codec.DEBUG) {
-          System.out.println("  hasNext set current field=" + current.fieldInfo.name);
-        }
         return current.fieldInfo.name;
       } else {
         current = null;
@@ -286,9 +265,6 @@ public class StandardTermsDictReader extends FieldsProducer {
       private final FieldAndTerm fieldTerm = new FieldAndTerm();
 
       SegmentTermsEnum() throws IOException {
-        if (Codec.DEBUG) {
-          System.out.println("tdr " + this + ": CREATE TermsEnum field=" + fieldInfo.name + " startPos=" + termsStartPointer + " seg=" + segment);
-        }
         in = (IndexInput) StandardTermsDictReader.this.in.clone();
         in.seek(termsStartPointer);
         bytesReader = new DeltaBytesReader(in);
@@ -308,12 +284,6 @@ public class StandardTermsDictReader extends FieldsProducer {
        *  was found, SeekStatus.END if we hit EOF */
       @Override
       public SeekStatus seek(BytesRef term) throws IOException {
-
-        if (Codec.DEBUG) {
-          Codec.debug("stdr.seek(text=" + fieldInfo.name + ":" + term + ") seg=" + segment);
-          new Throwable().printStackTrace(System.out);
-        }
-
         // Check cache
         fieldTerm.term = term;
         TermState cachedState = termsCache.get(fieldTerm);
@@ -325,15 +295,7 @@ public class StandardTermsDictReader extends FieldsProducer {
           seekPending = true;
           bytesReader.term.copy(term);
 
-          if (Codec.DEBUG) {
-            Codec.debug("  cache hit!  term=" + bytesReader.term + " " + cachedState);
-          }
-
           return SeekStatus.FOUND;
-        }
-
-        if (Codec.DEBUG) {
-          Codec.debug("  cache miss!");
         }
 
         boolean doSeek = true;
@@ -345,10 +307,6 @@ public class StandardTermsDictReader extends FieldsProducer {
 
           if (cmp == 0) {
             // already at the requested term
-            if (Codec.DEBUG) {
-              Codec.debug("  already here!");
-            }
-
             return SeekStatus.FOUND;
           }
 
@@ -371,10 +329,6 @@ public class StandardTermsDictReader extends FieldsProducer {
           // our text:
           indexReader.getIndexOffset(term, indexResult);
 
-          if (Codec.DEBUG) {
-            Codec.debug(" index pos=" + indexResult.position + " termFP=" + indexResult.offset + " term=" + indexResult.term.utf8ToString() + " this=" + this);
-          }
-
           in.seek(indexResult.offset);
           seekPending = false;
 
@@ -390,24 +344,14 @@ public class StandardTermsDictReader extends FieldsProducer {
           assert state.ord >= -1: "ord=" + state.ord;
 
           startOrd = indexResult.position;
-
-          if (Codec.DEBUG) {
-            Codec.debug("  set ord=" + state.ord);
-          }
         } else {
           startOrd = -1;
-          if (Codec.DEBUG) {
-            Codec.debug(": use scanning only (no seek)");
-          }
         }
 
         // Now scan:
         while(next() != null) {
           final int cmp = termComp.compare(bytesReader.term, term);
           if (cmp == 0) {
-            if (Codec.DEBUG) {
-              Codec.debug("  seek done found term=" + bytesReader.term);
-            }
 
             if (doSeek) {
               // Store in cache
@@ -416,19 +360,10 @@ public class StandardTermsDictReader extends FieldsProducer {
               // this is fp after current term
               cachedState.filePointer = in.getFilePointer();
               termsCache.put(entryKey, cachedState);
-              if (Codec.DEBUG) {
-                Codec.debug("  save to cache  term=" + fieldTerm.term + " " + cachedState);
-              }
-            }
-            if (Codec.DEBUG) {
-              Codec.debug("  found term=" + fieldTerm.term);
             }
               
             return SeekStatus.FOUND;
           } else if (cmp > 0) {
-            if (Codec.DEBUG) {
-              Codec.debug("  seek done did not find term=" + term + " found instead: " + bytesReader.term);
-            }
             return SeekStatus.NOT_FOUND;
           }
 
@@ -438,10 +373,6 @@ public class StandardTermsDictReader extends FieldsProducer {
           // cross another index term (besides the first
           // one) while we are scanning:
           assert state.ord == startOrd || !indexReader.isIndexTerm(state.ord, state.docFreq, true);
-        }
-
-        if (Codec.DEBUG) {
-          Codec.debug("  seek done did not find term=" + term + ": hit EOF");
         }
 
         return SeekStatus.END;
@@ -494,31 +425,17 @@ public class StandardTermsDictReader extends FieldsProducer {
       @Override
       public BytesRef next() throws IOException {
 
-        if (Codec.DEBUG) {
-          Codec.debug("tdr.next: field=" + fieldInfo.name + " tis.fp=" + in.getFilePointer() + " vs len=" + in.length() + " seg=" + segment);
-        }
-
         if (seekPending) {
-          if (Codec.DEBUG) {
-            Codec.debug("  do pending seek " + state);
-          }
           seekPending = false;
           in.seek(state.filePointer);
         }
         
         if (state.ord >= numTerms-1) {
-          if (Codec.DEBUG) {
-            Codec.debug("  return null ord=" + state.ord + " vs numTerms-1=" + (numTerms-1));
-          }
           return null;
         }
 
         bytesReader.read();
         state.docFreq = in.readVInt();
-
-        if (Codec.DEBUG) {
-          Codec.debug("  text=" + bytesReader.term.utf8ToString() + " freq=" + state.docFreq + " tis=" + in);
-        }
 
         // TODO: would be cleaner, but space-wasting, to
         // simply record a bit into each index entry as to
@@ -533,10 +450,6 @@ public class StandardTermsDictReader extends FieldsProducer {
 
         state.ord++;
 
-        if (Codec.DEBUG) {
-          Codec.debug("  ord=" + state.ord + " vs numTerms=" + numTerms + " fp=" + in.getFilePointer());
-        }
-
         return bytesReader.term;
       }
 
@@ -547,33 +460,17 @@ public class StandardTermsDictReader extends FieldsProducer {
 
       @Override
       public DocsEnum docs(Bits skipDocs, DocsEnum reuse) throws IOException {
-        if (Codec.DEBUG) {
-          System.out.println("stdr.docs");
-        }
         DocsEnum docsEnum = postingsReader.docs(fieldInfo, state, skipDocs, reuse);
         assert docsEnum != null;
-        if (Codec.DEBUG) {
-          docsEnum.desc = fieldInfo.name + ":" + bytesReader.term.utf8ToString();
-        }
         return docsEnum;
       }
 
       @Override
       public DocsAndPositionsEnum docsAndPositions(Bits skipDocs, DocsAndPositionsEnum reuse) throws IOException {
-        if (Codec.DEBUG) {
-          System.out.println("stdr.docsAndPositions omitTF=" + fieldInfo.omitTermFreqAndPositions);
-        }
         if (fieldInfo.omitTermFreqAndPositions) {
           return null;
         } else {
-          DocsAndPositionsEnum postingsEnum = postingsReader.docsAndPositions(fieldInfo, state, skipDocs, reuse);
-          if (postingsEnum != null) {
-            if (Codec.DEBUG) {
-              postingsEnum.desc = fieldInfo.name + ":" + bytesReader.term.utf8ToString();
-              Codec.debug("  return enum=" + postingsEnum);
-            }
-          }
-          return postingsEnum;
+          return postingsReader.docsAndPositions(fieldInfo, state, skipDocs, reuse);
         }
       }
     }

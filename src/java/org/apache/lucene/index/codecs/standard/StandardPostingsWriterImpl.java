@@ -27,7 +27,6 @@ import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.SegmentWriteState;
 import org.apache.lucene.index.IndexFileNames;
 import org.apache.lucene.index.CorruptIndexException;
-import org.apache.lucene.index.codecs.Codec;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.CodecUtil;
 
@@ -118,8 +117,6 @@ public final class StandardPostingsWriterImpl extends StandardPostingsWriter {
   int lastDocID;
   int df;
   
-  int count;
-
   /** Adds a new doc in this term.  If this returns null
    *  then we just skip consuming positions/payloads. */
   @Override
@@ -127,10 +124,6 @@ public final class StandardPostingsWriterImpl extends StandardPostingsWriter {
 
     final int delta = docID - lastDocID;
     
-    if (Codec.DEBUG) {
-      Codec.debug("  addDoc [" + desc + "] count=" + (count++) + " docID=" + docID + " lastDocID=" + lastDocID + " delta=" + delta + " omitTF=" + omitTermFreqAndPositions + " freq=" + termDocFreq + " freq.fp=" + freqOut.getFilePointer());
-    }
-
     if (docID < 0 || (df > 0 && delta <= 0)) {
       throw new CorruptIndexException("docs out of order (" + docID + " <= " + lastDocID + " )");
     }
@@ -161,14 +154,6 @@ public final class StandardPostingsWriterImpl extends StandardPostingsWriter {
     assert !omitTermFreqAndPositions: "omitTermFreqAndPositions is true";
     assert proxOut != null;
 
-    if (Codec.DEBUG) {
-      if (payload != null) {
-        Codec.debug("    addPos [" + desc + "]: pos=" + position + " prox.fp=" + proxOut.getFilePointer() + " payload=" + payload.length + " bytes");
-      } else {
-        Codec.debug("    addPos [" + desc + "]: pos=" + position + " prox.fp=" + proxOut.getFilePointer());
-      }
-    }
-    
     final int delta = position - lastPosition;
     
     assert delta > 0 || position == 0 || position == -1: "position=" + position + " lastPosition=" + lastPosition;            // not quite right (if pos=0 is repeated twice we don't catch it)
@@ -176,15 +161,9 @@ public final class StandardPostingsWriterImpl extends StandardPostingsWriter {
     lastPosition = position;
 
     if (storePayloads) {
-      if (Codec.DEBUG) {
-        System.out.println("  store payloads");
-      }
       final int payloadLength = payload == null ? 0 : payload.length;
 
       if (payloadLength != lastPayloadLength) {
-        if (Codec.DEBUG) {
-          System.out.println("  payload len change old=" + lastPayloadLength + " new=" + payloadLength);
-        }
         lastPayloadLength = payloadLength;
         proxOut.writeVInt((delta<<1)|1);
         proxOut.writeVInt(payloadLength);
@@ -213,11 +192,6 @@ public final class StandardPostingsWriterImpl extends StandardPostingsWriter {
     // for this term) in two places?
     assert docCount == df;
 
-    // mxx
-    if (Codec.DEBUG) {
-      Codec.debug("dw.finishTerm termsOut.fp=" + termsOut.getFilePointer() + " freqStart=" + freqStart + " df=" + df + " isIndex?=" + isIndexTerm);
-    }
-
     if (isIndexTerm) {
       // Write absolute at seek points
       termsOut.writeVLong(freqStart);
@@ -229,10 +203,6 @@ public final class StandardPostingsWriterImpl extends StandardPostingsWriter {
     lastFreqStart = freqStart;
 
     if (df >= skipInterval) {
-      // mxx
-      if (Codec.DEBUG) {
-        System.out.println(Thread.currentThread().getName() + ":  writeSkip @ freqFP=" + freqOut.getFilePointer() + " freqStartFP=" + freqStart);
-      }
       termsOut.writeVInt((int) (skipListWriter.writeSkip(freqOut)-freqStart));
     }
      
@@ -249,9 +219,6 @@ public final class StandardPostingsWriterImpl extends StandardPostingsWriter {
 
     lastDocID = 0;
     df = 0;
-    
-    // nocommit -- debugging
-    count = 0;
   }
 
   @Override

@@ -19,7 +19,6 @@ package org.apache.lucene.index.codecs.sep;
 
 import org.apache.lucene.store.IndexOutput;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.index.codecs.Codec;
 import org.apache.lucene.util.CodecUtil;
 
 import java.io.IOException;
@@ -56,20 +55,12 @@ public class SingleIntIndexOutput extends IntIndexOutput {
     out.close();
   }
 
-  @Override
-  public String descFilePointer() {
-    return Long.toString(out.getFilePointer());
-  }
-
   private class Index extends IntIndexOutput.Index {
     long fp;
     long lastFP;
     @Override
     public void mark() {
       fp = out.getFilePointer();
-      if (Codec.DEBUG) {
-        System.out.println("siio.idx.mark id=" + desc + " fp=" + fp);
-      }
     }
     @Override
     public void set(IntIndexOutput.Index other) {
@@ -78,9 +69,6 @@ public class SingleIntIndexOutput extends IntIndexOutput {
     @Override
     public void write(IndexOutput indexOut, boolean absolute)
       throws IOException {
-      if (Codec.DEBUG) {
-        System.out.println("siio.idx.write id=" + desc + " fp=" + fp + " abs=" + absolute + " delta=" + (fp-lastFP));
-      }
       if (absolute) {
         indexOut.writeVLong(fp);
       } else {

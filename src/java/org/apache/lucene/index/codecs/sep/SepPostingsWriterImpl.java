@@ -23,7 +23,6 @@ import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.IndexFileNames;
 import org.apache.lucene.index.SegmentWriteState;
-import org.apache.lucene.index.codecs.Codec;
 import org.apache.lucene.index.codecs.standard.StandardPostingsWriter;
 import org.apache.lucene.store.IndexOutput;
 import org.apache.lucene.util.BytesRef;
@@ -73,7 +72,6 @@ public final class SepPostingsWriterImpl extends StandardPostingsWriter {
   long lastPayloadStart;
   int lastDocID;
   int df;
-  int count;
 
   public SepPostingsWriterImpl(SegmentWriteState state, IntStreamFactory factory) throws IOException {
     super();
@@ -135,9 +133,6 @@ public final class SepPostingsWriterImpl extends StandardPostingsWriter {
 
   @Override
   public void startTerm() throws IOException {
-    if (Codec.DEBUG) {
-      Codec.debug("sep.writer.startTerm");
-    }
     docIndex.mark();
     if (!omitTF) {
       freqIndex.mark();
@@ -169,10 +164,6 @@ public final class SepPostingsWriterImpl extends StandardPostingsWriter {
 
     final int delta = docID - lastDocID;
 
-    if (Codec.DEBUG) {
-      System.out.println("  dw.addDoc [" + desc + "] count=" + (count++) + " docID=" + docID + " lastDocID=" + lastDocID + " delta=" + delta + " omitTF=" + omitTF + " freq=" + termDocFreq);
-    }
-
     if (docID < 0 || (df > 0 && delta <= 0)) {
       throw new CorruptIndexException("docs out of order (" + docID + " <= " + lastDocID + " )");
     }
@@ -182,16 +173,6 @@ public final class SepPostingsWriterImpl extends StandardPostingsWriter {
       // separate calls to skipper
       skipListWriter.setSkipData(lastDocID, storePayloads, lastPayloadLength);
       skipListWriter.bufferSkip(df);
-
-      if (Codec.DEBUG) {
-        System.out.println("    bufferSkip lastDocID=" + lastDocID +
-                           " df=" + df +
-                           " docFP=" + docOut.descFilePointer() + 
-                           " freqFP=" + freqOut.descFilePointer() + 
-                           " posFP=" + posOut.descFilePointer() + 
-                           " payloadFP=" + payloadOut.getFilePointer() + 
-                           " payloadLen=" + lastPayloadLength);
-      }
     }
 
     lastDocID = docID;
@@ -206,26 +187,12 @@ public final class SepPostingsWriterImpl extends StandardPostingsWriter {
   public void addPosition(int position, BytesRef payload) throws IOException {
     assert !omitTF;
 
-    if (Codec.DEBUG) {
-      if (payload != null && payload.length > 0) {
-        System.out.println("pw.addPos [" + desc + "]: pos=" + position + " posFP=" + posOut.descFilePointer() + " payloadFP=" + payloadOut.getFilePointer() + " payload=" + payload.length + " bytes");
-      } else {
-        System.out.println("pw.addPos [" + desc + "]: pos=" + position + " posFP=" + posOut.descFilePointer() + " payloadFP=" + payloadOut.getFilePointer());
-      }
-    }
-
     final int delta = position - lastPosition;
     lastPosition = position;
 
     if (storePayloads) {
       final int payloadLength = payload == null ? 0 : payload.length;
-      if (Codec.DEBUG) {
-        System.out.println("  store payload len=" + payloadLength);
-      }
       if (payloadLength != lastPayloadLength) {
-        if (Codec.DEBUG) {
-          System.out.println("  payload len change old=" + lastPayloadLength + " new=" + payloadLength);
-        }
         lastPayloadLength = payloadLength;
         // TODO: explore whether we get better compression
         // by not storing payloadLength into prox stream?
@@ -236,9 +203,6 @@ public final class SepPostingsWriterImpl extends StandardPostingsWriter {
       }
 
       if (payloadLength > 0) {
-        if (Codec.DEBUG) {
-          System.out.println("  write @ payloadFP=" + payloadOut.getFilePointer());
-        }
         payloadOut.writeBytes(payload.bytes, payload.offset, payloadLength);
       }
     } else {
@@ -263,9 +227,6 @@ public final class SepPostingsWriterImpl extends StandardPostingsWriter {
     // TODO: -- wasteful we are counting this in two places?
     assert docCount > 0;
     assert docCount == df;
-    if (Codec.DEBUG) {
-      System.out.println("dw.finishTerm termsFP=" + termsOut.getFilePointer() + " df=" + df + " skipPos=" + skipPos);
-    }
 
     // TODO: -- only do this if once (consolidate the
     // conditional things that are written)
@@ -275,10 +236,6 @@ public final class SepPostingsWriterImpl extends StandardPostingsWriter {
     docIndex.write(termsOut, isIndexTerm);
 
     if (df >= skipInterval) {
-      if (Codec.DEBUG) {
-        System.out.println("  writeSkip skipPos=" + skipPos + " lastSkipPos=" + lastSkipStart);
-      }
-      
       skipListWriter.writeSkip(skipOut);
     }
 
@@ -303,16 +260,10 @@ public final class SepPostingsWriterImpl extends StandardPostingsWriter {
 
     lastDocID = 0;
     df = 0;
-
-    // nocommit -- debugging
-    count = 0;
   }
 
   @Override
   public void close() throws IOException {
-    if (Codec.DEBUG) {
-      System.out.println("sep.writer.close skipFP=" + skipOut.getFilePointer());
-    }
     try {
       docOut.close();
     } finally {

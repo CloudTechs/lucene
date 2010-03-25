@@ -25,7 +25,6 @@ import org.apache.lucene.index.DocsAndPositionsEnum;
 import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.IndexFileNames;
 import org.apache.lucene.index.SegmentInfo;
-import org.apache.lucene.index.codecs.Codec;
 import org.apache.lucene.index.codecs.standard.StandardPostingsReader;
 import org.apache.lucene.index.codecs.standard.TermState;
 import org.apache.lucene.store.Directory;
@@ -182,11 +181,6 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
   public void readTerm(IndexInput termsIn, FieldInfo fieldInfo, TermState _termState, boolean isIndexTerm) throws IOException {
     final SepTermState termState = (SepTermState) _termState;
 
-    if (Codec.DEBUG) {
-      System.out.println("  dr.readTerm termsFP=" + termsIn.getFilePointer() + " df=" + termState.docFreq + " isIndex=" + isIndexTerm);
-      System.out.println("    start freqFP=" + termState.freqIndex + " docFP=" + termState.docIndex + " skipFP=" + termState.skipOffset);
-    }
-
     // read freq index
     if (!fieldInfo.omitTermFreqAndPositions) {
       if (termState.freqIndex == null) {
@@ -216,10 +210,6 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
       } else {
         termState.payloadOffset += v;
       }
-    }
-
-    if (Codec.DEBUG) {
-      System.out.println("    freqFP=" + termState.freqIndex + " docFP=" + termState.docIndex + " skipFP=" + termState.skipOffset);
     }
   }
 
@@ -269,9 +259,6 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
     SepSkipListReader skipper;
 
     SepDocsEnum() throws IOException {
-      if (Codec.DEBUG) {
-        Codec.debug("sep: new DocsEnum");
-      }
       docReader = docIn.reader();
       docIndex = docIn.index();
       if (freqIn != null) {
@@ -289,9 +276,6 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
     }
 
     SepDocsEnum init(FieldInfo fieldInfo, SepTermState termState, Bits skipDocs) throws IOException {
-      if (Codec.DEBUG) {
-        System.out.println("[" + desc + "] dr.init freqIn seek " + freqIndex + " this=" + this + " (in=" + freqIn + "; this=" + this + ")");
-      }
       this.skipDocs = skipDocs;
       omitTF = fieldInfo.omitTermFreqAndPositions;
       storePayloads = fieldInfo.storePayloads;
@@ -320,14 +304,6 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
     @Override
     public int nextDoc() throws IOException {
 
-      if (Codec.DEBUG) {
-        if (!omitTF) {
-          Codec.debug("sep.reader.docs.nextDoc count=" + count + " vs df=" + docFreq + " freqFP=" + freqReader.descFilePointer() + " docFP=" + docReader.descFilePointer() + " skipDocs?=" + (skipDocs != null), desc);
-        } else {
-          Codec.debug("sep.reader.docs.nextDoc count=" + count + " vs df=" + docFreq + " docFP=" + docReader.descFilePointer() + " skipDocs?=" + (skipDocs != null), desc);
-        }
-      }
-
       while(true) {
         if (count == docFreq) {
           return doc = NO_MORE_DOCS;
@@ -342,21 +318,11 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
           freq = freqReader.next();
         }
 
-        if (Codec.DEBUG) {
-          System.out.println("  decode doc=" + doc + " freq=" + freq);
-        }
-
         if (skipDocs == null || !skipDocs.get(doc)) {
           break;
-        } else if (Codec.DEBUG) {
-          System.out.println("  doc=" + doc + " is skipped");
         }
       }
 
-      // nocommit -- debugging
-      if (Codec.DEBUG) {
-        System.out.println("  return doc=" + doc);
-      }
       return doc;
     }
 
@@ -400,10 +366,6 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
       // TODO: jump right to next() if target is < X away
       // from where we are now?
 
-      if (Codec.DEBUG) {
-        Codec.debug("sep.reader.docs: advance target=" + target + " omitTF=" + omitTF, desc);
-      }
-
       if (docFreq >= skipInterval) {
 
         // There are enough docs in the posting to have
@@ -411,10 +373,6 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
 
         if (skipper == null) {
           // This DocsEnum has never done any skipping
-          if (Codec.DEBUG) {
-            System.out.println("  create skipper");
-          }
-
           skipper = new SepSkipListReader((IndexInput) skipIn.clone(),
                                           freqIn,
                                           docIn,
@@ -434,10 +392,6 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
                        storePayloads);
           skipper.setOmitTF(omitTF);
 
-          if (Codec.DEBUG) {
-            System.out.println("    init skipper: base skipFP=" + skipOffset + " docFP=" + docIndex + " freqFP=" + freqIndex);
-          }
-
           skipped = true;
         }
 
@@ -446,21 +400,12 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
         if (newCount > count) {
 
           // Skipper did move
-          if (Codec.DEBUG) {
-            System.out.println("sdr [" + desc + "]: skipper moved to newCount=" + newCount +
-                               " docFP=" + skipper.getDocIndex() +
-                               " freqFP=" + skipper.getFreqIndex() +
-                               " doc=" + skipper.getDoc());
-          }
-            
           if (!omitTF) {
             skipper.getFreqIndex().seek(freqReader);
           }
           skipper.getDocIndex().seek(docReader);
           count = newCount;
           doc = skipper.getDoc();
-        } else if (Codec.DEBUG) {
-          System.out.println("  no skipping to be done");
         }
       }
         
@@ -470,10 +415,6 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
           return NO_MORE_DOCS;
         }
       } while (target > doc);
-
-      if (Codec.DEBUG) {
-        Codec.debug("  skip return doc=" + doc);
-      }
 
       return doc;
     }
@@ -486,8 +427,6 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
     int freq;
     long freqStart;
 
-    // TODO: -- should we do omitTF with 2 different enum classes?
-    private boolean omitTF;
     private boolean storePayloads;
     private Bits skipDocs;
     private final IntIndexInput.Reader docReader;
@@ -512,9 +451,6 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
     private boolean posSeekPending;
 
     SepDocsAndPositionsEnum() throws IOException {
-      if (Codec.DEBUG) {
-        Codec.debug("sep: new DocsAndPositionsEnum");
-      }
       docReader = docIn.reader();
       docIndex = docIn.index();
       freqReader = freqIn.reader();
@@ -525,9 +461,6 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
     }
 
     SepDocsAndPositionsEnum init(FieldInfo fieldInfo, SepTermState termState, Bits skipDocs) throws IOException {
-      if (Codec.DEBUG) {
-        Codec.debug("sep.reader.init freqIn seek " + termState.freqIndex);
-      }
       this.skipDocs = skipDocs;
       storePayloads = fieldInfo.storePayloads;
 
@@ -560,14 +493,6 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
     @Override
     public int nextDoc() throws IOException {
 
-      if (Codec.DEBUG) {
-        if (!omitTF) {
-          Codec.debug("sep.reader.nextDoc next count=" + count + " vs df=" + docFreq + " freqFP=" + freqReader.descFilePointer() + " docFP=" + docReader.descFilePointer() + " skipDocs?=" + (skipDocs != null), desc);
-        } else {
-          Codec.debug("sep.reader.nextDoc next count=" + count + " vs df=" + docFreq + " docFP=" + docReader.descFilePointer() + " skipDocs?=" + (skipDocs != null), desc);
-        }
-      }
-
       while(true) {
         if (count == docFreq) {
           return doc = NO_MORE_DOCS;
@@ -585,21 +510,11 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
 
         pendingPosCount += freq;
 
-        if (Codec.DEBUG) {
-          System.out.println("  decode doc=" + doc + " freq=" + freq);
-        }
-
         if (skipDocs == null || !skipDocs.get(doc)) {
           break;
-        } else if (Codec.DEBUG) {
-          System.out.println("  doc=" + doc + " is skipped");
         }
       }
 
-      // nocommit -- debugging
-      if (Codec.DEBUG) {
-        System.out.println("  return doc=" + doc);
-      }
       position = 0;
       return doc;
     }
@@ -620,10 +535,6 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
       // TODO: jump right to next() if target is < X away
       // from where we are now?
 
-      if (Codec.DEBUG) {
-        Codec.debug("sep.reader.advance current doc=" + doc + " target=" + target, desc);
-      }
-
       if (docFreq >= skipInterval) {
 
         // There are enough docs in the posting to have
@@ -631,10 +542,6 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
 
         if (skipper == null) {
           // This DocsEnum has never done any skipping
-          if (Codec.DEBUG) {
-            System.out.println("  create skipper");
-          }
-
           skipper = new SepSkipListReader((IndexInput) skipIn.clone(),
                                           freqIn,
                                           docIn,
@@ -652,11 +559,6 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
                        docFreq,
                        storePayloads);
 
-          if (Codec.DEBUG) {
-            System.out.println("    init skipper: base skipFP=" + skipOffset + " docFP=" + docIndex + " freqFP=" + freqIndex + " proxFP=" +
-                               posIndex + " payloadFP=" + payloadOffset);
-          }
-
           skipped = true;
         }
 
@@ -665,13 +567,6 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
         if (newCount > count) {
 
           // Skipper did move
-          if (Codec.DEBUG) {
-            Codec.debug("  skipper moved to newCount=" + newCount +
-                        " docFP=" + skipper.getDocIndex() +
-                        " freqFP=" + skipper.getFreqIndex() +
-                        " doc=" + skipper.getDoc());
-          }
-            
           skipper.getFreqIndex().seek(freqReader);
           skipper.getDocIndex().seek(docReader);
           //skipper.getPosIndex().seek(posReader);
@@ -685,14 +580,6 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
           pendingPayloadBytes = 0;
           payloadPending = false;
           payloadLength = skipper.getPayloadLength();
-
-        } else if (Codec.DEBUG) {
-          System.out.println("  no skipping to be done");
-        }
-
-      } else {
-        if (Codec.DEBUG) {
-          Codec.debug("[" + desc + "]: no skip data");
         }
       }
         
@@ -703,18 +590,11 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
         }
       } while (target > doc);
 
-      if (Codec.DEBUG) {
-        Codec.debug("advance done return doc=" + doc, desc);
-      }
       return doc;
     }
 
     @Override
     public int nextPosition() throws IOException {
-      if (Codec.DEBUG) {
-        Codec.debug("sep.reader.nextPos pendingPosCount=" + pendingPosCount + " freq=" + freq, desc);
-      }
-
       if (posSeekPending) {
         posIndex.seek(posReader);
         payloadIn.seek(payloadOffset);
@@ -724,18 +604,12 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
       // scan over any docs that were iterated without their
       // positions
       while (pendingPosCount > freq) {
-        if (Codec.DEBUG) {
-          System.out.println("      skip position payloadBytesPending=" + pendingPayloadBytes);
-        }
         final int code = posReader.next();
         if (storePayloads) {
           if ((code & 1) != 0) {
             // Payload length has changed
             payloadLength = posReader.next();
             assert payloadLength >= 0;
-            if (Codec.DEBUG) {
-              System.out.println("  new payloadLen=" + payloadLength);
-            }
           }
         }
         pendingPosCount--;
@@ -750,9 +624,6 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
           // Payload length has changed
           payloadLength = posReader.next();
           assert payloadLength >= 0;
-          if (Codec.DEBUG) {
-            System.out.println("  new payloadLen=" + payloadLength);
-          }
         }
         position += code >> 1;
       } else {
@@ -764,10 +635,6 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
       pendingPosCount--;
       payloadPending = true;
       assert pendingPosCount >= 0;
-
-      if (Codec.DEBUG) {
-        System.out.println("      return pos=" + position);
-      }
       return position;
     }
 
@@ -782,10 +649,6 @@ public class SepPostingsReaderImpl extends StandardPostingsReader {
     public BytesRef getPayload() throws IOException {
       if (!payloadPending) {
         throw new IOException("Either no payload exists at this term position or an attempt was made to load it more than once.");
-      }
-
-      if (Codec.DEBUG) {
-        Codec.debug(" getPayload payloadFP=" + payloadIn.getFilePointer() + " len=" + payloadLength + " pendingPayloadBytes=" + pendingPayloadBytes, desc);
       }
 
       assert pendingPayloadBytes >= payloadLength;

@@ -126,13 +126,9 @@ public final class FieldInfos {
     for(int i=0;i<numFields;i++) {
       final FieldInfo fi = fieldInfo(i);
       if (fi.isIndexed && !fi.omitTermFreqAndPositions) {
-        // mxx
-        //        System.out.println(Thread.currentThread().getName() + ": fieldInfos: hasProx=true");
         return true;
       }
     }
-    // mxx
-    //System.out.println(Thread.currentThread().getName() + ": fieldInfos: hasProx=false");
     return false;
   }
   

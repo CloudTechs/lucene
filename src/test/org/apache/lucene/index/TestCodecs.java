@@ -137,8 +137,6 @@ public class TestCodecs extends MultiCodecTestCase {
     }
 
     public void write(final FieldsConsumer consumer) throws Throwable {
-      if (Codec.DEBUG)
-        System.out.println("WRITE field=" + fieldInfo.name);
       Arrays.sort(terms);
       final TermsConsumer termsConsumer = consumer.addField(fieldInfo);
       for (final TermData term : terms)
@@ -176,8 +174,6 @@ public class TestCodecs extends MultiCodecTestCase {
     }
 
     public void write(final TermsConsumer termsConsumer) throws Throwable {
-      if (Codec.DEBUG)
-        System.out.println("  term=" + text2);
       final PostingsConsumer postingsConsumer = termsConsumer.startTerm(text);
       for(int i=0;i<docs.length;i++) {
         final int termDocFreq;
@@ -324,10 +320,6 @@ public class TestCodecs extends MultiCodecTestCase {
     this.write(fieldInfos, dir, fields);
     final SegmentInfo si = new SegmentInfo(SEGMENT, 10000, dir, CodecProvider.getDefault().getWriter(null));
 
-    if (Codec.DEBUG) {
-      System.out.println("\nTEST: now read");
-    }
-
     final FieldsProducer terms = si.getCodec().fieldsProducer(new SegmentReadState(dir, si, fieldInfos, 1024, IndexReader.DEFAULT_TERMS_INDEX_DIVISOR));
 
     final Verify[] threads = new Verify[NUM_TEST_THREADS-1];
@@ -418,14 +410,6 @@ public class TestCodecs extends MultiCodecTestCase {
 
   }
 
-  private String getDesc(final FieldData field, final TermData term) {
-    return field.fieldInfo.name + ":" + term.text2;
-  }
-
-  private String getDesc(final FieldData field, final TermData term, final int doc) {
-    return this.getDesc(field, term) + ":" + doc;
-  }
-
   private class Verify extends Thread {
     final Fields termsDict;
     final FieldData[] fields;
@@ -463,24 +447,13 @@ public class TestCodecs extends MultiCodecTestCase {
     private void verifyPositions(final PositionData[] positions, final DocsAndPositionsEnum posEnum) throws Throwable {
       for(int i=0;i<positions.length;i++) {
         final int pos = posEnum.nextPosition();
-        if (Codec.DEBUG) {
-          System.out.println("TEST pos " + (1+i) + " of " + positions.length + " pos=" + pos);
-        }
         assertEquals(positions[i].pos, pos);
         if (positions[i].payload != null) {
           assertTrue(posEnum.hasPayload());
           if (TestCodecs.this.nextInt(3) < 2) {
             // Verify the payload bytes
             final BytesRef otherPayload = posEnum.getPayload();
-            if (Codec.DEBUG) {
-              System.out.println("TEST do check payload len=" + posEnum.getPayloadLength() + " vs " + (otherPayload == null ? "null" : otherPayload.length));
-            }
-
             assertTrue("expected=" + positions[i].payload.toString() + " got=" + otherPayload.toString(), positions[i].payload.equals(otherPayload));
-          } else {
-            if (Codec.DEBUG) {
-              System.out.println("TEST skip check payload len=" + posEnum.getPayloadLength());
-            }
           }
         } else {
           assertFalse(posEnum.hasPayload());
@@ -492,34 +465,20 @@ public class TestCodecs extends MultiCodecTestCase {
 
       for(int iter=0;iter<NUM_TEST_ITER;iter++) {
         final FieldData field = fields[TestCodecs.this.nextInt(fields.length)];
-        if (Codec.DEBUG) {
-          System.out.println("verify field=" + field.fieldInfo.name);
-        }
-
         final TermsEnum termsEnum = termsDict.terms(field.fieldInfo.name).iterator();
 
         // Test straight enum of the terms:
-        if (Codec.DEBUG) {
-          System.out.println("\nTEST: pure enum");
-        }
-
         int upto = 0;
         while(true) {
           final BytesRef term = termsEnum.next();
           if (term == null) {
             break;
           }
-          if (Codec.DEBUG) {
-            System.out.println("check " + upto + ": " + field.terms[upto].text2);
-          }
           assertTrue(new BytesRef(field.terms[upto++].text2).bytesEquals(term));
         }
         assertEquals(upto, field.terms.length);
 
         // Test random seek:
-        if (Codec.DEBUG) {
-          System.out.println("\nTEST: random seek");
-        }
         TermData term = field.terms[TestCodecs.this.nextInt(field.terms.length)];
         TermsEnum.SeekStatus status = termsEnum.seek(new BytesRef(term.text2));
         assertEquals(status, TermsEnum.SeekStatus.FOUND);
@@ -544,8 +503,6 @@ public class TestCodecs extends MultiCodecTestCase {
         }
 
         // Test seek to non-existent terms:
-        if (Codec.DEBUG)
-          System.out.println("\nTEST: seek to non-existent term");
         for(int i=0;i<100;i++) {
           final char[] text = TestCodecs.this.getRandomText();
           final String text2 = new String(text, 0, text.length-1) + ".";
@@ -555,25 +512,13 @@ public class TestCodecs extends MultiCodecTestCase {
         }
 
         // Seek to each term, backwards:
-        if (Codec.DEBUG) {
-          System.out.println("\n" + Thread.currentThread().getName() + ": TEST: seek backwards through terms");
-        }
         for(int i=field.terms.length-1;i>=0;i--) {
-          if (Codec.DEBUG) {
-            System.out.println(Thread.currentThread().getName() + ": TEST: term=" + field.terms[i].text2 + " has docFreq=" + field.terms[i].docs.length);
-          }
           assertEquals(Thread.currentThread().getName() + ": field=" + field.fieldInfo.name + " term=" + field.terms[i].text2, TermsEnum.SeekStatus.FOUND, termsEnum.seek(new BytesRef(field.terms[i].text2)));
           assertEquals(field.terms[i].docs.length, termsEnum.docFreq());
         }
 
         // Seek to each term by ord, backwards
-        if (Codec.DEBUG) {
-          System.out.println("\n" + Thread.currentThread().getName() + ": TEST: seek backwards through terms, by ord");
-        }
         for(int i=field.terms.length-1;i>=0;i--) {
-          if (Codec.DEBUG) {
-            System.out.println(Thread.currentThread().getName() + ": TEST: term=" + field.terms[i].text2 + " has docFreq=" + field.terms[i].docs.length);
-          }
           assertEquals(Thread.currentThread().getName() + ": field=" + field.fieldInfo.name + " term=" + field.terms[i].text2, TermsEnum.SeekStatus.FOUND, termsEnum.seek(i));
           assertEquals(field.terms[i].docs.length, termsEnum.docFreq());
           assertTrue(termsEnum.term().bytesEquals(new BytesRef(field.terms[i].text2)));
@@ -588,17 +533,11 @@ public class TestCodecs extends MultiCodecTestCase {
         assertTrue(termsEnum.term().bytesEquals(new BytesRef(field.terms[0].text2)));
 
         // Test docs enum
-        if (Codec.DEBUG) {
-          System.out.println("\nTEST: docs/positions");
-        }
         termsEnum.seek(new BytesRef(""));
         upto = 0;
         do {
           term = field.terms[upto];
           if (TestCodecs.this.nextInt(3) == 1) {
-            if (Codec.DEBUG) {
-              System.out.println("\nTEST [" + TestCodecs.this.getDesc(field, term) + "]: iterate docs...");
-            }
             final DocsEnum docs = termsEnum.docs(null, null);
             final DocsAndPositionsEnum postings = termsEnum.docsAndPositions(null, null);
 
@@ -616,10 +555,6 @@ public class TestCodecs extends MultiCodecTestCase {
               if (TestCodecs.this.nextInt(3) == 1 && left >= 1) {
                 final int inc = 1+TestCodecs.this.nextInt(left-1);
                 upto2 += inc;
-                if (Codec.DEBUG) {
-                  System.out.println("TEST [" + TestCodecs.this.getDesc(field, term) + "]: skip: " + left + " docs left; skip to doc=" + term.docs[upto2] + " [" + upto2 + " of " + term.docs.length + "]");
-                }
-
                 if (TestCodecs.this.nextInt(2) == 1) {
                   doc = docsEnum.advance(term.docs[upto2]);
                   assertEquals(term.docs[upto2], doc);
@@ -640,31 +575,18 @@ public class TestCodecs extends MultiCodecTestCase {
               } else {
                 doc = docsEnum.nextDoc();
                 assertTrue(doc != -1);
-                if (Codec.DEBUG) {
-                  System.out.println("TEST [" + TestCodecs.this.getDesc(field, term) + "]: got next doc...");
-                }
                 upto2++;
               }
               assertEquals(term.docs[upto2], doc);
               if (!field.omitTF) {
                 assertEquals(term.positions[upto2].length, docsEnum.freq());
                 if (TestCodecs.this.nextInt(2) == 1) {
-                  if (Codec.DEBUG) {
-                    System.out.println("TEST [" + TestCodecs.this.getDesc(field, term, term.docs[upto2]) + "]: check positions for doc " + term.docs[upto2] + "...");
-                  }
                   this.verifyPositions(term.positions[upto2], postings);
-                } else if (Codec.DEBUG) {
-                  System.out.println("TEST: skip positions...");
                 }
-              } else if (Codec.DEBUG) {
-                System.out.println("TEST: skip positions: omitTF=true");
               }
             }
 
             assertEquals(DocIdSetIterator.NO_MORE_DOCS, docsEnum.nextDoc());
-
-          } else if (Codec.DEBUG) {
-            System.out.println("\nTEST [" + TestCodecs.this.getDesc(field, term) + "]: skip docs");
           }
           upto++;
 

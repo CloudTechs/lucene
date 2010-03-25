@@ -55,11 +55,6 @@ public abstract class FixedIntBlockIndexOutput extends IntIndexOutput {
     return new Index();
   }
 
-  @Override
-  public String descFilePointer() {
-    return out.getFilePointer() + ":" + upto;
-  }
-
   private class Index extends IntIndexOutput.Index {
     long fp;
     int upto;

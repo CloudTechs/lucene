@@ -41,7 +41,6 @@ import org.apache.lucene.util.Bits;
 import org.apache.lucene.util.CloseableThreadLocal;
 import org.apache.lucene.util.UnicodeUtil;
 import org.apache.lucene.index.codecs.CodecProvider;
-import org.apache.lucene.index.codecs.Codec;
 import org.apache.lucene.index.codecs.preflex.PreFlexFields;
 import org.apache.lucene.index.codecs.preflex.SegmentTermDocs;
 import org.apache.lucene.index.codecs.preflex.SegmentTermPositions;
@@ -116,9 +115,6 @@ public class SegmentReader extends IndexReader implements Cloneable {
       }
 
       segment = si.name;
-      if (Codec.DEBUG) {
-        System.out.println("sr: init core for segment=" + segment);
-      }
       if (codecs == null) {
         codecs = CodecProvider.getDefault();
       }
@@ -141,9 +137,6 @@ public class SegmentReader extends IndexReader implements Cloneable {
         this.termsIndexDivisor = termsIndexDivisor;
 
         // Ask codec for its Fields
-        if (Codec.DEBUG) {
-          System.out.println("sr.core.init: seg=" + si.name + " codec=" + si.getCodec());
-        }
         fields = si.getCodec().fieldsProducer(new SegmentReadState(cfsDir, si, fieldInfos, readBufferSize, termsIndexDivisor));
         assert fields != null;
 
@@ -1406,10 +1399,6 @@ public class SegmentReader extends IndexReader implements Cloneable {
     @Override
     public boolean next() throws IOException {
 
-      if (Codec.DEBUG) {
-        System.out.println("tdte.next done=" + done + " seg=" + core.segment);
-      }
-
       if (done) {
         return false;
       }
@@ -1419,9 +1408,6 @@ public class SegmentReader extends IndexReader implements Cloneable {
           // Advance to the next field
           currentField = fields.next();
           if (currentField == null) {
-            if (Codec.DEBUG) {
-              System.out.println("  fields.next returned false");
-            }
             done = true;
             return false;
           }
@@ -1486,17 +1472,10 @@ public class SegmentReader extends IndexReader implements Cloneable {
 
     public void seek(Term term) throws IOException {
 
-      if (Codec.DEBUG) {
-        System.out.println("\nwrapper termdocs.seek term=" + term);
-      }
-
       any = false;
 
       if (terms != null && !term.field.equals(currentField)) {
         // new field
-        if (Codec.DEBUG) {
-          System.out.println("  switch field");
-        }
         terms = null;
       }
 
@@ -1516,13 +1495,6 @@ public class SegmentReader extends IndexReader implements Cloneable {
         any = true;
         pendingBulkResult = null;
         docsEnum = terms.docs(deletedDocs, docsEnum);
-        if (Codec.DEBUG) {
-          System.out.println("  init docs enum");
-        }
-      } else {
-        if (Codec.DEBUG) {
-          System.out.println("  clear docs enum");
-        }
       }
     }
 
@@ -1623,17 +1595,10 @@ public class SegmentReader extends IndexReader implements Cloneable {
 
     public void seek(Term term) throws IOException {
 
-      if (Codec.DEBUG) {
-        System.out.println("\nwrapper termdocs.seek term=" + term);
-      }
-
       any = false;
 
       if (terms != null && !term.field.equals(currentField)) {
         // new field
-        if (Codec.DEBUG) {
-          System.out.println("  switch field");
-        }
         terms = null;
       }
 
@@ -1656,13 +1621,6 @@ public class SegmentReader extends IndexReader implements Cloneable {
           docsEnum = terms.docs(deletedDocs, postingsEnum);
         } else {
           docsEnum = postingsEnum;
-        }
-        if (Codec.DEBUG) {
-          System.out.println("  init docs enum");
-        }
-      } else {
-        if (Codec.DEBUG) {
-          System.out.println("  clear docs enum");
         }
       }
     }

@@ -24,7 +24,6 @@ import java.util.Comparator;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.analysis.tokenattributes.TermToBytesRefAttribute;
 import org.apache.lucene.document.Fieldable;
-import org.apache.lucene.util.UnicodeUtil;
 import org.apache.lucene.util.BytesRef;
 
 final class TermsHashPerField extends InvertedDocConsumerPerField {
@@ -387,8 +386,6 @@ final class TermsHashPerField extends InvertedDocConsumerPerField {
 
     if (p == null) {
 
-      //System.out.println("  not seen yet");
-
       // First time we are seeing this token since we last
       // flushed the hash.
       final int textLen2 = 2+utf8.length;
@@ -538,7 +535,6 @@ final class TermsHashPerField extends InvertedDocConsumerPerField {
 
     final int newMask = newSize-1;
 
-    //System.out.println("  rehash");
     RawPostingList[] newHash = new RawPostingList[newSize];
     for(int i=0;i<postingsHashSize;i++) {
       RawPostingList p0 = postingsHash[i];
@@ -559,7 +555,6 @@ final class TermsHashPerField extends InvertedDocConsumerPerField {
             len = (text[start]&0x7f) + ((text[start+1]&0xff)<<7);
             pos = start+2;
           }
-          //System.out.println("    term=" + bytePool.setBytesRef(new BytesRef(), p0.textStart).toBytesString());
 
           final int endPos = pos+len;
           while(pos < endPos) {

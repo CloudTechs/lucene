@@ -27,7 +27,6 @@ import org.apache.lucene.index.FieldInfos;
 import org.apache.lucene.index.IndexFileNames;
 import org.apache.lucene.index.SegmentWriteState;
 import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.index.codecs.Codec;
 import org.apache.lucene.index.codecs.FieldsConsumer;
 import org.apache.lucene.index.codecs.PostingsConsumer;
 import org.apache.lucene.index.codecs.TermsConsumer;
@@ -64,8 +63,6 @@ public class StandardTermsDictWriter extends FieldsConsumer {
   private final List<TermsConsumer> fields = new ArrayList<TermsConsumer>();
   private final Comparator<BytesRef> termComp;
 
-  private String segment;
-
   public StandardTermsDictWriter(StandardTermsIndexWriter indexWriter, SegmentWriteState state, StandardPostingsWriter postingsWriter, Comparator<BytesRef> termComp) throws IOException {
     final String termsFileName = IndexFileNames.segmentFileName(state.segmentName, StandardCodec.TERMS_EXTENSION);
     this.indexWriter = indexWriter;
@@ -73,11 +70,6 @@ public class StandardTermsDictWriter extends FieldsConsumer {
     out = state.directory.createOutput(termsFileName);
     indexWriter.setTermsOutput(out);
     state.flushedFiles.add(termsFileName);
-    this.segment = state.segmentName;
-
-    if (Codec.DEBUG) {
-      System.out.println("stdw: write to segment=" + state.segmentName);
-    }
 
     fieldInfos = state.fieldInfos;
 
@@ -95,9 +87,6 @@ public class StandardTermsDictWriter extends FieldsConsumer {
 
   @Override
   public TermsConsumer addField(FieldInfo field) {
-    if (Codec.DEBUG) {
-      System.out.println("stdw.addField: field=" + field.name);
-    }
     assert currentField == null || currentField.name.compareTo(field.name) < 0;
     currentField = field;
     StandardTermsIndexWriter.FieldWriter fieldIndexWriter = indexWriter.addField(field);
@@ -109,15 +98,8 @@ public class StandardTermsDictWriter extends FieldsConsumer {
   @Override
   public void close() throws IOException {
 
-    if (Codec.DEBUG) {
-      System.out.println("stdw.close seg=" + segment);
-    }
-
     try {
       final int fieldCount = fields.size();
-
-      if (Codec.DEBUG)
-        System.out.println("  numFields=" + fieldCount);
 
       final long dirStart = out.getFilePointer();
 
@@ -127,8 +109,6 @@ public class StandardTermsDictWriter extends FieldsConsumer {
         out.writeInt(field.fieldInfo.number);
         out.writeLong(field.numTerms);
         out.writeLong(field.termsStartPointer);
-        if (Codec.DEBUG)
-          System.out.println("stdw.close: field=" + field.fieldInfo.name + " numTerms=" + field.numTerms + " tis pointer=" + field.termsStartPointer);
       }
       out.seek(CodecUtil.headerLength(CODEC_NAME));
       out.writeLong(dirStart);
@@ -160,10 +140,6 @@ public class StandardTermsDictWriter extends FieldsConsumer {
       termsStartPointer = out.getFilePointer();
       postingsWriter.setField(fieldInfo);
       this.postingsWriter = postingsWriter;
-
-      if (Codec.DEBUG) {
-        System.out.println("stdw: now write field=" + fieldInfo.name);
-      }
     }
     
     @Override
@@ -174,10 +150,6 @@ public class StandardTermsDictWriter extends FieldsConsumer {
     @Override
     public PostingsConsumer startTerm(BytesRef text) throws IOException {
       postingsWriter.startTerm();
-      if (Codec.DEBUG) {
-        postingsWriter.desc = fieldInfo.name + ":" + text.utf8ToString();
-        System.out.println("stdw.startTerm term=" + fieldInfo.name + ":" + text.utf8ToString() + " seg=" + segment);
-      }
       return postingsWriter;
     }
 
@@ -186,16 +158,8 @@ public class StandardTermsDictWriter extends FieldsConsumer {
 
       assert numDocs > 0;
 
-      if (Codec.DEBUG) {
-        Codec.debug("finishTerm seg=" + segment + " text=" + fieldInfo.name + ":" + text.utf8ToString() + " numDocs=" + numDocs + " numTerms=" + numTerms);
-      }
-
       final boolean isIndexTerm = fieldIndexWriter.checkIndexTerm(text, numDocs);
 
-      if (Codec.DEBUG) {
-        Codec.debug("  tis.fp=" + out.getFilePointer() + " isIndexTerm?=" + isIndexTerm);
-        System.out.println("  term bytes=" + text.utf8ToString());
-      }
       termWriter.write(text);
       out.writeVInt(numDocs);
 

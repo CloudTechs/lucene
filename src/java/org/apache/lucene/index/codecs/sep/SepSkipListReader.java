@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.lucene.store.IndexInput;
-import org.apache.lucene.index.codecs.Codec;
 import org.apache.lucene.index.codecs.MultiLevelSkipListReader;
 
 /**
@@ -66,19 +65,10 @@ class SepSkipListReader extends MultiLevelSkipListReader {
     for(int i=0;i<maxSkipLevels;i++) {
       if (freqIn != null) {
         freqIndex[i] = freqIn.index();
-        if (Codec.DEBUG) {
-          freqIndex[i].desc = "sslr.freq.level" + i;
-        }
       }
       docIndex[i] = docIn.index();
-      if (Codec.DEBUG) {
-        docIndex[i].desc = "sslr.doc.level" + i;
-      }
       if (posIn != null) {
         posIndex[i] = posIn.index();
-        if (Codec.DEBUG) {
-          posIndex[i].desc = "sslr.pos.level" + i;
-        }
       }
     }
     payloadPointer = new long[maxSkipLevels];
@@ -113,10 +103,6 @@ class SepSkipListReader extends MultiLevelSkipListReader {
 
     super.init(skipPointer, df);
     this.currentFieldStoresPayloads = storesPayloads;
-
-    if (Codec.DEBUG) {
-      System.out.println("ssr.init docBase=" + docBaseIndex + " freqBase=" + freqBaseIndex + " posBase=" + posBaseIndex + " payloadBase=" + payloadBasePointer + " df=" + df);
-    }
 
     lastPayloadPointer = payloadBasePointer;
 
@@ -214,9 +200,6 @@ class SepSkipListReader extends MultiLevelSkipListReader {
       payloadPointer[level] += skipStream.readVInt();
     }
     
-    if (Codec.DEBUG) {
-      System.out.println("ssr.readSkipData docDelta=" + delta + " curStoresPayloads=" + currentFieldStoresPayloads + " level=" + level + " freqIndex=" + (freqIndex==null?null:freqIndex[level]) + " docIndex=" + docIndex[level] + " posIndex=" + (posIndex==null? "null" : ""+posIndex[level]) + " payloadPointer=" + payloadPointer[level]);
-    }
     return delta;
   }
 }

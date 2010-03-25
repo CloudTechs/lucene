@@ -39,9 +39,6 @@ public abstract class IntIndexOutput implements Closeable {
 
   public abstract static class Index {
 
-    // nocommit -- debugging
-    public String desc;
-
     /** Internally records the current location */
     public abstract void mark() throws IOException;
 
@@ -58,7 +55,4 @@ public abstract class IntIndexOutput implements Closeable {
   public abstract Index index() throws IOException;
 
   public abstract void close() throws IOException;
-
-  // nocommit -- debugging
-  public abstract String descFilePointer() throws IOException;
 }

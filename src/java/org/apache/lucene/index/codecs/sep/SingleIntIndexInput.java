@@ -19,7 +19,6 @@ package org.apache.lucene.index.codecs.sep;
 
 import java.io.IOException;
 
-import org.apache.lucene.index.codecs.Codec;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.util.CodecUtil;
@@ -63,11 +62,6 @@ public class SingleIntIndexInput extends IntIndexInput {
     public int next() throws IOException {
       return in.readVInt();
     }
-
-    @Override
-    public String descFilePointer() {
-      return Long.toString(in.getFilePointer());
-    }
   }
   
   class Index extends IntIndexInput.Index {
@@ -78,16 +72,12 @@ public class SingleIntIndexInput extends IntIndexInput {
     @Override
     public void read(IndexInput indexIn, boolean absolute)
       throws IOException {
-      long cur = fp;
       if (absolute) {
         fp = indexIn.readVLong();
         first = false;
       } else {
         assert !first;
         fp += indexIn.readVLong();
-      }
-      if (Codec.DEBUG) {
-        System.out.println("siii.idx.read: id=" + desc + " abs=" + absolute + " now=" + fp + " delta=" + (fp-cur));
       }
     }
 

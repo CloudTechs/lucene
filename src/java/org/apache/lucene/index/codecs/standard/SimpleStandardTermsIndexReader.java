@@ -23,10 +23,6 @@ import org.apache.lucene.index.FieldInfos;
 import org.apache.lucene.index.FieldInfo;
 import org.apache.lucene.index.SegmentInfo;
 import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.util.RamUsageEstimator;
-import org.apache.lucene.index.codecs.Codec;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.util.ArrayUtil;
 import org.apache.lucene.util.CodecUtil;
 import org.apache.lucene.util.packed.PackedInts;
 
@@ -73,7 +69,6 @@ public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
   private volatile boolean indexLoaded;
 
   private final Comparator<BytesRef> termComp;
-  private final String segment;
 
   private final static int PAGED_BYTES_BITS = 15;
 
@@ -87,18 +82,12 @@ public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
 
     this.termComp = termComp;
 
-    this.segment = segment;
-
     IndexInput in = dir.openInput(IndexFileNames.segmentFileName(segment, StandardCodec.TERMS_INDEX_EXTENSION));
     
     boolean success = false;
 
     try {
       CodecUtil.checkHeader(in, SimpleStandardTermsIndexWriter.CODEC_NAME, SimpleStandardTermsIndexWriter.VERSION_START);
-
-      if (Codec.DEBUG) {
-        Codec.debug("  sstir init: header tii.fp=" + in.getFilePointer());
-      }
 
       final long dirOffset = in.readLong();
 
@@ -117,15 +106,8 @@ public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
 
       final int numFields = in.readInt();
 
-      if (Codec.DEBUG) {
-        System.out.println("sstir create seg=" + segment + " numFields=" + numFields + " dirStart=" + dirOffset);
-      }
-
       for(int i=0;i<numFields;i++) {
         final int field = in.readInt();
-        if (Codec.DEBUG) {
-          System.out.println("  read field number=" + field);
-        }
         final int numIndexTerms = in.readInt();
         final long termsStart = in.readLong();
         final long indexStart = in.readLong();
@@ -182,21 +164,12 @@ public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
       // is -1, so that StandardTermsDictReader can call
       // isIndexTerm for each field:
       if (indexDivisor != -1) {
-
-        if (Codec.DEBUG) {
-          System.out.println("read index for field=" + fieldInfo.name + " numIndexTerms=" + numIndexTerms + " indexDivisor=" + indexDivisor + " indexFP=" + indexStart);
-        }
-
         coreIndex = new CoreFieldIndex(indexStart,
                                        termsStart,
                                        packedIndexStart,
                                        packedOffsetsStart,
                                        numIndexTerms);
       
-      } else {
-        if (Codec.DEBUG) {
-          System.out.println("skip read index for field=" + fieldInfo.name + " numIndexTerms=" + numIndexTerms + " indexDivisor=" + indexDivisor);
-        }
       }
     }
 
@@ -316,7 +289,6 @@ public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
 
             int upto = 0;
 
-            long lastTermOffset = 0;
             long termOffsetUpto = 0;
 
             while(upto < this.numIndexTerms) {
@@ -352,10 +324,6 @@ public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
             clone.close();
           }
         }
-
-        if (Codec.DEBUG) {
-          System.out.println("  done read");
-        }
       }
 
       public final boolean nextIndexTerm(long ord, TermsIndexResult result) throws IOException {
@@ -377,11 +345,6 @@ public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
       }
 
       public final void getIndexOffset(BytesRef term, TermsIndexResult result) throws IOException {
-
-        if (Codec.DEBUG) {
-          System.out.println("getIndexOffset field=" + fieldInfo.name + " term=" + term.utf8ToString());
-        }
-
         int lo = 0;					  // binary search
         int hi = numIndexTerms - 1;
 
@@ -432,11 +395,6 @@ public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
 
       this.indexDivisor = indexDivisor;
       this.totalIndexInterval = indexInterval * indexDivisor;
-
-      // mxx
-      if (Codec.DEBUG) {
-        System.out.println(Thread.currentThread().getName() + ": sstir: load coreIndex on demand");
-      }
 
       Iterator<FieldIndexReader> it = fields.values().iterator();
       while(it.hasNext()) {

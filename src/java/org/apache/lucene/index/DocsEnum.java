@@ -31,9 +31,6 @@ public abstract class DocsEnum extends DocIdSetIterator {
 
   private AttributeSource atts = null;
 
-  // nocommit -- debugging
-  public String desc;
-
   /** Returns term frequency in the current document.  Do
    *  not call this before {@link #next} is first called,
    *  nor after {@link #next} returns NO_MORE_DOCS. */

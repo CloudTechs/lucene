@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.lucene.store.IndexOutput;
-import org.apache.lucene.index.codecs.Codec;
 import org.apache.lucene.index.codecs.MultiLevelSkipListWriter;
 
 // TODO: -- skip data should somehow be more local to the
@@ -43,7 +42,6 @@ class SepSkipListWriter extends MultiLevelSkipListWriter {
   private IntIndexOutput.Index[] posIndex;
   
   private IntIndexOutput freqOutput;
-  private IntIndexOutput docOutput;
   // TODO: -- private again
   IntIndexOutput posOutput;
   // TODO: -- private again
@@ -63,7 +61,6 @@ class SepSkipListWriter extends MultiLevelSkipListWriter {
     super(skipInterval, numberOfSkipLevels, docCount);
 
     this.freqOutput = freqOutput;
-    this.docOutput = docOutput;
     this.posOutput = posOutput;
     this.payloadOutput = payloadOutput;
     
@@ -79,19 +76,10 @@ class SepSkipListWriter extends MultiLevelSkipListWriter {
     for(int i=0;i<numberOfSkipLevels;i++) {
       if (freqOutput != null) {
         freqIndex[i] = freqOutput.index();
-        if (Codec.DEBUG) {
-          freqIndex[i].desc = "sslw.freq.level" + i;
-        }
       }
       docIndex[i] = docOutput.index();
-      if (Codec.DEBUG) {
-        docIndex[i].desc = "sslw.doc.level" + i;
-      }
       if (posOutput != null) {
         posIndex[i] = posOutput.index();
-        if (Codec.DEBUG) {
-          posIndex[i].desc = "sslw.pos.level" + i;
-        }
       }
     }
   }
@@ -106,9 +94,6 @@ class SepSkipListWriter extends MultiLevelSkipListWriter {
     this.posOutput = posOutput;
     for(int i=0;i<numberOfSkipLevels;i++) {
       posIndex[i] = posOutput.index();
-      if (Codec.DEBUG) {
-        posIndex[i].desc = "sslw.pos.level" + i;
-      }
     }
   }
 
@@ -134,11 +119,6 @@ class SepSkipListWriter extends MultiLevelSkipListWriter {
   protected void resetSkip(IntIndexOutput.Index topDocIndex, IntIndexOutput.Index topFreqIndex, IntIndexOutput.Index topPosIndex)
     throws IOException {
     super.resetSkip();
-    if (Codec.DEBUG) {
-      System.out.println("sslw.reset docIndexBase=" + topDocIndex +
-                         " freqIndexBase=" + topFreqIndex +
-                         " topPosIndex=" + (topPosIndex == null? "null" : (""+topPosIndex)));
-    }
 
     Arrays.fill(lastSkipDoc, 0);
     Arrays.fill(lastSkipPayloadLength, -1);  // we don't have to write the first length in the skip list
@@ -178,9 +158,6 @@ class SepSkipListWriter extends MultiLevelSkipListWriter {
     //         if DocSkip is even, then it is assumed that the
     //         current payload length equals the length at the previous
     //         skip point
-    if (Codec.DEBUG) {
-      System.out.println("ssw level=" + level + " curDoc=" + curDoc + " lastDoc=" + lastSkipDoc[level] + " delta=" + (curDoc - lastSkipDoc[level]) + " storePayloads=" + curStorePayloads + " skipBufferFP=" + skipBuffer.getFilePointer() + " curPayloadLen=" + curPayloadLength + " freqIndex=" + freqOutput.descFilePointer() + " docIndex=" + docOutput.descFilePointer() + " posIndex=" + posOutput.descFilePointer() + " curPayloadPointer=" + curPayloadPointer);
-    }
 
     assert !omitTF || !curStorePayloads;
 

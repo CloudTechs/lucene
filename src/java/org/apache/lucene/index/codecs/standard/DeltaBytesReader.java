@@ -37,12 +37,8 @@ final class DeltaBytesReader {
   }
 
   void read() throws IOException {
-    // mxx
-    //System.out.println(Thread.currentThread().getName() + ":  dbr termFP=" + in.getFilePointer());
     final int start = in.readVInt();
     final int suffix = in.readVInt();
-    // mxx
-    //System.out.println(Thread.currentThread().getName() + ":  start=" + start + " suffix=" + suffix);
     assert start <= term.length: "start=" + start + " length=" + term.length;
     final int newLength = start+suffix;
     term.grow(newLength);

@@ -671,9 +671,6 @@ final class DocumentsWriter {
     CompoundFileWriter cfsWriter = new CompoundFileWriter(directory, 
         IndexFileNames.segmentFileName(segment, IndexFileNames.COMPOUND_FILE_EXTENSION));
     for(String fileName : flushState.flushedFiles) {
-      if (Codec.DEBUG) {
-        System.out.println("make cfs " + fileName);
-      }
       cfsWriter.addFile(fileName);
     }
       

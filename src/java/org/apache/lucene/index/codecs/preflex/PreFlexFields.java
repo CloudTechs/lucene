@@ -34,7 +34,6 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.index.CompoundFileReader;
-import org.apache.lucene.index.codecs.Codec;
 import org.apache.lucene.index.codecs.FieldsProducer;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.IndexInput;
@@ -99,7 +98,6 @@ public class PreFlexFields extends FieldsProducer {
     files.add(IndexFileNames.segmentFileName(info.name, PreFlexCodec.TERMS_EXTENSION));
     files.add(IndexFileNames.segmentFileName(info.name, PreFlexCodec.TERMS_INDEX_EXTENSION));
     files.add(IndexFileNames.segmentFileName(info.name, PreFlexCodec.FREQ_EXTENSION));
-    //System.out.println("seg=" + info.name + " hasProx?=" + info.getHasProx());
     if (info.getHasProx()) {
       // LUCENE-1739: for certain versions of 2.9-dev,
       // hasProx would be incorrectly computed during
@@ -274,9 +272,6 @@ public class PreFlexFields extends FieldsProducer {
 
     @Override
     public SeekStatus seek(BytesRef term) throws IOException {
-      if (Codec.DEBUG) {
-        System.out.println("pff.seek term=" + term);
-      }
       skipNext = false;
       final TermInfosReader tis = getTermsDict();
       final Term t0 = new Term(fieldInfo.name, term.utf8ToString());
@@ -320,22 +315,13 @@ public class PreFlexFields extends FieldsProducer {
       }
       if (termEnum.next()) {
         final Term t = termEnum.term();
-        if (Codec.DEBUG) {
-          System.out.println("pff.next term=" + t);
-        }
         if (t.field() == fieldInfo.name) {
-          if (Codec.DEBUG) {
-            System.out.println("  ok");
-          }
           scratchBytesRef.copy(t.text());
           current = scratchBytesRef;
           return current;
         } else {
           assert !t.field().equals(fieldInfo.name);  // make sure field name is interned
           // Crossed into new field
-          if (Codec.DEBUG) {
-            System.out.println("  stop (new field " + t.field());
-          }
           return null;
         }
       } else {
@@ -387,9 +373,6 @@ public class PreFlexFields extends FieldsProducer {
 
     @Override
     public int nextDoc() throws IOException {
-      if (Codec.DEBUG) {
-        System.out.println("pff.docs.next");
-      }
       if (docs.next()) {
         return docs.doc();
       } else {
@@ -442,9 +425,6 @@ public class PreFlexFields extends FieldsProducer {
 
     @Override
     public int nextDoc() throws IOException {
-      if (Codec.DEBUG) {
-        System.out.println("pff.docs.next");
-      }
       if (pos.next()) {
         return pos.doc();
       } else {
