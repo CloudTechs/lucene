@@ -361,4 +361,10 @@ public class TestWildcard
     assertMatches(searcher, new OldWildcardQuery(new Term("body", "*tal")), 1);
     assertMatches(searcher, new OldWildcardQuery(new Term("body", "*tal*")), 2);
   }
+  
+  @Deprecated
+  public void testBackwardsLayer() {
+    assertTrue(new WildcardQuery(new Term("body", "metal*")).hasNewAPI);
+    assertFalse(new OldWildcardQuery(new Term("body", "metal*")).hasNewAPI);
+  }
 }

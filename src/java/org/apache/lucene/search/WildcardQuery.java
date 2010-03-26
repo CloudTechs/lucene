@@ -19,6 +19,7 @@ package org.apache.lucene.search;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.util.ToStringUtils;
 import org.apache.lucene.util.automaton.Automaton;
 import org.apache.lucene.util.automaton.BasicAutomata;
@@ -84,6 +85,12 @@ public class WildcardQuery extends AutomatonQuery {
     return new WildcardTermEnum(reader, term);
   }
   
+  // we override this method, else backwards layer in MTQ will prefer getEnum!
+  @Override
+  protected TermsEnum getTermsEnum(IndexReader reader) throws IOException {
+    return super.getTermsEnum(reader);
+  }
+
   /**
    * Returns the pattern term.
    */

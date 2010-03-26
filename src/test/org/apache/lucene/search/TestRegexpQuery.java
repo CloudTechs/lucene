@@ -120,4 +120,9 @@ public class TestRegexpQuery extends LuceneTestCase {
   public void testBacktracking() throws IOException {
     assertEquals(1, regexQueryNrHits("4934[314]"));
   }
+  
+  @Deprecated
+  public void testBackwardsLayer() {
+    assertTrue(new RegexpQuery(newTerm(".*")).hasNewAPI);
+  }
 }
