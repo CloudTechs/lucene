@@ -76,11 +76,11 @@ public class TestBackwardsCompatibility extends LuceneTestCase {
   }
   */
 
-  /* Unzips dirName + ".zip" --> dirName, removing dirName
+  /* Unzips zipName --> dirName, removing dirName
      first */
-  public void unzip(String zipName, String destDirName) throws IOException {
+  public void unzip(File zipName, String destDirName) throws IOException {
 
-    ZipFile zipFile = new ZipFile(zipName + ".zip");
+    ZipFile zipFile = new ZipFile(zipName);
 
     Enumeration<? extends ZipEntry> entries = zipFile.entries();
 
@@ -209,8 +209,7 @@ public class TestBackwardsCompatibility extends LuceneTestCase {
     Random rand = newRandom();
     
     for(int i=0;i<oldNames.length;i++) {
-      String dirName = "src/test/org/apache/lucene/index/index." + oldNames[i];
-      unzip(dirName, oldNames[i]);
+      unzip(getDataFile("index." + oldNames[i] + ".zip"), oldNames[i]);
 
       String fullPath = fullDir(oldNames[i]);
       Directory dir = FSDirectory.open(new File(fullPath));
@@ -244,8 +243,7 @@ public class TestBackwardsCompatibility extends LuceneTestCase {
 
   public void testSearchOldIndex() throws IOException {
     for(int i=0;i<oldNames.length;i++) {
-      String dirName = "src/test/org/apache/lucene/index/index." + oldNames[i];
-      unzip(dirName, oldNames[i]);
+      unzip(getDataFile("index." + oldNames[i] + ".zip"), oldNames[i]);
       searchIndex(oldNames[i], oldNames[i]);
       rmDir(oldNames[i]);
     }
@@ -253,8 +251,7 @@ public class TestBackwardsCompatibility extends LuceneTestCase {
 
   public void testIndexOldIndexNoAdds() throws IOException {
     for(int i=0;i<oldNames.length;i++) {
-      String dirName = "src/test/org/apache/lucene/index/index." + oldNames[i];
-      unzip(dirName, oldNames[i]);
+      unzip(getDataFile("index." + oldNames[i] + ".zip"), oldNames[i]);
       changeIndexNoAdds(oldNames[i]);
       rmDir(oldNames[i]);
     }
@@ -262,8 +259,7 @@ public class TestBackwardsCompatibility extends LuceneTestCase {
 
   public void testIndexOldIndex() throws IOException {
     for(int i=0;i<oldNames.length;i++) {
-      String dirName = "src/test/org/apache/lucene/index/index." + oldNames[i];
-      unzip(dirName, oldNames[i]);
+      unzip(getDataFile("index." + oldNames[i] + ".zip"), oldNames[i]);
       changeIndexWithAdds(oldNames[i]);
       rmDir(oldNames[i]);
     }
@@ -665,8 +661,7 @@ public class TestBackwardsCompatibility extends LuceneTestCase {
   // flex: test basics of TermsEnum api on non-flex index
   public void testNextIntoWrongField() throws Exception {
     for(int i=0;i<oldNames.length;i++) {
-      String dirName = "src/test/org/apache/lucene/index/index." + oldNames[i];
-      unzip(dirName, oldNames[i]);
+      unzip(getDataFile("index." + oldNames[i] + ".zip"), oldNames[i]);
       String fullPath = fullDir(oldNames[i]);
       Directory dir = FSDirectory.open(new File(fullPath));
       IndexReader r = IndexReader.open(dir);

@@ -17,30 +17,30 @@ package org.apache.lucene.search.regex;
  * limitations under the License.
  */
 
-import org.apache.lucene.search.FilteredTermsEnum;
+import org.apache.lucene.search.FilteredTermEnum;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
 
 /**
- * Subclass of FilteredTermsEnum for enumerating all terms that match the
+ * Subclass of FilteredTermEnum for enumerating all terms that match the
  * specified regular expression term using the specified regular expression
  * implementation.
  * <p>
  * Term enumerations are always ordered by Term.compareTo().  Each term in
  * the enumeration is greater than all that precede it.
- *
  */
 
-public class RegexTermsEnum extends FilteredTermsEnum {
+public class RegexTermEnum extends FilteredTermEnum {
+  private String field = "";
   private String pre = "";
+  private boolean endEnum = false;
   private RegexCapabilities regexImpl;
-  private final BytesRef prefixRef;
 
-  public RegexTermsEnum(IndexReader reader, Term term, RegexCapabilities regexImpl) throws IOException {
-    super(reader, term.field());
+  public RegexTermEnum(IndexReader reader, Term term, RegexCapabilities regexImpl) throws IOException {
+    super();
+    field = term.field();
     String text = term.text();
     this.regexImpl = regexImpl;
 
@@ -49,16 +49,35 @@ public class RegexTermsEnum extends FilteredTermsEnum {
     pre = regexImpl.prefix();
     if (pre == null) pre = "";
 
-    prefixRef = new BytesRef(pre);
-    setInitialSeekTerm(prefixRef);
+    setEnum(reader.terms(new Term(term.field(), pre)));
   }
 
   @Override
-  protected final AcceptStatus accept(BytesRef term) {
-    if (term.startsWith(prefixRef)) {
-      return regexImpl.match(term.utf8ToString()) ? AcceptStatus.YES : AcceptStatus.NO;
-    } else {
-      return AcceptStatus.END;
+  protected final boolean termCompare(Term term) {
+    if (field == term.field()) {
+      String searchText = term.text();
+      if (searchText.startsWith(pre)) {
+        return regexImpl.match(searchText);
+      }
     }
+    endEnum = true;
+    return false;
+  }
+
+  @Override
+  public final float difference() {
+// TODO: adjust difference based on distance of searchTerm.text() and term().text()
+    return 1.0f;
+  }
+
+  @Override
+  public final boolean endEnum() {
+    return endEnum;
+  }
+
+  @Override
+  public void close() throws IOException {
+    super.close();
+    field = null;
   }
 }
