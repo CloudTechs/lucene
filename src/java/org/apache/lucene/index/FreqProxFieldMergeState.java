@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.util.Comparator;
 import org.apache.lucene.util.BytesRef;
 
+import org.apache.lucene.index.FreqProxTermsWriterPerField.FreqProxPostingsArray;
+
 // TODO FI: some of this is "generic" to TermsHash* so we
 // should factor it out so other consumers don't have to
 // duplicate this code
@@ -32,9 +34,10 @@ final class FreqProxFieldMergeState {
   final FreqProxTermsWriterPerField field;
   final int numPostings;
   private final ByteBlockPool bytePool;
-  final RawPostingList[] postings;
-
-  private FreqProxTermsWriter.PostingList p;
+  final int[] termIDs;
+  final FreqProxPostingsArray postings;
+  int currentTermID;
+  
   final BytesRef text = new BytesRef();
 
   private int postingUpto = -1;
@@ -48,8 +51,9 @@ final class FreqProxFieldMergeState {
   public FreqProxFieldMergeState(FreqProxTermsWriterPerField field, Comparator<BytesRef> termComp) {
     this.field = field;
     this.numPostings = field.termsHashPerField.numPostings;
-    this.postings = field.termsHashPerField.sortPostings(termComp);
     this.bytePool = field.perThread.termsHashPerThread.bytePool;
+    this.termIDs = field.termsHashPerField.sortPostings(termComp);
+    this.postings = (FreqProxPostingsArray) field.termsHashPerField.postingsArray;
   }
 
   boolean nextTerm() throws IOException {
@@ -58,15 +62,16 @@ final class FreqProxFieldMergeState {
       return false;
     }
 
-    p = (FreqProxTermsWriter.PostingList) postings[postingUpto];
+    currentTermID = termIDs[postingUpto];
     docID = 0;
 
     // Get BytesRef
-    bytePool.setBytesRef(text, p.textStart);
+    final int textStart = postings.textStarts[currentTermID];
+    bytePool.setBytesRef(text, textStart);
 
-    field.termsHashPerField.initReader(freq, p, 0);
+    field.termsHashPerField.initReader(freq, currentTermID, 0);
     if (!field.fieldInfo.omitTermFreqAndPositions) {
-      field.termsHashPerField.initReader(prox, p, 1);
+      field.termsHashPerField.initReader(prox, currentTermID, 1);
     }
 
     // Should always be true
@@ -78,12 +83,12 @@ final class FreqProxFieldMergeState {
 
   public boolean nextDoc() throws IOException {
     if (freq.eof()) {
-      if (p.lastDocCode != -1) {
+      if (postings.lastDocCodes[currentTermID] != -1) {
         // Return last doc
-        docID = p.lastDocID;
+        docID = postings.lastDocIDs[currentTermID];
         if (!field.omitTermFreqAndPositions)
-          termFreq = p.docFreq;
-        p.lastDocCode = -1;
+          termFreq = postings.docFreqs[currentTermID];
+        postings.lastDocCodes[currentTermID] = -1;
         return true;
       } else
         // EOF
@@ -101,7 +106,7 @@ final class FreqProxFieldMergeState {
         termFreq = freq.readVInt();
     }
 
-    assert docID != p.lastDocID;
+    assert docID != postings.lastDocIDs[currentTermID];
 
     return true;
   }

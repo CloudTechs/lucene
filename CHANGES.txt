@@ -6,9 +6,11 @@ Changes in backwards compatibility policy
 
 * LUCENE-1458, LUCENE-2111: Changes from flexible indexing:
   - MultiReader ctor now throws IOException
-  - Directory.copy now copies all files (not just index files), since
-    what is and isn't and index file is now dependent on the codec
-    used. (Mike McCandless)
+
+  - Directory.copy/Directory.copyTo now copies all files (not just
+    index files), since what is and isn't and index file is now
+    dependent on the codecs used. (Mike McCandless)
+
   - UnicodeUtil now uses BytesRef for UTF-8 output, and some method
     signatures have changed to CharSequence.  These are advanced APIs
     and subject to change suddenly.  (Robert Muir, Mike McCandless)
@@ -318,6 +320,15 @@ Optimizations
 * LUCENE-2303: Remove code duplication in Token class by subclassing
   TermAttributeImpl, move DEFAULT_TYPE constant to TypeInterface, improve
   null-handling for TypeAttribute.  (Uwe Schindler)
+
+* LUCENE-2329: Switch TermsHash* from using a PostingList object per unique 
+  term to parallel arrays, indexed by termID. This reduces garbage collection
+  overhead significantly, which results in great indexing performance wins
+  when the available JVM heap space is low. This will become even more
+  important when the DocumentsWriter RAM buffer is searchable in the future,
+  because then it will make sense to make the RAM buffers as large as 
+  possible. (Mike McCandless, Michael Busch)
+
 
 Build
 

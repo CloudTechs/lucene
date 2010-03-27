@@ -36,9 +36,6 @@ final class TermsHashPerThread extends InvertedDocConsumerPerThread {
   final boolean primary;
   final DocumentsWriter.DocState docState;
 
-  final RawPostingList freePostings[] = new RawPostingList[256];
-  int freePostingsCount;
-
   // Used when comparing postings via termRefComp, in TermsHashPerField
   final BytesRef tr1 = new BytesRef();
   final BytesRef tr2 = new BytesRef();
@@ -100,20 +97,6 @@ final class TermsHashPerThread extends InvertedDocConsumerPerThread {
       nextPerThread.abort();
   }
 
-  // perField calls this when it needs more postings:
-  void morePostings() throws IOException {
-    assert freePostingsCount == 0;
-    termsHash.getPostings(freePostings);
-    freePostingsCount = freePostings.length;
-    assert noNullPostings(freePostings, freePostingsCount, "consumer=" + consumer);
-  }
-
-  private static boolean noNullPostings(RawPostingList[] postings, int count, String details) {
-    for(int i=0;i<count;i++)
-      assert postings[i] != null: "postings[" + i + "] of " + count + " is null: " + details;
-    return true;
-  }
-
   @Override
   public void startDocument() throws IOException {
     consumer.startDocument();
@@ -143,9 +126,8 @@ final class TermsHashPerThread extends InvertedDocConsumerPerThread {
     intPool.reset();
     bytePool.reset();
 
-    if (recyclePostings) {
-      termsHash.recyclePostings(freePostings, freePostingsCount);
-      freePostingsCount = 0;
+    if (primary) {
+      bytePool.reset();
     }
   }
 }

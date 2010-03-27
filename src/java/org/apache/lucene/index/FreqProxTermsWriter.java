@@ -39,13 +39,6 @@ final class FreqProxTermsWriter extends TermsHashConsumer {
   }
 
   @Override
-  void createPostings(RawPostingList[] postings, int start, int count) {
-    final int end = start + count;
-    for(int i=start;i<end;i++)
-      postings[i] = new PostingList();
-  }
-
-  @Override
   void closeDocStore(SegmentWriteState state) {}
 
   @Override
@@ -306,17 +299,5 @@ final class FreqProxTermsWriter extends TermsHashConsumer {
     }
 
     termsConsumer.finish();
-  }
-
-  static final class PostingList extends RawPostingList {
-    int docFreq;                                    // # times this term occurs in the current doc
-    int lastDocID;                                  // Last docID where this term occurred
-    int lastDocCode;                                // Code for prior doc
-    int lastPosition;                               // Last position where this term occurred
-  }
-
-  @Override
-  int bytesPerPosting() {
-    return RawPostingList.BYTES_SIZE + 4 * DocumentsWriter.INT_NUM_BYTE;
   }
 }
