@@ -38,6 +38,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.document.FieldSelector;
 import org.apache.lucene.document.FieldSelectorResult;
+import org.apache.lucene.document.NumericField;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
@@ -597,6 +598,9 @@ public class TestBackwardsCompatibility extends LuceneTestCase
       doc.add(new Field("compressedSize", Integer.toString(BINARY_COMPRESSED_LENGTH), Field.Store.YES, Field.Index.NOT_ANALYZED));
     }
     */
+    // add numeric fields, to test if flex preserves encoding
+    doc.add(new NumericField("trieInt", 4).setIntValue(id));
+    doc.add(new NumericField("trieLong", 4).setLongValue(id));
     writer.addDocument(doc);
   }
 
