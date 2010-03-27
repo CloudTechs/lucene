@@ -37,7 +37,7 @@ class PagedBytes implements Closeable {
   private final int blockMask;
   private int upto;
   private byte[] currentBlock;
-  private final CloseableThreadLocal<byte[]> threadBuffers = new CloseableThreadLocal();
+  private final CloseableThreadLocal<byte[]> threadBuffers = new CloseableThreadLocal<byte[]>();
 
   private static final byte[] EMPTY_BYTES = new byte[0];
 
