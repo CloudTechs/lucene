@@ -75,7 +75,7 @@ public class StandardCodec extends Codec {
   public final static int TERMS_CACHE_SIZE = 1024;
 
   @Override
-    public FieldsProducer fieldsProducer(SegmentReadState state) throws IOException {
+  public FieldsProducer fieldsProducer(SegmentReadState state) throws IOException {
     StandardPostingsReader postings = new StandardPostingsReaderImpl(state.dir, state.segmentInfo, state.readBufferSize);
     StandardTermsIndexReader indexReader;
 
