@@ -18,7 +18,6 @@ package org.apache.lucene.search;
  */
 
 import java.io.IOException;
-import java.util.BitSet;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -69,8 +68,10 @@ public class AutomatonTermsEnum extends FilteredTermsEnum {
   private final boolean finite;
   // array of sorted transitions for each state, indexed by state number
   private final Transition[][] allTransitions;
-  // for path tracking: each bit is a numbered state
-  private final BitSet visited;
+  // for path tracking: each long records gen when we last
+  // visited the state; we use gens to avoid having to clear
+  private final long[] visited;
+  private long curGen;
   // used for unicode conversion from BytesRef byte[] to char[]
   private final UnicodeUtil.UTF16Result utf16 = new UnicodeUtil.UTF16Result();
   // the reference used for seeking forwards through the term dictionary
@@ -126,16 +127,18 @@ public class AutomatonTermsEnum extends FilteredTermsEnum {
       // we will seek each time anyway (and take the unicode conversion hit).
       // its also currently expensive to calculate, because getCommonSuffix is 
       // a bit expensive.
-      commonSuffixRef = new BytesRef("");
+      commonSuffixRef = null;
       // build a cache of sorted transitions for every state
       allTransitions = new Transition[runAutomaton.getSize()][];
       for (State state : this.automaton.getStates())
         allTransitions[state.getNumber()] = state.getSortedTransitionArray(false);
       // used for path tracking, where each bit is a numbered state.
-      visited = new BitSet(runAutomaton.getSize());
+      visited = new long[runAutomaton.getSize()];
       NO_MATCH = AcceptStatus.NO_AND_SEEK;
       YES_MATCH = finite ? AcceptStatus.YES_AND_SEEK : AcceptStatus.YES;
     }
+
+    setUseTermsCache(finite);
   }
   
   /**
@@ -196,7 +199,7 @@ public class AutomatonTermsEnum extends FilteredTermsEnum {
    */
   @Override
   protected AcceptStatus accept(final BytesRef term) {
-    if (term.endsWith(commonSuffixRef)) {
+    if (commonSuffixRef == null || term.endsWith(commonSuffixRef)) {
       UnicodeUtil.UTF8toUTF16(term.bytes, term.offset, term.length, utf16);
       return runAutomaton.run(utf16.result, 0, utf16.length) ? YES_MATCH : NO_MATCH;
     } else {
@@ -307,9 +310,10 @@ public class AutomatonTermsEnum extends FilteredTermsEnum {
         c++;
     }
 
+    curGen++;
+
     utf16.setLength(position);
-    visited.clear();
-    visited.set(state);
+    visited[state] = curGen;
 
     Transition transitions[] = allTransitions[state];
 
@@ -327,8 +331,8 @@ public class AutomatonTermsEnum extends FilteredTermsEnum {
          * as long as is possible, continue down the minimal path in
          * lexicographic order. if a loop or accept state is encountered, stop.
          */
-        while (!visited.get(state) && !runAutomaton.isAccept(state)) {
-          visited.set(state);
+        while (visited[state] != curGen && !runAutomaton.isAccept(state)) {
+          visited[state] = curGen;
           /* 
            * Note: we work with a DFA with no transitions to dead states.
            * so the below is ok, if it is not an accept state,

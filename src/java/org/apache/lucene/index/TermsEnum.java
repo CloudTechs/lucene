@@ -54,11 +54,18 @@ public abstract class TermsEnum {
    *  was hit. */
   public static enum SeekStatus {END, FOUND, NOT_FOUND};
 
+  /** Expert: just like {@link #seek(BytesRef)} but allows
+   *  you to control whether the implementation should
+   *  attempt to use its term cache (if it uses one). */
+  public abstract SeekStatus seek(BytesRef text, boolean useCache) throws IOException;
+
   /** Seeks to the specified term.  Returns SeekResult to
    *  indicate whether exact term was found, a different
    *  term was found, or EOF was hit.  The target term may
    *  be befor or after the current term. */
-  public abstract SeekStatus seek(BytesRef text) throws IOException;
+  public final SeekStatus seek(BytesRef text) throws IOException {
+    return seek(text, true);
+  }
 
   /** Seeks to the specified term by ordinal (position) as
    *  previously returned by {@link #ord}.  The target ord
@@ -124,7 +131,7 @@ public abstract class TermsEnum {
    */
   public static final TermsEnum EMPTY = new TermsEnum() {    
     @Override
-    public SeekStatus seek(BytesRef term) { return SeekStatus.END; }
+    public SeekStatus seek(BytesRef term, boolean useCache) { return SeekStatus.END; }
     
     @Override
     public SeekStatus seek(long ord) { return SeekStatus.END; }

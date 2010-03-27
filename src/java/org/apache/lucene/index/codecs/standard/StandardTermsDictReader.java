@@ -283,19 +283,20 @@ public class StandardTermsDictReader extends FieldsProducer {
        *  is found, SeekStatus.NOT_FOUND if a different term
        *  was found, SeekStatus.END if we hit EOF */
       @Override
-      public SeekStatus seek(BytesRef term) throws IOException {
+      public SeekStatus seek(BytesRef term, boolean useCache) throws IOException {
         // Check cache
         fieldTerm.term = term;
-        TermState cachedState = termsCache.get(fieldTerm);
-        
-        if (cachedState != null) {
-
-          state.copy(cachedState);
-
-          seekPending = true;
-          bytesReader.term.copy(term);
-
-          return SeekStatus.FOUND;
+        TermState cachedState;
+        if (useCache) {
+          cachedState = termsCache.get(fieldTerm);
+          if (cachedState != null) {
+            state.copy(cachedState);
+            seekPending = true;
+            bytesReader.term.copy(term);
+            return SeekStatus.FOUND;
+          }
+        } else {
+          cachedState = null;
         }
 
         boolean doSeek = true;
@@ -353,7 +354,7 @@ public class StandardTermsDictReader extends FieldsProducer {
           final int cmp = termComp.compare(bytesReader.term, term);
           if (cmp == 0) {
 
-            if (doSeek) {
+            if (doSeek && useCache) {
               // Store in cache
               FieldAndTerm entryKey = new FieldAndTerm(fieldTerm);
               cachedState = (TermState) state.clone();

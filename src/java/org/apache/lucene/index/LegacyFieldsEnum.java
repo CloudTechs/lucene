@@ -89,7 +89,7 @@ class LegacyFieldsEnum extends FieldsEnum {
     }
 
     @Override
-    public SeekStatus seek(BytesRef text) throws IOException {
+    public SeekStatus seek(BytesRef text, boolean useCache) throws IOException {
       if (terms != null) {
         terms.close();
       }

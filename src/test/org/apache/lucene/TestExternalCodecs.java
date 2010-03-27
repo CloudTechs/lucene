@@ -284,7 +284,7 @@ public class TestExternalCodecs extends LuceneTestCase {
       }
 
       @Override
-      public SeekStatus seek(BytesRef term) {
+      public SeekStatus seek(BytesRef term, boolean useCache) {
         current = term.utf8ToString();
         it = null;
         if (ramField.termToDocs.containsKey(current)) {

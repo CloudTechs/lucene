@@ -229,8 +229,8 @@ public final class FuzzyTermsEnum extends TermsEnum {
   }
   
   @Override
-  public SeekStatus seek(BytesRef text) throws IOException {
-    return actualEnum.seek(text);
+  public SeekStatus seek(BytesRef text, boolean useCache) throws IOException {
+    return actualEnum.seek(text, useCache);
   }
   
   @Override

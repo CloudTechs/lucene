@@ -46,6 +46,7 @@ public abstract class FilteredTermsEnum extends TermsEnum {
   private BytesRef initialSeekTerm = null;
   private boolean doSeek = true;        
   private BytesRef actualTerm = null;
+  private boolean useTermsCache = false;
 
   private final TermsEnum tenum;
 
@@ -115,6 +116,16 @@ public abstract class FilteredTermsEnum extends TermsEnum {
     return t;
   }
 
+  /** Expert: enable or disable the terms cache when seeking. */
+  protected final void setUseTermsCache(boolean useTermsCache) {
+    this.useTermsCache = useTermsCache;
+  }
+
+  /** Expert: enable or disable the terms cache when seeking. */
+  protected final boolean getUseTermsCache() {
+    return useTermsCache;
+  }
+
   /**
    * Returns the related attributes, the returned {@link AttributeSource}
    * is shared with the delegate {@code TermsEnum}.
@@ -148,7 +159,7 @@ public abstract class FilteredTermsEnum extends TermsEnum {
    * @throws UnsupportedOperationException
    */
   @Override
-  public SeekStatus seek(BytesRef term) throws IOException {
+  public SeekStatus seek(BytesRef term, boolean useCache) throws IOException {
     throw new UnsupportedOperationException(getClass().getName()+" does not support seeking");
   }
 
@@ -187,7 +198,7 @@ public abstract class FilteredTermsEnum extends TermsEnum {
       if (doSeek) {
         doSeek = false;
         final BytesRef t = nextSeekTerm(actualTerm);
-        if (t == null || tenum.seek(t) == SeekStatus.END) {
+        if (t == null || tenum.seek(t, useTermsCache) == SeekStatus.END) {
           // no more terms to seek to or enum exhausted
           return null;
         }

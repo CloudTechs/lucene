@@ -271,7 +271,7 @@ public class PreFlexFields extends FieldsProducer {
     }
 
     @Override
-    public SeekStatus seek(BytesRef term) throws IOException {
+    public SeekStatus seek(BytesRef term, boolean useCache) throws IOException {
       skipNext = false;
       final TermInfosReader tis = getTermsDict();
       final Term t0 = new Term(fieldInfo.name, term.utf8ToString());

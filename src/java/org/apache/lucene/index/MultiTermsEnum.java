@@ -136,11 +136,11 @@ public final class MultiTermsEnum extends TermsEnum {
   }
 
   @Override
-  public SeekStatus seek(BytesRef term) throws IOException {
+  public SeekStatus seek(BytesRef term, boolean useCache) throws IOException {
     queue.clear();
     numTop = 0;
     for(int i=0;i<numSubs;i++) {
-      final SeekStatus status = currentSubs[i].terms.seek(term);
+      final SeekStatus status = currentSubs[i].terms.seek(term, useCache);
       if (status == SeekStatus.FOUND) {
         top[numTop++] = currentSubs[i];
         currentSubs[i].current = term;
