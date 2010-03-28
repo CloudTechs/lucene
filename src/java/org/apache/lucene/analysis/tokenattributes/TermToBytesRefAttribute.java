@@ -25,8 +25,23 @@ import org.apache.lucene.util.BytesRef;
  * This attribute has no real state, it should be implemented in addition to
  * {@link CharTermAttribute}, to support indexing the term text as
  * UTF-8 bytes.
+ * @lucene.experimental This is a very expert API, please use
+ * {@link CharTermAttributeImpl} and its implementation of this method
+ * for UTF-8 terms.
  */
 public interface TermToBytesRefAttribute extends Attribute {
-  /** Copies the token's term text into the given {@link BytesRef}. It returns the hashCode for TermsHash */
-  public int toBytesRef(BytesRef bytes);
+  /** Copies the token's term text into the given {@link BytesRef}.
+   * @param termBytes destination to write the bytes to (UTF-8 for text terms).
+   * @return the hashcode as defined by {@link BytesRef#hashCode}:
+   * <pre>
+   *  int hash = 0;
+   *  for (int i = termBytes.offset; i &lt; termBytes.offset+termBytes.length; i++) {
+   *    hash = 31*hash + termBytes.bytes[i];
+   *  }
+   * </pre>
+   * Implement this for performance reasons, if your code can calculate
+   * the hash on-the-fly. If this is not the case, just return
+   * {@code termBytes.hashCode()}.
+   */
+  public int toBytesRef(BytesRef termBytes);
 }

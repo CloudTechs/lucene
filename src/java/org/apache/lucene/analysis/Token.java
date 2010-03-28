@@ -115,6 +115,7 @@ import org.apache.lucene.util.AttributeImpl;
 
   @see org.apache.lucene.index.Payload
 */
+// TODO: change superclass to CharTermAttribute in 4.0!
 public class Token extends TermAttributeImpl 
                    implements TypeAttribute, PositionIncrementAttribute,
                               FlagsAttribute, OffsetAttribute, PayloadAttribute {

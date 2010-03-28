@@ -125,6 +125,15 @@ public final class BytesRef {
     return sliceEquals(other, length - other.length);
   }
   
+  /** Calculates the hash code as required by TermsHash during indexing.
+   * <p>It is defined as:
+   * <pre>
+   *  int hash = 0;
+   *  for (int i = offset; i &lt; offset + length; i++) {
+   *    hash = 31*hash + bytes[i];
+   *  }
+   * </pre>
+   */
   @Override
   public int hashCode() {
     final int prime = 31;
