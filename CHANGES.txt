@@ -53,6 +53,10 @@ New features
   representation for the in-memory terms dict index.  (Mike
   McCandless)
 
+* LUCENE-2126: Add new classes for data (de)serialization: DataInput
+  and DataOutput.  IndexInput and IndexOutput extend these new classes.
+  (Michael Busch)
+
 ======================= Trunk (not yet released) =======================
 
 Changes in backwards compatibility policy
