@@ -26,11 +26,12 @@ import org.apache.lucene.util.BytesRef;
 
 /** Iterator to seek ({@link #seek}) or step through ({@link
  * #next} terms, obtain frequency information ({@link
- * #docFreq}), and obtain a {@link DocsEnum} for the current
- * term ({@link #docs)}.
+ * #docFreq}), and obtain a {@link DocsEnum} or {@link
+ * DocsAndPositionsEnum} for the current term ({@link
+ * #docs}.
  * 
  * <p>Term enumerations are always ordered by
- * {@link #getTermComparator}.  Each term in the enumeration is
+ * {@link #getComparator}.  Each term in the enumeration is
  * greater than all that precede it.</p>
  *
  * <p>On obtaining a TermsEnum, you must first call
@@ -47,7 +48,7 @@ public abstract class TermsEnum {
     return atts;
   }
   
-  /** Represents returned result from {@link TermsEnum.seek}.
+  /** Represents returned result from {@link #seek}.
    *  If status is FOUND, then the precise term was found.
    *  If status is NOT_FOUND, then a different term was
    *  found.  If the status is END, the end of the iteration
@@ -70,7 +71,7 @@ public abstract class TermsEnum {
   /** Seeks to the specified term by ordinal (position) as
    *  previously returned by {@link #ord}.  The target ord
    *  may be befor or after the current ord.  See {@link
-   *  #seek(BytesRef). */
+   *  #seek(BytesRef)}. */
   public abstract SeekStatus seek(long ord) throws IOException;
   
   /** Increments the enumeration to the next element.

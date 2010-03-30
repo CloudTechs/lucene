@@ -34,7 +34,7 @@ import org.apache.lucene.util.Bits;
  * Abstract class for enumerating a subset of all terms. 
  * 
  * <p>Term enumerations are always ordered by
- * {@link #getTermComparator}.  Each term in the enumeration is
+ * {@link #getComparator}.  Each term in the enumeration is
  * greater than all that precede it.</p>
  * <p><em>Please note:</em> Consumers of this enum cannot
  * call {@code seek()}, it is forward only; it throws
@@ -52,7 +52,7 @@ public abstract class FilteredTermsEnum extends TermsEnum {
 
   /** Return value, if term should be accepted or the iteration should
    * {@code END}. The {@code *_SEEK} values denote, that after handling the current term
-   * the enum should call {@link nextSeekTerm()} and step forward.
+   * the enum should call {@link #nextSeekTerm} and step forward.
    * @see #accept(BytesRef)
    */
   protected static enum AcceptStatus {YES, YES_AND_SEEK, NO, NO_AND_SEEK, END};

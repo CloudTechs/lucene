@@ -25,7 +25,7 @@ import org.apache.lucene.util.BytesRef;
 public abstract class DocsAndPositionsEnum extends DocsEnum {
 
   /** Returns the next position.  You should only call this
-   *  up to {@link FormatPostingsDocsEnum#freq()} times else
+   *  up to {@link DocsEnum#freq()} times else
    *  the behavior is not defined. */
   public abstract int nextPosition() throws IOException;
 

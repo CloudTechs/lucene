@@ -86,7 +86,7 @@ public abstract class MultiTermQuery extends Query {
   /** Add this {@link Attribute} to a {@link TermsEnum} returned by {@link #getTermsEnum}
    * and update the boost on each returned term. This enables to control the boost factor
    * for each matching term in {@link #SCORING_BOOLEAN_QUERY_REWRITE} or
-   * {@link TOP_TERMS_SCORING_BOOLEAN_QUERY_REWRITE} mode.
+   * {@link TopTermsBooleanQueryRewrite} mode.
    * {@link FuzzyQuery} is using this to take the edit distance into account.
    */
   public static interface BoostAttribute extends Attribute {
@@ -95,7 +95,7 @@ public abstract class MultiTermQuery extends Query {
     /** Retrieves the boost, default is {@code 1.0f}. */
     public float getBoost();
     /** Sets the maximum boost for terms that would never get
-     * into the priority queue of {@link MultiTermQuery#TOP_TERMS_SCORING_BOOLEAN_REWRITE}.
+     * into the priority queue of {@link MultiTermQuery.TopTermsBooleanQueryRewrite}.
      * This value is not changed by {@link AttributeImpl#clear}
      * and not used in {@code equals()} and {@code hashCode()}.
      * Do not change the value in the {@link TermsEnum}!
@@ -262,7 +262,6 @@ public abstract class MultiTermQuery extends Query {
         if (boostAtt != null) boostAtt.setMaxNonCompetitiveBoost(maxNonCompetitiveBoost);
       }
     }
-    
   }
   
   private static class ScoringBooleanQueryRewrite extends BooleanQueryRewrite {

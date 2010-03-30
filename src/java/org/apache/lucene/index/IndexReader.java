@@ -24,6 +24,7 @@ import org.apache.lucene.index.codecs.CodecProvider;
 import org.apache.lucene.store.*;
 import org.apache.lucene.util.Bits;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.ReaderUtil;         // for javadocs
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -941,7 +942,7 @@ public abstract class IndexReader implements Cloneable,Closeable {
    * </ul>
    * <p>The enumeration is ordered by document number.  Each document number
    * is greater than all that precede it in the enumeration.
-   * @deprecated Use the new flex API ({@link #termDocsEnum()}) instead.
+   * @deprecated Use the new flex API ({@link #termDocsEnum}) instead.
    * @throws IOException if there is a low-level IO error
    */
   @Deprecated
@@ -1021,7 +1022,7 @@ public abstract class IndexReader implements Cloneable,Closeable {
    * <p>The enumeration is ordered by document number.  Each document number is
    * greater than all that precede it in the enumeration.
    * @deprecated Please switch the flex API ({@link
-   * #termDocsEnum()}) instead
+   * #termDocsEnum}) instead
    * @throws IOException if there is a low-level IO error
    */
   @Deprecated
@@ -1034,7 +1035,7 @@ public abstract class IndexReader implements Cloneable,Closeable {
 
   /** Returns an unpositioned {@link TermPositions} enumerator.
    * @deprecated Please switch the flex API ({@link
-   * #termDocsEnum()}) instead
+   * #termDocsEnum}) instead
    * @throws IOException if there is a low-level IO error
    */
   @Deprecated

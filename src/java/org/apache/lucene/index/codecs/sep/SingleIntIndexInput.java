@@ -24,7 +24,7 @@ import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.util.CodecUtil;
 
 /** Reads IndexInputs written with {@link
- *  SingleIntIndexoutput}.  NOTE: this class is just for
+ *  SingleIntIndexOutput}.  NOTE: this class is just for
  *  demonstration puprposes (it is a very slow way to read a
  *  block of ints).
  *

@@ -17,8 +17,10 @@ package org.apache.lucene.index.codecs.standard;
  * limitations under the License.
  */
 
+import org.apache.lucene.index.DocsEnum;          // for javadocs
+
 /**
- * Holds all state required for {@link StandardDocsProducer}
+ * Holds all state required for {@link StandardPostingsReader}
  * to produce a {@link DocsEnum} without re-seeking the
  * terms dict.
  * @lucene.experimental

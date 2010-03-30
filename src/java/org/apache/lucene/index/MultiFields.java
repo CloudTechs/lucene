@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 import org.apache.lucene.util.ReaderUtil;
+import org.apache.lucene.util.ReaderUtil.Gather;  // for javadocs
 import org.apache.lucene.util.Bits;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.MultiBits;
@@ -31,7 +32,7 @@ import org.apache.lucene.util.MultiBits;
  * Exposes flex API, merged from flex API of sub-segments.
  * This is useful when you're interacting with an {@link
  * IndexReader} implementation that consists of sequential
- * sub-readers (eg {@link DirectoryReade} or {@link
+ * sub-readers (eg {@link DirectoryReader} or {@link
  * MultiReader}).
  *
  * <p><b>NOTE</b>: for multi readers, you'll get better
@@ -53,7 +54,7 @@ public final class MultiFields extends Fields {
    *
    *  <p><bNOTE</b>: this is a slow way to access postings.
    *  It's better to get the sub-readers (using {@link
-   *  ReaderUtil#Gather}) and iterate through them
+   *  Gather}) and iterate through them
    *  yourself. */
   public static Fields getFields(IndexReader r) throws IOException {
     final IndexReader[] subs = r.getSequentialSubReaders();

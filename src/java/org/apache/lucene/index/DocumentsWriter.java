@@ -1075,7 +1075,7 @@ final class DocumentsWriter {
           
           termRef.copy(term.text());
           
-          if (termsEnum.seek(termRef) == TermsEnum.SeekStatus.FOUND) {
+          if (termsEnum.seek(termRef, false) == TermsEnum.SeekStatus.FOUND) {
             DocsEnum docsEnum = termsEnum.docs(reader.getDeletedDocs(), docs);
             
             if (docsEnum != null) {

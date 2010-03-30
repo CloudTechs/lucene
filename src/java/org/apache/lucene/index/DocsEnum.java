@@ -24,7 +24,7 @@ import org.apache.lucene.util.AttributeSource;
 import org.apache.lucene.util.IntsRef;
 
 /** Iterates through the documents, term freq and positions.
- *  NOTE: you must first call {@link #next}.
+ *  NOTE: you must first call {@link #nextDoc}.
  *
  *  @lucene.experimental */
 public abstract class DocsEnum extends DocIdSetIterator {
@@ -32,8 +32,8 @@ public abstract class DocsEnum extends DocIdSetIterator {
   private AttributeSource atts = null;
 
   /** Returns term frequency in the current document.  Do
-   *  not call this before {@link #next} is first called,
-   *  nor after {@link #next} returns NO_MORE_DOCS. */
+   *  not call this before {@link #nextDoc} is first called,
+   *  nor after {@link #nextDoc} returns NO_MORE_DOCS. */
   public abstract int freq();
   
   /** Returns the related attributes. */
@@ -66,7 +66,7 @@ public abstract class DocsEnum extends DocIdSetIterator {
   }
   
   /** Bulk read (docs and freqs).  After this is called,
-   * {@link #doc} and {@link #freq} are undefined.  This
+   * {@link #docID()} and {@link #freq} are undefined.  This
    * returns the count read, or 0 if the end is reached.
    * The IntsRef for docs and freqs will not have their
    * length set.

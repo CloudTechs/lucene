@@ -132,7 +132,8 @@ public class AutomatonTermsEnum extends FilteredTermsEnum {
   }
  
   /**
-   * Returns true if the term matches the automaton. 
+   * Returns true if the term matches the automaton. Also stashes away the term
+   * to assist with smart enumeration.
    */
   @Override
   protected AcceptStatus accept(final BytesRef term) {

@@ -5,6 +5,7 @@ Lucene Change Log
 Changes in backwards compatibility policy
 
 * LUCENE-1458, LUCENE-2111: Changes from flexible indexing:
+
   - MultiReader ctor now throws IOException
 
   - Directory.copy/Directory.copyTo now copies all files (not just
@@ -12,8 +13,20 @@ Changes in backwards compatibility policy
     dependent on the codecs used. (Mike McCandless)
 
   - UnicodeUtil now uses BytesRef for UTF-8 output, and some method
-    signatures have changed to CharSequence.  These are advanced APIs
+    signatures have changed to CharSequence.  These are internal APIs
     and subject to change suddenly.  (Robert Muir, Mike McCandless)
+
+  - Positional queries (PhraseQuery, *SpanQuery) will now throw an
+    exception if use them on a field that omits positions during
+    indexing (previously they silently returned no results).
+
+  - FieldCache.(Byte,Short,Int,Long,Float,Double}Parser's API has
+    changed -- each parse method now takes a BytesRef instead of a
+    String.  If you have an existing Parser, a simple way to fix it is
+    invoke BytesRef.utf8ToString, and pass that String to your
+    existing parser.  This will work, but performance would be better
+    if you could fix your parser to instead operate directly on the
+    byte[] in the BytesRef.
 
 Bug Fixes
 

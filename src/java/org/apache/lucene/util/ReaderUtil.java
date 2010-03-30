@@ -48,7 +48,11 @@ public class ReaderUtil {
   }
 
   /**
-   * Gathers sub-readers from reader into a List.
+   * Gathers sub-readers from reader into a List.  See
+   * {@link Gather} for are more general way to gather
+   * whatever you need to, per reader.
+   *
+   * @lucene.experimental
    * 
    * @param allSubReaders
    * @param reader
@@ -68,6 +72,11 @@ public class ReaderUtil {
     }
   }
 
+  /** Recursively visits all sub-readers of a reader.  You
+   *  should subclass this and override the add method to
+   *  gather what you need.
+   *
+   * @lucene.experimental */
   public static abstract class Gather {
     private final IndexReader topReader;
 

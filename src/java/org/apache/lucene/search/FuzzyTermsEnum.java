@@ -40,7 +40,7 @@ import java.util.List;
  * to the specified filter term.
  *
  * <p>Term enumerations are always ordered by
- * {@link #getTermComparator}.  Each term in the enumeration is
+ * {@link #getComparator}.  Each term in the enumeration is
  * greater than all that precede it.</p>
  */
 public final class FuzzyTermsEnum extends TermsEnum {
