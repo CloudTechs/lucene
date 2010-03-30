@@ -18,6 +18,7 @@ package org.apache.lucene.search;
  */
 
 import java.io.IOException;
+import java.util.Comparator;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -44,15 +45,6 @@ import org.apache.lucene.util.automaton.Transition;
  * completely accepted. This is not possible when the language accepted by the
  * FSM is not finite (i.e. * operator).
  * </p>
- * <p>
- * If the DFA has a leading kleene star, or something similar, it will
- * need to run against the entire term dictionary. In this case its much
- * better to do just that than to use smart enumeration.
- * This heuristic looks for an initial loop, with a range of at least 1/3
- * of the unicode BMP.
- * Use {@link #usesLinearMode} to find out if it enumerates all terms
- * in linear mode without seeking.
- * </p>
  * @lucene.experimental
  */
 public class AutomatonTermsEnum extends FilteredTermsEnum {
@@ -60,8 +52,6 @@ public class AutomatonTermsEnum extends FilteredTermsEnum {
   private final Automaton automaton;
   // a tableized array-based form of the DFA
   private final RunAutomaton runAutomaton;
-  // true if this enum will not seek around
-  private final boolean linearMode;
   // common suffix of the automaton
   private final BytesRef commonSuffixRef;
   // true if the automaton accepts a finite language
@@ -75,11 +65,16 @@ public class AutomatonTermsEnum extends FilteredTermsEnum {
   // used for unicode conversion from BytesRef byte[] to char[]
   private final UnicodeUtil.UTF16Result utf16 = new UnicodeUtil.UTF16Result();
   // the reference used for seeking forwards through the term dictionary
-  private final BytesRef seekBytesRef = new BytesRef(10);
-  
-  // this accept stati will be returned by accept() dependent on internal mode
-  private final AcceptStatus NO_MATCH, YES_MATCH;
-  
+  private final BytesRef seekBytesRef = new BytesRef(10); 
+  // true if we are enumerating an infinite portion of the DFA.
+  // in this case it is faster to drive the query based on the terms dictionary.
+  // when this is true, linearUpperBound indicate the end of range
+  // of terms where we should simply do sequential reads instead.
+  private boolean linear = false;
+  private final BytesRef linearUpperBound = new BytesRef(10);
+  private final UnicodeUtil.UTF16Result linearUpperBoundUTF16 = new UnicodeUtil.UTF16Result();
+  private final Comparator<BytesRef> termComp;
+
   /**
    * Expert ctor:
    * Construct an enumerator based upon an automaton, enumerating the specified
@@ -92,15 +87,15 @@ public class AutomatonTermsEnum extends FilteredTermsEnum {
    * State numbering, or you will get undefined behavior.
    * <p>
    * @param preCompiled optional pre-compiled RunAutomaton (can be null)
-   * @param linearMode determines whether or not it will use smart enumeration.
+   * @param finite true if the automaton accepts a finite language
    */
   AutomatonTermsEnum(Automaton automaton, RunAutomaton preCompiled,
-      Term queryTerm, IndexReader reader, boolean linearMode)
+      Term queryTerm, IndexReader reader, boolean finite)
       throws IOException {
     super(reader, queryTerm.field());
     this.automaton = automaton;
-    this.linearMode = linearMode;
-    
+    this.finite = finite;
+
     /* 
      * tableize the automaton. this also ensures it is deterministic, and has no 
      * transitions to dead states. it also invokes Automaton.setStateNumbers to
@@ -111,128 +106,107 @@ public class AutomatonTermsEnum extends FilteredTermsEnum {
     else
       runAutomaton = preCompiled;
 
-    if (this.linearMode) {
-      // iterate all terms in linear mode
-      this.finite = false;
-      allTransitions = null;
-      visited = null;
-      commonSuffixRef = new BytesRef(getValidUTF16Suffix(SpecialOperations
-          .getCommonSuffix(automaton)));
-      NO_MATCH = AcceptStatus.NO;
-      YES_MATCH = AcceptStatus.YES;
-    } else {
-      // if the automaton is finite, we will never read sequentially, but always seek.
-      this.finite = SpecialOperations.isFinite(this.automaton);
-      // in nonlinear mode, the common suffix isn't that helpful.
-      // we will seek each time anyway (and take the unicode conversion hit).
-      // its also currently expensive to calculate, because getCommonSuffix is 
-      // a bit expensive.
-      commonSuffixRef = null;
-      // build a cache of sorted transitions for every state
-      allTransitions = new Transition[runAutomaton.getSize()][];
-      for (State state : this.automaton.getStates())
-        allTransitions[state.getNumber()] = state.getSortedTransitionArray(false);
-      // used for path tracking, where each bit is a numbered state.
-      visited = new long[runAutomaton.getSize()];
-      NO_MATCH = AcceptStatus.NO_AND_SEEK;
-      YES_MATCH = finite ? AcceptStatus.YES_AND_SEEK : AcceptStatus.YES;
-    }
+    commonSuffixRef = finite ? null : new BytesRef(getValidUTF16Suffix(SpecialOperations
+        .getCommonSuffix(automaton)));
+    
+    // build a cache of sorted transitions for every state
+    allTransitions = new Transition[runAutomaton.getSize()][];
+    for (State state : this.automaton.getStates())
+      allTransitions[state.getNumber()] = state.getSortedTransitionArray(false);
+    // used for path tracking, where each bit is a numbered state.
+    visited = new long[runAutomaton.getSize()];
 
     setUseTermsCache(finite);
+    termComp = getComparator();
   }
   
   /**
    * Construct an enumerator based upon an automaton, enumerating the specified
    * field, working on a supplied reader.
    * <p>
-   * It will automagically determine whether or not to enumerate the term dictionary
-   * in a smart way, or to just do a linear scan depending upon a heuristic.
+   * It will automatically calculate whether or not the automaton is finite
    */
   public AutomatonTermsEnum(Automaton automaton, Term queryTerm, IndexReader reader)
       throws IOException {
-    this(automaton, null, queryTerm, reader, AutomatonTermsEnum.isSlow(automaton));
-  }
-  
-  /**
-   * Heuristic to detect if an automaton will be so slow,
-   * that it is better to do a linear enumeration.
-   * <p>
-   * A very slow automaton will simply cause a lot of wasted disk seeks.
-   * Instead in that case it is actually faster to do a linear enumeration.
-   * <p>
-   * @param automaton automaton
-   * @return true if it will result in bad search performance
-   */
-  private static boolean isSlow(Automaton automaton) {
-    /*
-     * If the DFA has a leading kleene star, or something similar, it will
-     * need to run against the entire term dictionary. In this case its much
-     * better to do just that than to use smart enumeration.
-     * 
-     * this heuristic looks for an initial loop, with a range of at least 1/3
-     * of the unicode BMP.
-     */
-    State initialState = automaton.getInitialState();
-    boolean linearMode = false;
-    for (Transition transition : initialState.getTransitions()) {
-      if (transition.getDest() == initialState && 
-          (transition.getMax() - transition.getMin()) > (Character.MAX_VALUE / 3)) {
-        linearMode = true;
-        break;
-      }
-    }
-    return linearMode;
-  }
-  
-  /**
-   * Returns {@code true} if the enum is in linear mode, {@code false} in smart mode.
-   */
-  public final boolean usesLinearMode() {
-    return linearMode;
+    this(automaton, null, queryTerm, reader, SpecialOperations.isFinite(automaton));
   }
  
   /**
-   * Returns true if the term matches the automaton. Also stashes away the term
-   * to assist with smart enumeration.
-   * <p>In linear mode, it also sets {@link #endEnum} if the enumeration is exhausted.
-   * In smart mode, it will never do this.   
+   * Returns true if the term matches the automaton. 
    */
   @Override
   protected AcceptStatus accept(final BytesRef term) {
     if (commonSuffixRef == null || term.endsWith(commonSuffixRef)) {
       UnicodeUtil.UTF8toUTF16(term.bytes, term.offset, term.length, utf16);
-      return runAutomaton.run(utf16.result, 0, utf16.length) ? YES_MATCH : NO_MATCH;
+      if (runAutomaton.run(utf16.result, 0, utf16.length))
+        return linear ? AcceptStatus.YES : AcceptStatus.YES_AND_SEEK;
+      else
+        return (linear && termComp.compare(term, linearUpperBound) < 0) ? 
+            AcceptStatus.NO : AcceptStatus.NO_AND_SEEK;
     } else {
-      return NO_MATCH;
+      return (linear && termComp.compare(term, linearUpperBound) < 0) ? 
+          AcceptStatus.NO : AcceptStatus.NO_AND_SEEK;
     }
   }
   
   @Override
   protected BytesRef nextSeekTerm(final BytesRef term) throws IOException {
     if (term == null) {
-      // return the first seek term
-      if (linearMode) {
+      // return the empty term, as its valid
+      if (runAutomaton.run("")) {
         seekBytesRef.copy("");
-      } else {
-        utf16.copyText("");
-        if (!nextString())
-          return null;
-        UnicodeUtil.nextValidUTF16String(utf16);
-        UnicodeUtil.UTF16toUTF8(utf16.result, 0, utf16.length, seekBytesRef);
-      }
-      return seekBytesRef;
-    } else if (!linearMode) {
-      // seek to the next possible string
-      UnicodeUtil.UTF8toUTF16(term.bytes, term.offset, term.length, utf16);
-      if (nextString()) {
-        // reposition
-        UnicodeUtil.nextValidUTF16String(utf16);
-        UnicodeUtil.UTF16toUTF8(utf16.result, 0, utf16.length, seekBytesRef);
         return seekBytesRef;
       }
+      
+      utf16.copyText("");
+    } else {
+      UnicodeUtil.UTF8toUTF16(term.bytes, term.offset, term.length, utf16);
+    }
+
+    // seek to the next possible string;
+    if (nextString()) {
+      // reposition
+      if (linear)
+        setLinear(infinitePosition);
+      UnicodeUtil.nextValidUTF16String(utf16);
+      UnicodeUtil.UTF16toUTF8(utf16.result, 0, utf16.length, seekBytesRef);
+      return seekBytesRef;
     }
     // no more possible strings can match
     return null;
+  }
+
+  // this instance prevents unicode conversion during backtracking,
+  // we can just call setLinear once at the end.
+  int infinitePosition;
+
+  /**
+   * Sets the enum to operate in linear fashion, as we have found
+   * a looping transition at position
+   */
+  private void setLinear(int position) {
+    int state = runAutomaton.getInitialState();
+    char maxInterval = 0xffff;
+    for (int i = 0; i < position; i++)
+      state = runAutomaton.step(state, utf16.result[i]);
+    for (int i = 0; i < allTransitions[state].length; i++) {
+      Transition t = allTransitions[state][i];
+      if (t.getMin() <= utf16.result[position] && utf16.result[position] <= t.getMax()) {
+        maxInterval = t.getMax();
+        break;
+      }
+    }
+    // 0xffff terms don't get the optimization... not worth the trouble.
+    if (maxInterval < 0xffff)
+      maxInterval++;
+    int length = position + 1; /* position + maxTransition */
+    if (linearUpperBoundUTF16.result.length < length)
+      linearUpperBoundUTF16.result = new char[length];
+    System.arraycopy(utf16.result, 0, linearUpperBoundUTF16.result, 0, position);
+    linearUpperBoundUTF16.result[position] = maxInterval;
+    linearUpperBoundUTF16.setLength(length);
+    UnicodeUtil.nextValidUTF16String(linearUpperBoundUTF16);
+    UnicodeUtil.UTF16toUTF8(linearUpperBoundUTF16.result, 0, length, linearUpperBound);
   }
 
   /**
@@ -250,14 +224,21 @@ public class AutomatonTermsEnum extends FilteredTermsEnum {
     int pos = 0;
 
     while (true) {
+      curGen++;
+      linear = false;
       state = runAutomaton.getInitialState();
       // walk the automaton until a character is rejected.
       for (pos = 0; pos < utf16.length; pos++) {
+        visited[state] = curGen;
         int nextState = runAutomaton.step(state, utf16.result[pos]);
         if (nextState == -1)
           break;
-        else
-          state = nextState;
+        // we found a loop, record it for faster enumeration
+        if (!finite && !linear && visited[nextState] == curGen) {
+          linear = true;
+          infinitePosition = pos;
+        }
+        state = nextState;
       }
 
       // take the useful portion, and the last non-reject state, and attempt to
@@ -310,8 +291,6 @@ public class AutomatonTermsEnum extends FilteredTermsEnum {
         c++;
     }
 
-    curGen++;
-
     utf16.setLength(position);
     visited[state] = curGen;
 
@@ -339,10 +318,15 @@ public class AutomatonTermsEnum extends FilteredTermsEnum {
            * then there MUST be at least one transition.
            */
           transition = allTransitions[state][0];
+          state = transition.getDest().getNumber();
+          // we found a loop, record it for faster enumeration
+          if (!finite && !linear && visited[state] == curGen) {
+            linear = true;
+            infinitePosition = utf16.length;
+          }
           // append the minimum transition
           utf16.setLength(utf16.length + 1);
           utf16.result[utf16.length - 1] = transition.getMin();
-          state = transition.getDest().getNumber();
         }
         return true;
       }

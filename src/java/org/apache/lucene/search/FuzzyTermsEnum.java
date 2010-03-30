@@ -268,7 +268,7 @@ final class AutomatonFuzzyTermsEnum extends AutomatonTermsEnum {
   
   public AutomatonFuzzyTermsEnum(Automaton automaton, Term queryTerm,
       IndexReader reader, float minSimilarity, RunAutomaton matchers[], BytesRef lastTerm) throws IOException {
-    super(automaton, matchers[matchers.length - 1], queryTerm, reader, false);
+    super(automaton, matchers[matchers.length - 1], queryTerm, reader, true);
     this.minimumSimilarity = minSimilarity;
     this.scale_factor = 1.0f / (1.0f - minimumSimilarity);
     this.matchers = matchers;

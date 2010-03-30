@@ -200,19 +200,7 @@ public class TestAutomatonQuery extends LuceneTestCase {
   }
   
   /**
-   * Test that a badly-performing automaton that must visit all the terms does
-   * not use the smart enumeration, this will just waste cpu.
-   */
-  public void testLinearOptimization() throws IOException {
-    AutomatonQuery aq = new RegexpQuery(newTerm(".*ument"));
-    assertTrue(((AutomatonTermsEnum) aq.getTermsEnum(searcher.getIndexReader()))
-        .usesLinearMode());
-    assertEquals(1, automatonQueryNrHits(aq));
-  }
-  
-  /**
-   * Test that a badly-performing automaton that must visit all the terms does
-   * not use the smart enumeration, this will just waste cpu.
+   * Test handling of the empty language
    */
   public void testEmptyOptimization() throws IOException {
     AutomatonQuery aq = new AutomatonQuery(newTerm("bogus"), BasicAutomata

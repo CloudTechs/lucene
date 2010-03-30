@@ -65,12 +65,16 @@ public class TestUnicodeUtil extends LuceneTestCase {
     assertEquals("dogs\uD801\uDC00", UnicodeUtil
         .nextValidUTF16String("dogs\uD801\uD800"));
     
-    // an illegal combination where we have already enumerated the supp plane
-    // we must replace both H and Z with \uE000 (the lowest possible
-    // "upper BMP")
-    assertEquals("dogs\uE000", UnicodeUtil
+    // an illegal combination where we have already enumerated the trail
+    // we must increment the lead and start the trail back at the beginning.
+    assertEquals("dogs\uD802\uDC00", UnicodeUtil
         .nextValidUTF16String("dogs\uD801\uE001"));
     
+    // an illegal combination where we have exhausted the supp plane
+    // we must now move to the lower bmp.
+    assertEquals("dogs\uE000", UnicodeUtil
+        .nextValidUTF16String("dogs\uDBFF\uE001"));
+
     // an unpaired trail surrogate. this is invalid when not preceded by a lead
     // surrogate. in this case we have to bump to \uE000 (the lowest possible
     // "upper BMP")

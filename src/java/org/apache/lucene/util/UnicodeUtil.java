@@ -372,8 +372,14 @@ final public class UnicodeUtil {
               s.result[i] = (char) UnicodeUtil.UNI_SUR_LOW_START;             
               return;
             } else { // SMP already enumerated
-              s.setLength(i);
-              s.result[i - 1] = (char) (UnicodeUtil.UNI_SUR_LOW_END + 1);              
+              if (s.result[i - 1] == UnicodeUtil.UNI_SUR_HIGH_END) {
+                s.result[i - 1] = (char) (UnicodeUtil.UNI_SUR_LOW_END + 1);
+                s.setLength(i);               
+              } else {
+                s.result[i - 1]++;
+                s.result[i] = (char) UnicodeUtil.UNI_SUR_LOW_START;
+                s.setLength(i + 1);
+              }            
               return;
             }
         } else {
