@@ -125,6 +125,7 @@ public class StandardTermsDictReader extends FieldsProducer {
       for(int i=0;i<numFields;i++) {
         final int field = in.readInt();
         final long numTerms = in.readLong();
+        assert numTerms >= 0;
         final long termsStartPointer = in.readLong();
         final StandardTermsIndexReader.FieldReader fieldIndexReader;
         final FieldInfo fieldInfo = fieldInfos.fieldInfo(field);

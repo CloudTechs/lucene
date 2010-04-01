@@ -593,18 +593,27 @@ public class CheckIndex {
       if (infoStream != null) {
         infoStream.print("    test: terms, freq, prox...");
       }
+
+      final Fields fields = reader.fields();
+      if (fields == null) {
+        msg("OK [no fields/terms]");
+        return status;
+      }
       
-      final FieldsEnum fields = reader.fields().iterator();
+      final FieldsEnum fieldsEnum = fields.iterator();
       while(true) {
-        final String field = fields.next();
+        final String field = fieldsEnum.next();
         if (field == null) {
           break;
         }
         
-        final TermsEnum terms = fields.terms();
+        final TermsEnum terms = fieldsEnum.terms();
 
         DocsEnum docs = null;
         DocsAndPositionsEnum postings = null;
+
+        boolean hasOrd = true;
+        final long termCountStart = status.termCount;
 
         while(true) {
 
@@ -612,11 +621,30 @@ public class CheckIndex {
           if (term == null) {
             break;
           }
+
           final int docFreq = terms.docFreq();
           status.totFreq += docFreq;
 
           docs = terms.docs(delDocs, docs);
           postings = terms.docsAndPositions(delDocs, postings);
+
+          if (hasOrd) {
+            long ord = -1;
+            try {
+              ord = terms.ord();
+            } catch (UnsupportedOperationException uoe) {
+              hasOrd = false;
+            }
+
+            if (hasOrd) {
+              final long ordExpected = status.termCount - termCountStart;
+              if (ord != ordExpected) {
+                throw new RuntimeException("ord mismatch: TermsEnum has ord=" + ord + " vs actual=" + ordExpected);
+              }
+            }
+          }
+
+          status.termCount++;
 
           final DocsEnum docs2;
           if (postings != null) {
@@ -624,8 +652,6 @@ public class CheckIndex {
           } else {
             docs2 = docs;
           }
-
-          status.termCount++;
 
           int lastDoc = -1;
           while(true) {

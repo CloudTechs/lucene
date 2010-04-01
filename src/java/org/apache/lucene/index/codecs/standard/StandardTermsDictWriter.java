@@ -129,7 +129,7 @@ public class StandardTermsDictWriter extends FieldsConsumer {
     private final FieldInfo fieldInfo;
     private final StandardPostingsWriter postingsWriter;
     private final long termsStartPointer;
-    private int numTerms;
+    private long numTerms;
     private final StandardTermsIndexWriter.FieldWriter fieldIndexWriter;
 
     TermsWriter(StandardTermsIndexWriter.FieldWriter fieldIndexWriter, FieldInfo fieldInfo, StandardPostingsWriter postingsWriter) {

@@ -60,7 +60,15 @@ import org.apache.lucene.index.IndexFileNames;
 /** @lucene.experimental */
 public class SimpleStandardTermsIndexReader extends StandardTermsIndexReader {
 
-  private int totalIndexInterval;
+  // NOTE: long is overkill here, since this number is 128
+  // by default and only indexDivisor * 128 if you change
+  // the indexDivisor at search time.  But, we use this in a
+  // number of places to multiply out the actual ord, and we
+  // will overflow int during those multiplies.  So to avoid
+  // having to upgrade each multiple to long in multiple
+  // places (error proned), we use long here:
+  private long totalIndexInterval;
+
   private int indexDivisor;
   final private int indexInterval;
 
