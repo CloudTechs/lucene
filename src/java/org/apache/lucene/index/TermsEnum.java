@@ -60,7 +60,7 @@ public abstract class TermsEnum {
    *  attempt to use its term cache (if it uses one). */
   public abstract SeekStatus seek(BytesRef text, boolean useCache) throws IOException;
 
-  /** Seeks to the specified term.  Returns SeekResult to
+  /** Seeks to the specified term.  Returns SeekStatus to
    *  indicate whether exact term was found, a different
    *  term was found, or EOF was hit.  The target term may
    *  be befor or after the current term. */
