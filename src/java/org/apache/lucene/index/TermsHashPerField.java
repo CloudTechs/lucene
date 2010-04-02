@@ -25,6 +25,7 @@ import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.analysis.tokenattributes.TermToBytesRefAttribute;
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.RamUsageEstimator;
 
 final class TermsHashPerField extends InvertedDocConsumerPerField {
 
@@ -57,18 +58,21 @@ final class TermsHashPerField extends InvertedDocConsumerPerField {
   private final BytesRef utf8;
   private Comparator<BytesRef> termComp;
 
-  private final int bytesPerPosting;
-  
   public TermsHashPerField(DocInverterPerField docInverterPerField, final TermsHashPerThread perThread, final TermsHashPerThread nextPerThread, final FieldInfo fieldInfo) {
     this.perThread = perThread;
     intPool = perThread.intPool;
     bytePool = perThread.bytePool;
     termBytePool = perThread.termBytePool;
     docState = perThread.docState;
+
     postingsHash = new int[postingsHashSize];
     Arrays.fill(postingsHash, -1);
+    bytesUsed(postingsHashSize * RamUsageEstimator.NUM_BYTES_INT);
+
     fieldState = docInverterPerField.fieldState;
     this.consumer = perThread.consumer.addField(this, fieldInfo);
+    postingsArray = consumer.createPostingsArray(postingsHashSize/2);
+    bytesUsed(postingsArray.size * postingsArray.bytesPerPosting());
 
     streamCount = consumer.getStreamCount();
     numPostingInt = 2*streamCount;
@@ -78,23 +82,15 @@ final class TermsHashPerField extends InvertedDocConsumerPerField {
       nextPerField = (TermsHashPerField) nextPerThread.addField(docInverterPerField, fieldInfo);
     else
       nextPerField = null;
-    
-    //   +3: Posting is referenced by hash, which
-    //       targets 25-50% fill factor; approximate this
-    //       as 3X # pointers
-    bytesPerPosting = consumer.bytesPerPosting() + 3*DocumentsWriter.INT_NUM_BYTE;
   }
-  
-  void initPostingsArray() {
-    assert postingsArray == null;
 
-    postingsArray = consumer.createPostingsArray(postingsHashSize);
-    
+  // sugar: just forwards to DW
+  private void bytesUsed(long size) {
     if (perThread.termsHash.trackAllocations) {
-      perThread.termsHash.docWriter.bytesAllocated(bytesPerPosting * postingsHashSize);
+      perThread.termsHash.docWriter.bytesUsed(size);
     }
   }
-
+  
   void shrinkHash(int targetSize) {
     assert postingsCompacted || numPostings == 0;
 
@@ -106,12 +102,19 @@ final class TermsHashPerField extends InvertedDocConsumerPerField {
     }
 
     if (newSize != postingsHash.length) {
+      final long previousSize = postingsHash.length;
       postingsHash = new int[newSize];
+      bytesUsed((newSize-previousSize)*RamUsageEstimator.NUM_BYTES_INT);
       Arrays.fill(postingsHash, -1);
-      postingsArray = null;
       postingsHashSize = newSize;
       postingsHashHalfSize = newSize/2;
       postingsHashMask = newSize-1;
+    }
+
+    if (postingsArray != null) {
+      final int startSize = postingsArray.size;
+      postingsArray = postingsArray.shrink(targetSize, false);
+      bytesUsed(postingsArray.bytesPerPosting() * (postingsArray.size - startSize));
     }
   }
 
@@ -135,14 +138,10 @@ final class TermsHashPerField extends InvertedDocConsumerPerField {
       nextPerField.abort();
   }
   
-  private void growParallelPostingsArray() {
-    int oldSize = postingsArray.byteStarts.length;
-    int newSize = (int) (oldSize * 1.5);
-    this.postingsArray = this.postingsArray.resize(newSize);
-    
-    if (perThread.termsHash.trackAllocations) {
-      perThread.termsHash.docWriter.bytesAllocated(bytesPerPosting * (newSize - oldSize));
-    }
+  private final void growParallelPostingsArray() {
+    int oldSize = postingsArray.size;
+    this.postingsArray = this.postingsArray.grow();
+    bytesUsed(postingsArray.bytesPerPosting() * (postingsArray.size - oldSize));
   }
 
   public void initReader(ByteSliceReader reader, int termID, int stream) {
@@ -301,9 +300,6 @@ final class TermsHashPerField extends InvertedDocConsumerPerField {
     } else {
       throw new IllegalArgumentException("Could not find a term attribute (that implements TermToBytesRefAttribute) in the TokenStream");
     }
-    if (postingsArray == null) {
-      initPostingsArray();
-    }
     consumer.start(f);
     if (nextPerField != null) {
       nextPerField.start(f);
@@ -349,11 +345,8 @@ final class TermsHashPerField extends InvertedDocConsumerPerField {
 
       // New posting
       termID = numPostings++;
-      if (termID >= postingsArray.textStarts.length) {
+      if (termID >= postingsArray.size) {
         growParallelPostingsArray();
-      }
-      if (perThread.termsHash.trackAllocations) {
-        perThread.termsHash.docWriter.bytesUsed(bytesPerPosting);
       }
 
       assert termID >= 0;
@@ -455,11 +448,8 @@ final class TermsHashPerField extends InvertedDocConsumerPerField {
 
       // New posting
       termID = numPostings++;
-      if (termID >= postingsArray.textStarts.length) {
+      if (termID >= postingsArray.size) {
         growParallelPostingsArray();
-      }
-      if (perThread.termsHash.trackAllocations) {
-        perThread.termsHash.docWriter.bytesUsed(bytesPerPosting);
       }
 
       assert termID != -1;
@@ -492,6 +482,7 @@ final class TermsHashPerField extends InvertedDocConsumerPerField {
 
       if (numPostings == postingsHashHalfSize) {
         rehashPostings(2*postingsHashSize);
+        bytesUsed(2*numPostings * RamUsageEstimator.NUM_BYTES_INT);
       }
 
       // Init stream slices
@@ -621,6 +612,7 @@ final class TermsHashPerField extends InvertedDocConsumerPerField {
 
     postingsHashMask = newMask;
     postingsHash = newHash;
+
     postingsHashSize = newSize;
     postingsHashHalfSize = newSize >> 1;
   }
