@@ -198,7 +198,7 @@ public final class BytesRef {
     return utf8SortedAsUTF16SortOrder;
   }
 
-  public static class UTF8SortedAsUTF16Comparator implements Comparator<BytesRef> {
+  private static class UTF8SortedAsUTF16Comparator implements Comparator<BytesRef> {
     // Only singleton
     private UTF8SortedAsUTF16Comparator() {};
 
