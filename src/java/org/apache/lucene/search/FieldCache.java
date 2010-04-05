@@ -256,15 +256,14 @@ public interface FieldCache {
   };
 
   /**
-   * A parser instance for int values encoded by {@link NumericUtils#intToPrefixCoded(int)}, e.g. when indexed
+   * A parser instance for int values encoded by {@link NumericUtils}, e.g. when indexed
    * via {@link NumericField}/{@link NumericTokenStream}.
    */
   public static final IntParser NUMERIC_UTILS_INT_PARSER=new IntParser(){
-    public int parseInt(BytesRef val) {
-      final int shift = val.bytes[val.offset]-NumericUtils.SHIFT_START_INT;
-      if (shift>0 && shift<=31)
+    public int parseInt(BytesRef term) {
+      if (NumericUtils.getPrefixCodedIntShift(term) > 0)
         throw new FieldCacheImpl.StopFillCacheException();
-      return NumericUtils.prefixCodedToInt(val);
+      return NumericUtils.prefixCodedToInt(term);
     }
     protected Object readResolve() {
       return NUMERIC_UTILS_INT_PARSER;
@@ -281,8 +280,7 @@ public interface FieldCache {
    */
   public static final FloatParser NUMERIC_UTILS_FLOAT_PARSER=new FloatParser(){
     public float parseFloat(BytesRef term) {
-      final int shift = term.bytes[term.offset]-NumericUtils.SHIFT_START_INT;
-      if (shift>0 && shift<=31)
+      if (NumericUtils.getPrefixCodedIntShift(term) > 0)
         throw new FieldCacheImpl.StopFillCacheException();
       return NumericUtils.sortableIntToFloat(NumericUtils.prefixCodedToInt(term));
     }
@@ -296,13 +294,12 @@ public interface FieldCache {
   };
 
   /**
-   * A parser instance for long values encoded by {@link NumericUtils#longToPrefixCoded(long)}, e.g. when indexed
+   * A parser instance for long values encoded by {@link NumericUtils}, e.g. when indexed
    * via {@link NumericField}/{@link NumericTokenStream}.
    */
   public static final LongParser NUMERIC_UTILS_LONG_PARSER = new LongParser(){
     public long parseLong(BytesRef term) {
-      final int shift = term.bytes[term.offset]-NumericUtils.SHIFT_START_LONG;
-      if (shift>0 && shift<=63)
+      if (NumericUtils.getPrefixCodedLongShift(term) > 0)
         throw new FieldCacheImpl.StopFillCacheException();
       return NumericUtils.prefixCodedToLong(term);
     }
@@ -321,8 +318,7 @@ public interface FieldCache {
    */
   public static final DoubleParser NUMERIC_UTILS_DOUBLE_PARSER = new DoubleParser(){
     public double parseDouble(BytesRef term) {
-      final int shift = term.bytes[term.offset]-NumericUtils.SHIFT_START_LONG;
-      if (shift>0 && shift<=63)
+      if (NumericUtils.getPrefixCodedLongShift(term) > 0)
         throw new FieldCacheImpl.StopFillCacheException();
       return NumericUtils.sortableLongToDouble(NumericUtils.prefixCodedToLong(term));
     }

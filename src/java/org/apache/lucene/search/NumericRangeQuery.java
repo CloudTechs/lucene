@@ -379,9 +379,9 @@ public final class NumericRangeQuery<T extends Number> extends MultiTermQuery {
    */
   private final class NumericRangeTermsEnum extends FilteredTermsEnum {
 
-    private final BytesRef currentLowerBound = new BytesRef(), currentUpperBound = new BytesRef();
+    private BytesRef currentLowerBound, currentUpperBound;
 
-    private final LinkedList<String> rangeBounds = new LinkedList<String>();
+    private final LinkedList<BytesRef> rangeBounds = new LinkedList<BytesRef>();
     private final Comparator<BytesRef> termComp;
 
     NumericRangeTermsEnum(final IndexReader reader) throws IOException {
@@ -414,7 +414,7 @@ public final class NumericRangeQuery<T extends Number> extends MultiTermQuery {
           
           NumericUtils.splitLongRange(new NumericUtils.LongRangeBuilder() {
             @Override
-            public final void addRange(String minPrefixCoded, String maxPrefixCoded) {
+            public final void addRange(BytesRef minPrefixCoded, BytesRef maxPrefixCoded) {
               rangeBounds.add(minPrefixCoded);
               rangeBounds.add(maxPrefixCoded);
             }
@@ -449,7 +449,7 @@ public final class NumericRangeQuery<T extends Number> extends MultiTermQuery {
           
           NumericUtils.splitIntRange(new NumericUtils.IntRangeBuilder() {
             @Override
-            public final void addRange(String minPrefixCoded, String maxPrefixCoded) {
+            public final void addRange(BytesRef minPrefixCoded, BytesRef maxPrefixCoded) {
               rangeBounds.add(minPrefixCoded);
               rangeBounds.add(maxPrefixCoded);
             }
@@ -470,11 +470,11 @@ public final class NumericRangeQuery<T extends Number> extends MultiTermQuery {
       if (rangeBounds.size() >= 2) {
         assert rangeBounds.size() % 2 == 0;
 
-        this.currentLowerBound.copy(rangeBounds.removeFirst());
-        assert termComp.compare(currentUpperBound, currentLowerBound) <= 0 :
+        this.currentLowerBound = rangeBounds.removeFirst();
+        assert currentUpperBound == null || termComp.compare(currentUpperBound, currentLowerBound) <= 0 :
           "The current upper bound must be <= the new lower bound";
         
-        this.currentUpperBound.copy(rangeBounds.removeFirst());
+        this.currentUpperBound = rangeBounds.removeFirst();
         return currentLowerBound;
       }
       

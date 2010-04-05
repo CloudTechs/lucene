@@ -4,7 +4,7 @@ Lucene Change Log
 
 Changes in backwards compatibility policy
 
-* LUCENE-1458, LUCENE-2111: Changes from flexible indexing:
+* LUCENE-1458, LUCENE-2111, LUCENE-2354: Changes from flexible indexing:
 
   - MultiReader ctor now throws IOException
 
@@ -27,6 +27,23 @@ Changes in backwards compatibility policy
     existing parser.  This will work, but performance would be better
     if you could fix your parser to instead operate directly on the
     byte[] in the BytesRef.
+
+  - The internal (experimental) API of NumericUtils changed completely
+    from String to BytesRef. Client code should never use this class,
+    so the change would normally not affect you. If you used some of
+    the methods to inspect terms or create TermQueries out of
+    prefix encoded terms, change to use BytesRef. Please note:
+    Do not use TermQueries to search for single numeric terms.
+    The recommended way is to create a corresponding NumericRangeQuery
+    with upper and lower bound equal and included. TermQueries do not
+    score correct, so the constant score mode of NRQ is the only
+    correct way to handle single value queries.
+  
+  - NumericTokenStream now works directly on byte[] terms. If you
+    plug a TokenFilter on top of this stream, you will likely get
+    an IllegalArgumentException, because the NTS does not support
+    TermAttribute/CharTermAttribute. If you want to further filter
+    or attach Payloads to NTS, use the new NumericTermAttribute.
 
 Bug Fixes
 

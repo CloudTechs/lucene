@@ -24,11 +24,11 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.NumericField;
 import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.index.IndexWriter.MaxFieldLength;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.store.RAMDirectory;
+import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.LuceneTestCaseJ4;
 import org.apache.lucene.util.NumericUtils;
 
@@ -333,9 +333,15 @@ public class TestNumericRangeQuery32 extends LuceneTestCaseJ4 {
       if (lower>upper) {
         int a=lower; lower=upper; upper=a;
       }
+      final BytesRef lowerBytes = new BytesRef(NumericUtils.BUF_SIZE_INT), upperBytes = new BytesRef(NumericUtils.BUF_SIZE_INT);
+      NumericUtils.intToPrefixCoded(lower, 0, lowerBytes);
+      NumericUtils.intToPrefixCoded(upper, 0, upperBytes);
+      // TODO: when new TermRange ctors with BytesRef available, use them and do not convert to string!
+      final String lowerString = lowerBytes.utf8ToString(), upperString = upperBytes.utf8ToString();
+
       // test inclusive range
       NumericRangeQuery<Integer> tq=NumericRangeQuery.newIntRange(field, precisionStep, lower, upper, true, true);
-      TermRangeQuery cq=new TermRangeQuery(field, NumericUtils.intToPrefixCoded(lower), NumericUtils.intToPrefixCoded(upper), true, true);
+      TermRangeQuery cq=new TermRangeQuery(field, lowerString, upperString, true, true);
       TopDocs tTopDocs = searcher.search(tq, 1);
       TopDocs cTopDocs = searcher.search(cq, 1);
       assertEquals("Returned count for NumericRangeQuery and TermRangeQuery must be equal", cTopDocs.totalHits, tTopDocs.totalHits );
@@ -343,7 +349,7 @@ public class TestNumericRangeQuery32 extends LuceneTestCaseJ4 {
       termCountC += cq.getTotalNumberOfTerms();
       // test exclusive range
       tq=NumericRangeQuery.newIntRange(field, precisionStep, lower, upper, false, false);
-      cq=new TermRangeQuery(field, NumericUtils.intToPrefixCoded(lower), NumericUtils.intToPrefixCoded(upper), false, false);
+      cq=new TermRangeQuery(field, lowerString, upperString, false, false);
       tTopDocs = searcher.search(tq, 1);
       cTopDocs = searcher.search(cq, 1);
       assertEquals("Returned count for NumericRangeQuery and TermRangeQuery must be equal", cTopDocs.totalHits, tTopDocs.totalHits );
@@ -351,7 +357,7 @@ public class TestNumericRangeQuery32 extends LuceneTestCaseJ4 {
       termCountC += cq.getTotalNumberOfTerms();
       // test left exclusive range
       tq=NumericRangeQuery.newIntRange(field, precisionStep, lower, upper, false, true);
-      cq=new TermRangeQuery(field, NumericUtils.intToPrefixCoded(lower), NumericUtils.intToPrefixCoded(upper), false, true);
+      cq=new TermRangeQuery(field, lowerString, upperString, false, true);
       tTopDocs = searcher.search(tq, 1);
       cTopDocs = searcher.search(cq, 1);
       assertEquals("Returned count for NumericRangeQuery and TermRangeQuery must be equal", cTopDocs.totalHits, tTopDocs.totalHits );
@@ -359,7 +365,7 @@ public class TestNumericRangeQuery32 extends LuceneTestCaseJ4 {
       termCountC += cq.getTotalNumberOfTerms();
       // test right exclusive range
       tq=NumericRangeQuery.newIntRange(field, precisionStep, lower, upper, true, false);
-      cq=new TermRangeQuery(field, NumericUtils.intToPrefixCoded(lower), NumericUtils.intToPrefixCoded(upper), true, false);
+      cq=new TermRangeQuery(field, lowerString, upperString, true, false);
       tTopDocs = searcher.search(tq, 1);
       cTopDocs = searcher.search(cq, 1);
       assertEquals("Returned count for NumericRangeQuery and TermRangeQuery must be equal", cTopDocs.totalHits, tTopDocs.totalHits );
@@ -558,7 +564,7 @@ public class TestNumericRangeQuery32 extends LuceneTestCaseJ4 {
     while (termEnum.next() != null) {
       final BytesRef t = termEnum.term();
       if (t != null) {
-        final int val = NumericUtils.prefixCodedToInt(t.utf8ToString());
+        final int val = NumericUtils.prefixCodedToInt(t);
         assertTrue("value not in bounds " + val + " >= " + lower + " && "
             + val + " <= " + upper, val >= lower && val <= upper);
         count++;
