@@ -40,8 +40,6 @@ import java.util.Comparator;
  */
 class TransitionComparator implements Comparator<Transition>, Serializable {
   
-  static final long serialVersionUID = 10001;
-  
   boolean to_first;
   
   TransitionComparator(boolean to_first) {

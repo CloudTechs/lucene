@@ -39,8 +39,6 @@ import java.util.Set;
  */
 public final class RunAutomaton implements Serializable {
   
-  static final long serialVersionUID = 20001;
-  
   final int size;
   final boolean[] accept;
   final int initial;

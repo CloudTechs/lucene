@@ -41,8 +41,6 @@ import java.io.Serializable;
  */
 public class Transition implements Serializable, Cloneable {
   
-  static final long serialVersionUID = 40001;
-  
   /*
    * CLASS INVARIANT: min<=max
    */

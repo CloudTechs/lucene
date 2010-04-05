@@ -67,8 +67,6 @@ import java.util.Set;
  */
 public class Automaton implements Serializable, Cloneable {
   
-  static final long serialVersionUID = 10001;
-  
   /**
    * Minimize using Hopcroft's O(n log n) algorithm. This is regarded as one of
    * the most generally efficient algorithms that exist.

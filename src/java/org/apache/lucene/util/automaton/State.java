@@ -43,8 +43,6 @@ import java.util.Set;
  */
 public class State implements Serializable, Comparable<State> {
   
-  static final long serialVersionUID = 30001;
-  
   boolean accept;
   Set<Transition> transitions;
   
