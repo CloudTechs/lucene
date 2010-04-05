@@ -23,7 +23,7 @@ public class TestBasicOperations extends LuceneTestCase {
   public void testSingletonConcatenate() {
     Automaton singleton = BasicAutomata.makeString("prefix");
     Automaton expandedSingleton = singleton.cloneExpanded();
-    Automaton other = BasicAutomata.makeMaxInteger("57");
+    Automaton other = BasicAutomata.makeCharRange('5', '7');
     Automaton concat = BasicOperations.concatenate(singleton, other);
     assertTrue(concat.isDeterministic());
     assertEquals(BasicOperations.concatenate(expandedSingleton, other), concat);
@@ -45,7 +45,7 @@ public class TestBasicOperations extends LuceneTestCase {
   public void testEmptySingletonConcatenate() {
     Automaton singleton = BasicAutomata.makeString("");
     Automaton expandedSingleton = singleton.cloneExpanded();
-    Automaton other = BasicAutomata.makeMaxInteger("57");
+    Automaton other = BasicAutomata.makeCharRange('5', '7');
     Automaton concat1 = BasicOperations.concatenate(expandedSingleton, other);
     Automaton concat2 = BasicOperations.concatenate(singleton, other);
     assertTrue(concat2.isDeterministic());

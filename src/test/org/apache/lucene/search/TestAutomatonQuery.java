@@ -106,23 +106,14 @@ public class TestAutomatonQuery extends LuceneTestCase {
     assertAutomatonHits(2, BasicAutomata.makeString("doc"));
     assertAutomatonHits(1, BasicAutomata.makeChar('a'));
     assertAutomatonHits(2, BasicAutomata.makeCharRange('a', 'b'));
-    assertAutomatonHits(2, BasicAutomata.makeCharSet("ab"));
-    assertAutomatonHits(1, BasicAutomata.makeDecimalValue("5678.9"));
-    assertAutomatonHits(1, BasicAutomata.makeDecimalValue("2345"));
-    assertAutomatonHits(3, BasicAutomata.makeFractionDigits(3));
-    assertAutomatonHits(1, BasicAutomata.makeIntegerValue("1234"));
     assertAutomatonHits(2, BasicAutomata.makeInterval(1233, 2346, 0));
     assertAutomatonHits(1, BasicAutomata.makeInterval(0, 2000, 0));
-    assertAutomatonHits(2, BasicAutomata.makeMaxInteger("003000"));
-    assertAutomatonHits(1, BasicAutomata.makeMinInteger("002000"));
-    assertAutomatonHits(2, BasicAutomata.makeStringMatcher("ome"));
-    assertAutomatonHits(2, BasicAutomata.makeTotalDigits(5));
     assertAutomatonHits(2, BasicOperations.union(BasicAutomata.makeChar('a'),
         BasicAutomata.makeChar('b')));
     assertAutomatonHits(0, BasicOperations.intersection(BasicAutomata
         .makeChar('a'), BasicAutomata.makeChar('b')));
-    assertAutomatonHits(1, BasicOperations.minus(BasicAutomata
-        .makeMaxInteger("3000"), BasicAutomata.makeIntegerValue("1234")));
+    assertAutomatonHits(1, BasicOperations.minus(BasicAutomata.makeCharRange('a', 'b'), 
+        BasicAutomata.makeChar('a')));
   }
   
   /**
