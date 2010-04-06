@@ -44,9 +44,18 @@ public class CartesianPolyFilterBuilder {
 
   private IProjector projector = new SinusoidalProjector();
   private final String tierPrefix;
-  
-  public CartesianPolyFilterBuilder( String tierPrefix ) {
+	private int minTier;
+	private int maxTier;
+  /**
+   * 
+   * @param tierPrefix The prefix for the name of the fields containing the tier info
+   * @param minTierIndexed The minimum tier level indexed
+   * @param maxTierIndexed The maximum tier level indexed
+   */
+  public CartesianPolyFilterBuilder( String tierPrefix, int minTierIndexed, int maxTierIndexed ) {
     this.tierPrefix = tierPrefix;
+	this.minTier = minTierIndexed;
+	this.maxTier = maxTierIndexed;
   }
   
   public Shape getBoxShape(double latitude, double longitude, double miles)
@@ -63,11 +72,15 @@ public class CartesianPolyFilterBuilder {
     double longY = ur.getLng();
     double longX = ll.getLng();
     double longX2 = 0.0;
-
+	//These two if checks setup us up to deal with issues around the prime meridian and the 180th meridian
+	//In these two cases, we need to get tiles (tiers) from the lower left up to the meridian and then 
+	//from the meridan to the upper right
+	//Are we crossing the 180 deg. longitude, if so, we need to do some special things
     if (ur.getLng() < 0.0 && ll.getLng() > 0.0) {
 	longX2 = ll.getLng();
  	longX = -180.0;	
     }
+	//are we crossing the prime meridian (0 degrees)?  If so, we need to account for it and boxes on both sides
     if (ur.getLng() > 0.0 && ll.getLng() < 0.0) {
 	longX2 = ll.getLng();
  	longX = 0.0;	
@@ -77,6 +90,11 @@ public class CartesianPolyFilterBuilder {
     //System.err.println("getBoxShape:"+latX+"," + longX);
     CartesianTierPlotter ctp = new CartesianTierPlotter(2, projector,tierPrefix);
     int bestFit = ctp.bestFit(miles);
+	if (bestFit < minTier){
+		bestFit = minTier;
+	} else if (bestFit > maxTier){
+		bestFit = maxTier;
+	}
     
     ctp = new CartesianTierPlotter(bestFit, projector,tierPrefix);
     Shape shape = new Shape(ctp.getTierFieldName());
@@ -85,23 +103,26 @@ public class CartesianPolyFilterBuilder {
     // iterate from startX->endX
     //     iterate from startY -> endY
     //      shape.add(currentLat.currentLong);
-
+	//for the edge cases (prime meridian and the 180th meridian), this call handles all tiles East of the meridian
+    //for all other cases, it handles the whole set of tiles
     shape = getShapeLoop(shape,ctp,latX,longX,latY,longY);
     if (longX2 != 0.0) {
-	if (longX2 != 0.0) {
 		if (longX == 0.0) {
 			longX = longX2;
 			longY = 0.0;
-        		shape = getShapeLoop(shape,ctp,latX,longX,latY,longY);
+	        //handles the lower left longitude to the prime meridian
+	        //shape = getShapeLoop(shape, ctp, latX, longX, latY, longY);
 		} else {
+	        //this clause handles the lower left longitude up to the 180 meridian
 			longX = longX2;
-			longY = -180.0;
-        		shape = getShapeLoop(shape,ctp,latY,longY,latX,longX);
+	        longY = 180.0;
 		}
-	}
+	      shape = getShapeLoop(shape, ctp, latX, longX, latY, longY);
+
         //System.err.println("getBoxShape2:"+latY+"," + longY);
         //System.err.println("getBoxShape2:"+latX+"," + longX);
     }
+ 
  
     return shape; 
   } 
@@ -113,7 +134,11 @@ public class CartesianPolyFilterBuilder {
     //System.err.println("getShapeLoop:"+latX+"," + longX);
     double beginAt = ctp.getTierBoxId(latX, longX);
     double endAt = ctp.getTierBoxId(latY, longY);
-    
+    if (beginAt > endAt){
+	      double tmp = beginAt;
+	      beginAt = endAt;
+	      endAt = tmp;
+	}
     double tierVert = ctp.getTierVerticalPosDivider();
     //System.err.println(" | "+ beginAt+" | "+ endAt);
     

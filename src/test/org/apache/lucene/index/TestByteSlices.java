@@ -16,6 +16,7 @@ package org.apache.lucene.index;
 
 import java.util.Random;
 import java.util.ArrayList;
+import java.util.List;
 import org.apache.lucene.util.LuceneTestCase;
 
 public class TestByteSlices extends LuceneTestCase {
@@ -41,6 +42,13 @@ public class TestByteSlices extends LuceneTestCase {
       for(int i=start;i<end;i++)
         freeByteBlocks.add(blocks[i]);
     }
+
+    @Override
+    synchronized void recycleByteBlocks(List<byte[]> blocks) {
+      final int size = blocks.size();
+      for(int i=0;i<size;i++)
+        freeByteBlocks.add(blocks.get(i));
+  }
   }
 
   public void testBasic() throws Throwable {

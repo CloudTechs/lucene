@@ -1,3 +1,5 @@
+package org.apache.lucene.benchmark.byTask.utils;
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -14,25 +16,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.lucene.spatial.tier;
 
+import static org.junit.Assert.*;
 
-/**
- *
- */
-public class PolyShape {
+import java.util.Properties;
 
-  private static double lat = 38.969398; 
-  private static double lng= -77.386398;
-  private static int miles = 1000;
-  /**
-   * @param args
-   */
-  public static void main(String[] args) {
-  
-    CartesianPolyFilterBuilder cpf = new CartesianPolyFilterBuilder( "_localTier" );
-    cpf.getBoxShape(lat, lng, miles);
-    
+import org.apache.lucene.util.LuceneTestCaseJ4;
+import org.junit.Test;
+
+public class TestConfig extends LuceneTestCaseJ4 {
+
+  @Test
+  public void testAbsolutePathNamesWindows() throws Exception {
+    Properties props = new Properties();
+    props.setProperty("work.dir1", "c:\\temp");
+    props.setProperty("work.dir2", "c:/temp");
+    Config conf = new Config(props);
+    assertEquals("c:\\temp", conf.get("work.dir1", ""));
+    assertEquals("c:/temp", conf.get("work.dir2", ""));
   }
 
 }
