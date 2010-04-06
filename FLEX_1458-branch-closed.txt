@@ -1,0 +1,2 @@
+The flex branch was closed, please switch to trunk:
+https://svn.apache.org/repos/asf/lucene/dev/trunk/lucene

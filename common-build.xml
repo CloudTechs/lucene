@@ -187,6 +187,14 @@
   </target>
 
   <target name="init" depends="javacc-uptodate-check, javacc-notice, jflex-uptodate-check, jflex-notice">
+    <echo>
+=====================================
+WARNING: FLEX_1458 branch was closed!
+=====================================
+The flex branch was closed, please switch to trunk:
+https://svn.apache.org/repos/asf/lucene/dev/trunk/lucene
+    </echo>
+    <fail/>
   </target>
 
   <target name="jflex-uptodate-check">
