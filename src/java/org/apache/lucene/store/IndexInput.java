@@ -26,7 +26,6 @@ import java.util.HashMap;
  * @see Directory
  */
 public abstract class IndexInput implements Cloneable {
-  private char[] chars;                           // used by readModifiedUTF8String()
   private boolean preUTF8Strings;                 // true if we are reading old (modified UTF8) string format
 
   /** Reads and returns a single byte.
@@ -127,8 +126,7 @@ public abstract class IndexInput implements Cloneable {
 
   private String readModifiedUTF8String() throws IOException {
     int length = readVInt();
-    if (chars == null || length > chars.length)
-      chars = new char[length];
+    final char[] chars = new char[length];
     readChars(chars, 0, length);
     return new String(chars, 0, length);
   }
@@ -219,8 +217,6 @@ public abstract class IndexInput implements Cloneable {
     try {
       clone = (IndexInput)super.clone();
     } catch (CloneNotSupportedException e) {}
-
-    clone.chars = null;
 
     return clone;
   }
