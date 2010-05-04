@@ -27,7 +27,6 @@ import java.util.HashMap;
  * @see Directory
  */
 public abstract class IndexInput implements Cloneable,Closeable {
-  private byte[] bytes;                           // used by readString()
   private char[] chars;                           // used by readModifiedUTF8String()
   private boolean preUTF8Strings;                 // true if we are reading old (modified UTF8) string format
 
@@ -122,8 +121,7 @@ public abstract class IndexInput implements Cloneable,Closeable {
     if (preUTF8Strings)
       return readModifiedUTF8String();
     int length = readVInt();
-    if (bytes == null || length > bytes.length)
-      bytes = new byte[(int) (length*1.25)];
+    final byte[] bytes = new byte[length];
     readBytes(bytes, 0, length);
     return new String(bytes, 0, length, "UTF-8");
   }
@@ -224,7 +222,6 @@ public abstract class IndexInput implements Cloneable,Closeable {
       clone = (IndexInput)super.clone();
     } catch (CloneNotSupportedException e) {}
 
-    clone.bytes = null;
     clone.chars = null;
 
     return clone;
