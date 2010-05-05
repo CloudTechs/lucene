@@ -13,6 +13,12 @@ Bug fixes
    in IndexWriter, nor the Reader in Tokenizer after close is
    called.  (Ruben Laguna, Uwe Schindler, Mike McCandless)
 
+* LUCENE-2283: Use shared memory pool for term vector and stored
+  fields buffers. This memory will be reclaimed if needed according to
+  the configured RAM Buffer Size for the IndexWriter.  This also fixes
+  potentially excessive memory usage when many threads are indexing a
+  mix of small and large documents.  (Tim Smith via Mike McCandless)
+  
 API Changes
 
 * LUCENE-2281: added doBeforeFlush to IndexWriter to allow extensions to perform
