@@ -166,14 +166,13 @@ final class StoredFieldsWriter {
   }
 
   class PerDoc extends DocumentsWriter.DocWriter {
-
-    // TODO: use something more memory efficient; for small
-    // docs the 1024 buffer size of RAMOutputStream wastes alot
-    RAMOutputStream fdt = new RAMOutputStream();
+    final DocumentsWriter.PerDocBuffer buffer = docWriter.newPerDocBuffer();
+    RAMOutputStream fdt = new RAMOutputStream(buffer);
     int numStoredFields;
 
     void reset() {
       fdt.reset();
+      buffer.recycle();
       numStoredFields = 0;
     }
 
@@ -183,7 +182,7 @@ final class StoredFieldsWriter {
     }
 
     public long sizeInBytes() {
-      return fdt.sizeInBytes();
+      return buffer.getSizeInBytes();
     }
 
     public void finish() throws IOException {

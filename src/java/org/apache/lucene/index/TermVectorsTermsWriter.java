@@ -191,8 +191,8 @@ final class TermVectorsTermsWriter extends TermsHashConsumer {
         tvd.writeVLong(pos-lastPos);
         lastPos = pos;
       }
-      perDoc.tvf.writeTo(tvf);
-      perDoc.tvf.reset();
+      perDoc.perDocTvf.writeTo(tvf);
+      perDoc.perDocTvf.reset();
       perDoc.numVectorFields = 0;
     }
 
@@ -242,16 +242,17 @@ final class TermVectorsTermsWriter extends TermsHashConsumer {
 
   class PerDoc extends DocumentsWriter.DocWriter {
 
-    // TODO: use something more memory efficient; for small
-    // docs the 1024 buffer size of RAMOutputStream wastes alot
-    RAMOutputStream tvf = new RAMOutputStream();
+    final DocumentsWriter.PerDocBuffer buffer = docWriter.newPerDocBuffer();
+    RAMOutputStream perDocTvf = new RAMOutputStream(buffer);
+
     int numVectorFields;
 
     int[] fieldNumbers = new int[1];
     long[] fieldPointers = new long[1];
 
     void reset() {
-      tvf.reset();
+      perDocTvf.reset();
+      buffer.recycle();
       numVectorFields = 0;
     }
 
@@ -266,12 +267,12 @@ final class TermVectorsTermsWriter extends TermsHashConsumer {
         fieldPointers = ArrayUtil.grow(fieldPointers);
       }
       fieldNumbers[numVectorFields] = fieldNumber;
-      fieldPointers[numVectorFields] = tvf.getFilePointer();
+      fieldPointers[numVectorFields] = perDocTvf.getFilePointer();
       numVectorFields++;
     }
 
     public long sizeInBytes() {
-      return tvf.sizeInBytes();
+      return buffer.getSizeInBytes();
     }
 
     public void finish() throws IOException {

@@ -9,6 +9,17 @@ Bug fixes
    in IndexWriter, nor the Reader in Tokenizer after close is
    called.  (Ruben Laguna, Uwe Schindler, Mike McCandless)
 
+ * LUCENE-2422: Don't reuse byte[] in IndexInput/Output -- it gains
+   little performance, and ties up possibly large amounts of memory
+   for apps that index large docs.  (Ross Woolf via Mike McCandless)
+
+ * LUCENE-2283: Use shared memory pool for term vector and stored
+   fields buffers. This memory will be reclaimed if needed according
+   to the configured RAM Buffer Size for the IndexWriter.  This also
+   fixes potentially excessive memory usage when many threads are
+   indexing a mix of small and large documents.  (Tim Smith via Mike
+   McCandless)
+  
 ======================= Release 2.9.2 2010-02-26 =======================
 
 Bug fixes
@@ -55,10 +66,6 @@ Bug fixes
  * LUCENE-2270: Queries consisting of all zero-boost clauses
    (for example, text:foo^0) sorted incorrectly and produced
    invalid docids. (yonik)
-
- * LUCENE-2422: Don't reuse byte[] in IndexInput/Output -- it gains
-   little performance, and ties up possibly large amounts of memory
-   for apps that index large docs.  (Ross Woolf via Mike McCandless)
 
 API Changes
 
