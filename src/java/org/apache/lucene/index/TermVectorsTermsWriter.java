@@ -193,7 +193,6 @@ final class TermVectorsTermsWriter extends TermsHashConsumer {
         lastPos = pos;
       }
       perDoc.perDocTvf.writeTo(tvf);
-      perDoc.perDocTvf.reset();
       perDoc.numVectorFields = 0;
     }
 
@@ -201,6 +200,7 @@ final class TermVectorsTermsWriter extends TermsHashConsumer {
 
     lastDocID++;
 
+    perDoc.reset();
     free(perDoc);
     assert docWriter.writer.testPoint("TermVectorsTermsWriter.finishDocument end");
   }

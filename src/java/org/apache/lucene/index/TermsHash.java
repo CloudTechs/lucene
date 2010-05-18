@@ -89,8 +89,17 @@ final class TermsHash extends InvertedDocConsumer {
 
     assert postingsFreeCount == postingsAllocCount: Thread.currentThread().getName() + ": postingsFreeCount=" + postingsFreeCount + " postingsAllocCount=" + postingsAllocCount + " consumer=" + consumer;
 
-    final int newSize = ArrayUtil.getShrinkSize(postingsFreeList.length, postingsAllocCount);
+    final int newSize = 1;
     if (newSize != postingsFreeList.length) {
+      if (postingsFreeCount > newSize) {
+        if (trackAllocations) {
+          docWriter.bytesAllocated(-(postingsFreeCount-newSize) * bytesPerPosting);
+        }
+
+        postingsFreeCount = newSize;
+        postingsAllocCount = newSize;
+      }
+
       RawPostingList[] newArray = new RawPostingList[newSize];
       System.arraycopy(postingsFreeList, 0, newArray, 0, postingsFreeCount);
       postingsFreeList = newArray;

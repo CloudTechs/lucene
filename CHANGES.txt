@@ -19,6 +19,9 @@ Bug fixes
   potentially excessive memory usage when many threads are indexing a
   mix of small and large documents.  (Tim Smith via Mike McCandless)
   
+* LUCENE-2467: Fixed memory leaks in IndexWriter when large documents
+  are indexed.  (Mike McCandless)
+
 API Changes
 
 * LUCENE-2281: added doBeforeFlush to IndexWriter to allow extensions to perform
