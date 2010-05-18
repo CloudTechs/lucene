@@ -41,6 +41,7 @@ final class ReusableStringReader extends Reader {
       left -= len;
       return len;
     } else if (0 == left) {
+      s = null;
       return -1;
     } else {
       s.getChars(upto, upto+left, c, off);

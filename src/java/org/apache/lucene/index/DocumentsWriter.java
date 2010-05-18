@@ -1276,8 +1276,13 @@ final class DocumentsWriter {
     /* Return byte[]'s to the pool */
     void recycleByteBlocks(byte[][] blocks, int start, int end) {
       synchronized(DocumentsWriter.this) {
-        for(int i=start;i<end;i++)
+        for(int i=start;i<end;i++) {
           freeByteBlocks.add(blocks[i]);
+          blocks[i] = null;
+        }
+        if (infoStream != null && blockSize != 1024) {
+          message("DW.recycleByteBlocks blockSize=" + blockSize + " count=" + (end-start) + " total now " + freeByteBlocks.size());
+        }
       }
     }
   }
@@ -1313,7 +1318,6 @@ final class DocumentsWriter {
 
   synchronized void bytesAllocated(long numBytes) {
     numBytesAlloc += numBytes;
-    assert numBytesUsed <= numBytesAlloc;
   }
 
   synchronized void bytesUsed(long numBytes) {
@@ -1323,8 +1327,13 @@ final class DocumentsWriter {
 
   /* Return int[]s to the pool */
   synchronized void recycleIntBlocks(int[][] blocks, int start, int end) {
-    for(int i=start;i<end;i++)
+    for(int i=start;i<end;i++) {
       freeIntBlocks.add(blocks[i]);
+      blocks[i] = null;
+    }
+    if (infoStream != null) {
+      message("DW.recycleIntBlocks count=" + (end-start) + " total now " + freeIntBlocks.size());
+    }
   }
 
   ByteBlockAllocator byteBlockAllocator = new ByteBlockAllocator(BYTE_BLOCK_SIZE);
@@ -1364,8 +1373,13 @@ final class DocumentsWriter {
 
   /* Return char[]s to the pool */
   synchronized void recycleCharBlocks(char[][] blocks, int numBlocks) {
-    for(int i=0;i<numBlocks;i++)
+    for(int i=0;i<numBlocks;i++) {
       freeCharBlocks.add(blocks[i]);
+      blocks[i] = null;
+    }
+    if (infoStream != null) {
+      message("DW.recycleCharBlocks count=" + numBlocks + " total now " + freeCharBlocks.size());
+    }
   }
 
   String toMB(long v) {
@@ -1425,7 +1439,7 @@ final class DocumentsWriter {
             // Nothing else to free -- must flush now.
             bufferIsFull = numBytesUsed+deletesRAMUsed > flushTrigger;
             if (infoStream != null) {
-              if (numBytesUsed > flushTrigger)
+              if (bufferIsFull)
                 message("    nothing to free; now set bufferIsFull");
               else
                 message("    nothing to free");

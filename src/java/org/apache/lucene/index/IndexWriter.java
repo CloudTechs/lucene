@@ -4208,6 +4208,9 @@ public class IndexWriter {
     try {
       return doFlushInternal(flushDocStores, flushDeletes);
     } finally {
+      if (docWriter.doBalanceRAM()) {
+        docWriter.balanceRAM();
+      }
       docWriter.clearFlushPending();
     }
   }

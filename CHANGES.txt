@@ -20,6 +20,9 @@ Bug fixes
    indexing a mix of small and large documents.  (Tim Smith via Mike
    McCandless)
   
+ * LUCENE-2467: Fixed memory leaks in IndexWriter when large documents
+   are indexed.  (Mike McCandless)
+
 ======================= Release 2.9.2 2010-02-26 =======================
 
 Bug fixes
