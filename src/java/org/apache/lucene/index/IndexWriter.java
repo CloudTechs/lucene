@@ -1042,9 +1042,12 @@ public class IndexWriter implements Closeable {
     }
 
     Lock writeLock = directory.makeLock(WRITE_LOCK_NAME);
+
     if (!writeLock.obtain(writeLockTimeout)) // obtain write lock
       throw new LockObtainFailedException("Index locked for write: " + writeLock);
     this.writeLock = writeLock;                   // save it
+
+    boolean success = false;
 
     try {
       if (create) {
@@ -1122,10 +1125,20 @@ public class IndexWriter implements Closeable {
         messageState();
       }
 
-    } catch (IOException e) {
-      this.writeLock.release();
-      this.writeLock = null;
-      throw e;
+      success = true;
+
+    } finally {
+      if (!success) {
+        if (infoStream != null) {
+          message("init: hit exception on init; releasing write lock");
+        }
+        try {
+          writeLock.release();
+        } catch (Throwable t) {
+          // don't mask the original exception
+        }
+        writeLock = null;
+      }
     }
   }
 
