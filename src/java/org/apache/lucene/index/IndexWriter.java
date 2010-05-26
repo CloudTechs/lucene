@@ -4244,6 +4244,9 @@ public class IndexWriter {
     // Make sure no threads are actively adding a document.
     // Returns true if docWriter is currently aborting, in
     // which case we skip flushing this segment
+    if (infoStream != null) {
+      message("flush: now pause all indexing threads");
+    }
     if (docWriter.pauseAllThreads()) {
       docWriter.resumeAllThreads();
       return false;
