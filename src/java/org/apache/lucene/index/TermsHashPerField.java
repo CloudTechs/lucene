@@ -71,19 +71,14 @@ final class TermsHashPerField extends InvertedDocConsumerPerField {
   void shrinkHash(int targetSize) {
     assert postingsCompacted || numPostings == 0;
 
-    // Cannot use ArrayUtil.shrink because we require power
-    // of 2:
-    int newSize = postingsHash.length;
-    while(newSize >= 8 && newSize/4 > targetSize) {
-      newSize /= 2;
-    }
-
+    final int newSize = 4;
     if (newSize != postingsHash.length) {
       postingsHash = new RawPostingList[newSize];
       postingsHashSize = newSize;
       postingsHashHalfSize = newSize/2;
       postingsHashMask = newSize-1;
     }
+    Arrays.fill(postingsHash, null);
   }
 
   public void reset() {
