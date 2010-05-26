@@ -27,6 +27,9 @@ Bug fixes
    demo resulted in ArrayIndexOutOfBoundsException.
    (Sami Siren via Robert Muir)
 
+ * LUCENE-2478: Fix CachingWrapperFilter to not throw NPE when
+   Filter.getDocIdSet() returns null.  (Uwe Schindler, Daniel Noll)
+
 ======================= Release 2.9.2 2010-02-26 =======================
 
 Bug fixes
