@@ -30,6 +30,9 @@ Bug fixes
   lock (previously we only released on IOException).  (Tamas Cservenak
   via Mike McCandless)
 
+* LUCENE-2478: Fix CachingWrapperFilter to not throw NPE when
+  Filter.getDocIdSet() returns null.  (Uwe Schindler, Daniel Noll)
+
 API Changes
 
 * LUCENE-2281: added doBeforeFlush to IndexWriter to allow extensions to perform
