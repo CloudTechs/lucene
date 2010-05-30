@@ -18,9 +18,13 @@ Bug fixes
   the configured RAM Buffer Size for the IndexWriter.  This also fixes
   potentially excessive memory usage when many threads are indexing a
   mix of small and large documents.  (Tim Smith via Mike McCandless)
-
+  
 * LUCENE-2467: Fixed memory leaks in IndexWriter when large documents
   are indexed.  (Mike McCandless)
+
+* LUCENE-2473: Clicking on the "More Results" link in the luceneweb.war
+  demo resulted in ArrayIndexOutOfBoundsException.
+  (Sami Siren via Robert Muir)
 
 * LUCENE-2478: Fix CachingWrapperFilter to not throw NPE when
   Filter.getDocIdSet() returns null.  (Uwe Schindler, Daniel Noll)
