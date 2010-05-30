@@ -1547,9 +1547,12 @@ public class IndexWriter {
     }
 
     Lock writeLock = directory.makeLock(WRITE_LOCK_NAME);
+
     if (!writeLock.obtain(writeLockTimeout)) // obtain write lock
       throw new LockObtainFailedException("Index locked for write: " + writeLock);
     this.writeLock = writeLock;                   // save it
+
+    boolean success = false;
 
     try {
       if (create) {
@@ -1629,10 +1632,20 @@ public class IndexWriter {
         messageState();
       }
 
-    } catch (IOException e) {
-      this.writeLock.release();
-      this.writeLock = null;
-      throw e;
+      success = true;
+
+    } finally {
+      if (!success) {
+        if (infoStream != null) {
+          message("init: hit exception on init; releasing write lock");
+        }
+        try {
+          writeLock.release();
+        } catch (Throwable t) {
+          // don't mask the original exception
+        }
+        writeLock = null;
+      }
     }
   }
 
@@ -3980,12 +3993,12 @@ public class IndexWriter {
     }
   }
 
-  // This is called after pending added and deleted
-  // documents have been flushed to the Directory but before
-  // the change is committed (new segments_N file written).
-  void doAfterFlush()
-    throws IOException {
-  }
+  /**
+   * A hook for extending classes to execute operations after pending added and
+   * deleted documents have been flushed to the Directory but before the change
+   * is committed (new segments_N file written).
+   */
+  protected void doAfterFlush() throws IOException {}
 
   /**
    * Flush all in-memory buffered updates (adds and deletes)
@@ -4010,6 +4023,12 @@ public class IndexWriter {
 
     flush(true, false, true);
   }
+
+  /**
+   * A hook for extending classes to execute operations before pending added and
+   * deleted documents are flushed to the Directory.
+   */
+  protected void doBeforeFlush() throws IOException {}
 
   /** Expert: prepare for commit.
    *
@@ -4228,6 +4247,8 @@ public class IndexWriter {
 
     assert testPoint("startDoFlush");
 
+    doBeforeFlush();
+    
     flushCount++;
 
     // If we are flushing because too many deletes
