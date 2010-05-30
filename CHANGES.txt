@@ -5,30 +5,25 @@ $Id$
 
 Bug fixes
 
- * LUCENE-2387: Don't hang onto Fieldables from the last doc indexed,
-   in IndexWriter, nor the Reader in Tokenizer after close is
-   called.  (Ruben Laguna, Uwe Schindler, Mike McCandless)
+* LUCENE-2422: Don't reuse byte[] in IndexInput/Output -- it gains
+  little performance, and ties up possibly large amounts of memory
+  for apps that index large docs.  (Ross Woolf via Mike McCandless)
 
- * LUCENE-2422: Don't reuse byte[] in IndexInput/Output -- it gains
-   little performance, and ties up possibly large amounts of memory
-   for apps that index large docs.  (Ross Woolf via Mike McCandless)
+* LUCENE-2387: Don't hang onto Fieldables from the last doc indexed,
+  in IndexWriter, nor the Reader in Tokenizer after close is
+  called.  (Ruben Laguna, Uwe Schindler, Mike McCandless)
 
- * LUCENE-2283: Use shared memory pool for term vector and stored
-   fields buffers. This memory will be reclaimed if needed according
-   to the configured RAM Buffer Size for the IndexWriter.  This also
-   fixes potentially excessive memory usage when many threads are
-   indexing a mix of small and large documents.  (Tim Smith via Mike
-   McCandless)
-  
- * LUCENE-2467: Fixed memory leaks in IndexWriter when large documents
-   are indexed.  (Mike McCandless)
+* LUCENE-2283: Use shared memory pool for term vector and stored
+  fields buffers. This memory will be reclaimed if needed according to
+  the configured RAM Buffer Size for the IndexWriter.  This also fixes
+  potentially excessive memory usage when many threads are indexing a
+  mix of small and large documents.  (Tim Smith via Mike McCandless)
 
- * LUCENE-2473: Clicking on the "More Results" link in the luceneweb.war
-   demo resulted in ArrayIndexOutOfBoundsException.
-   (Sami Siren via Robert Muir)
+* LUCENE-2467: Fixed memory leaks in IndexWriter when large documents
+  are indexed.  (Mike McCandless)
 
- * LUCENE-2478: Fix CachingWrapperFilter to not throw NPE when
-   Filter.getDocIdSet() returns null.  (Uwe Schindler, Daniel Noll)
+* LUCENE-2478: Fix CachingWrapperFilter to not throw NPE when
+  Filter.getDocIdSet() returns null.  (Uwe Schindler, Daniel Noll)
 
 ======================= Release 2.9.2 2010-02-26 =======================
 
