@@ -208,8 +208,6 @@ final class DocumentsWriter {
         setLength(0);
         
         // Recycle the blocks
-        final int blockCount = buffers.size();
-        
         perDocAllocator.recycleByteBlocks(buffers);
         buffers.clear();
         sizeInBytes = 0;
