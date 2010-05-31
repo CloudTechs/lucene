@@ -34,11 +34,13 @@ package org.apache.lucene.index;
  * hit a non-zero byte. */
 
 import java.util.Arrays;
+import java.util.List;
 
 final class ByteBlockPool {
 
   abstract static class Allocator {
     abstract void recycleByteBlocks(byte[][] blocks, int start, int end);
+    abstract void recycleByteBlocks(List<byte[]> blocks);
     abstract byte[] getByteBlock(boolean trackAllocations);
   }
 
