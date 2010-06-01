@@ -18,13 +18,13 @@ package org.apache.lucene.util;
  */
 
 import java.io.PrintStream;
+import java.io.File;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Random;
 
 import junit.framework.TestCase;
 
-import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.index.ConcurrentMergeScheduler;
 import org.apache.lucene.search.FieldCache;
 import org.apache.lucene.search.FieldCache.CacheEntry;
@@ -49,6 +49,14 @@ import org.apache.lucene.util.FieldCacheSanityChecker.Insanity;
  * @see #assertSaneFieldCaches
  */
 public abstract class LuceneTestCase extends TestCase {
+
+  public static final File TEMP_DIR;
+  static {
+    String s = System.getProperty("tempDir", System.getProperty("java.io.tmpdir"));
+    if (s == null)
+      throw new RuntimeException("To run tests, you need to define system property 'tempDir' or 'java.io.tmpdir'.");
+    TEMP_DIR = new File(s);
+  }
 
   public LuceneTestCase() {
     super();

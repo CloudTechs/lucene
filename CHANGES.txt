@@ -2,6 +2,11 @@ Lucene Change Log
 $Id$
 
 ======================= 3.0 branch (not yet released) ==================
+Changes in runtime behavior
+
+* LUCENE-2421: NativeFSLockFactory does not throw LockReleaseFailedException if 
+  it cannot delete the lock file, since obtaining the lock does not fail if the 
+  file is there. (Shai Erera)
 
 Bug fixes
 
