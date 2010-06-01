@@ -38,6 +38,11 @@ Bug fixes
   potentially excessive memory usage when many threads are indexing a
   mix of small and large documents.  (Tim Smith via Mike McCandless)
 
+* LUCENE-2300: If IndexWriter is pooling reader (because NRT reader
+  has been obtained), and addIndexes* is run, do not pool the
+  readers from the external directory.  This is harmless (NRT reader is
+  correct), but a waste of resources.  (Mike McCandless)
+
 * LUCENE-2422: Don't reuse byte[] in IndexInput/Output -- it gains
   little performance, and ties up possibly large amounts of memory
   for apps that index large docs.  (Ross Woolf via Mike McCandless)

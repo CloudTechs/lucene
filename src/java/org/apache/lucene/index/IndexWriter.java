@@ -554,7 +554,8 @@ public class IndexWriter {
 
       assert !pooled | readerMap.get(sr.getSegmentInfo()) == sr;
 
-      // Drop caller's ref
+      // Drop caller's ref; for an external reader (not
+      // pooled), this decRef will close it
       sr.decRef();
 
       if (pooled && (drop || (!poolReaders && sr.getRefCount() == 1))) {
@@ -692,7 +693,11 @@ public class IndexWriter {
         // synchronized
         // Returns a ref, which we xfer to readerMap:
         sr = SegmentReader.get(info, readBufferSize, doOpenStores, termsIndexDivisor);
-        readerMap.put(info, sr);
+
+        if (info.dir == directory) {
+          // Only pool if reader is not external
+          readerMap.put(info, sr);
+        }
       } else {
         if (doOpenStores) {
           sr.openDocStores();
@@ -709,7 +714,10 @@ public class IndexWriter {
       }
 
       // Return a ref to our caller
-      sr.incRef();
+      if (info.dir == directory) {
+        // Only incRef if we pooled (reader is not external)
+        sr.incRef();
+      }
       return sr;
     }
 
