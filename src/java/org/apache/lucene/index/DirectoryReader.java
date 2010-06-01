@@ -144,7 +144,7 @@ class DirectoryReader extends IndexReader implements Cloneable {
     for (int i=0;i<numSegments;i++) {
       boolean success = false;
       try {
-        final SegmentInfo info = infos.info(upto);
+        final SegmentInfo info = infos.info(i);
         if (info.dir == dir) {
           readers[upto++] = writer.readerPool.getReadOnlyClone(info, true, termInfosIndexDivisor);
         }

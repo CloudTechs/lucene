@@ -33,6 +33,9 @@ Bug fixes
 * LUCENE-2478: Fix CachingWrapperFilter to not throw NPE when
   Filter.getDocIdSet() returns null.  (Uwe Schindler, Daniel Noll)
 
+* LUCENE-2299: If you open an NRT reader while addIndexes* is running,
+  it may miss some segments (Earwin Burrfoot via Mike McCandless)
+
 API Changes
 
 * LUCENE-2281: added doBeforeFlush to IndexWriter to allow extensions to perform
