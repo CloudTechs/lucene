@@ -1,6 +1,4 @@
-package org.apache.lucene;
-// Intentionally not in org.apache.lucene.index, to assert
-// that we do not require any package private access.
+package org.apache.lucene.index;
 
 /**
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -19,7 +17,6 @@ package org.apache.lucene;
  * limitations under the License.
  */
 
-import java.util.Iterator;
 import java.util.Collection;
 import java.io.File;
 import java.io.IOException;
@@ -31,11 +28,6 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.store.MockRAMDirectory;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.index.IndexCommit;
-import org.apache.lucene.index.KeepOnlyLastCommitDeletionPolicy;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.TestIndexWriter;
-import org.apache.lucene.index.SnapshotDeletionPolicy;
 import org.apache.lucene.util.ThreadInterruptedException;
 import org.apache.lucene.util.LuceneTestCase;
 import org.apache.lucene.util._TestUtil;
@@ -108,8 +100,8 @@ public class TestSnapshotDeletionPolicy extends LuceneTestCase
   }
 
   private void runTest(Directory dir) throws Exception {
-    // Run for ~7 seconds
-    final long stopTime = System.currentTimeMillis() + 7000;
+    // Run for ~1 seconds
+    final long stopTime = System.currentTimeMillis() + 1000;
 
     SnapshotDeletionPolicy dp = new SnapshotDeletionPolicy(new KeepOnlyLastCommitDeletionPolicy());
     final IndexWriter writer = new IndexWriter(dir, new StandardAnalyzer(org.apache.lucene.util.Version.LUCENE_CURRENT), dp, IndexWriter.MaxFieldLength.UNLIMITED);
@@ -122,7 +114,7 @@ public class TestSnapshotDeletionPolicy extends LuceneTestCase
         public void run() {
           Document doc = new Document();
           doc.add(new Field("content", "aaa", Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS));
-          while(System.currentTimeMillis() < stopTime) {
+          do {
             for(int i=0;i<27;i++) {
               try {
                 writer.addDocument(doc);
@@ -143,7 +135,7 @@ public class TestSnapshotDeletionPolicy extends LuceneTestCase
             } catch (InterruptedException ie) {
               throw new ThreadInterruptedException(ie);
             }
-          }
+          } while(System.currentTimeMillis() < stopTime);
         }
       };
 
@@ -151,12 +143,12 @@ public class TestSnapshotDeletionPolicy extends LuceneTestCase
 
     // While the above indexing thread is running, take many
     // backups:
-    while(System.currentTimeMillis() < stopTime) {
+    do {
       backupIndex(dir, dp);
       Thread.sleep(20);
       if (!t.isAlive())
         break;
-    }
+    } while(System.currentTimeMillis() < stopTime);
 
     t.join();
 
@@ -195,10 +187,8 @@ public class TestSnapshotDeletionPolicy extends LuceneTestCase
     // While we hold the snapshot, and nomatter how long
     // we take to do the backup, the IndexWriter will
     // never delete the files in the snapshot:
-    Collection files = cp.getFileNames();
-    Iterator it = files.iterator();
-    while(it.hasNext()) {
-      final String fileName = (String) it.next();
+    Collection<String> files = cp.getFileNames();
+    for (final String fileName : files) {
       // NOTE: in a real backup you would not use
       // readFile; you would need to use something else
       // that copies the file to a backup location.  This
@@ -233,6 +223,18 @@ public class TestSnapshotDeletionPolicy extends LuceneTestCase
       Thread.sleep(1);
     } finally {
       input.close();
+    }
+  }
+
+  public void testNoCommits() throws Exception {
+    // Tests that if there were no commits when snapshot() is called, then
+    // IllegalStateException is thrown rather than NPE.
+    SnapshotDeletionPolicy sdp = new SnapshotDeletionPolicy(new KeepOnlyLastCommitDeletionPolicy());
+    try {
+      sdp.snapshot();
+      fail("expected exception not hit");
+    } catch (IllegalStateException ise) {
+      // expected
     }
   }
 }
