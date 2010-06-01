@@ -950,6 +950,10 @@ class DirectoryReader extends IndexReader implements Cloneable {
     public Map getUserData() {
       return userData;
     }
+
+    public void delete() {
+      throw new UnsupportedOperationException("This IndexCommit does not support deletions");
+    }
   }
 
   static class MultiTermEnum extends TermEnum {

@@ -125,6 +125,9 @@ public class SnapshotDeletionPolicy implements IndexDeletionPolicy {
     public Map getUserData() throws IOException {
       return cp.getUserData();
     }
+    public boolean isOptimized() {
+      return cp.isOptimized();
+    }
   }
 
   private List wrapCommits(List commits) {
