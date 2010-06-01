@@ -36,11 +36,19 @@ Bug fixes
 * LUCENE-2299: If you open an NRT reader while addIndexes* is running,
   it may miss some segments (Earwin Burrfoot via Mike McCandless)
 
+* LUCENE-2397: Don't throw NPE from SnapshotDeletionPolicy.snapshot if
+  there are no commits yet (Shai Erera)
+
 API Changes
 
 * LUCENE-2281: added doBeforeFlush to IndexWriter to allow extensions to perform
   operations before flush starts. Also exposed doAfterFlush as protected instead
   of package-private. (Shai Erera via Mike McCandless)
+
+Optimizations
+
+* LUCENE-2360: Small speedup to recycling of reused per-doc RAM in
+  IndexWriter (Robert Muir, Mike McCandless)
 
 ======================= Release 2.9.2 2010-02-26 =======================
 
