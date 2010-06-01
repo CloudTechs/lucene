@@ -17,7 +17,6 @@ package org.apache.lucene.store;
  * limitations under the License.
  */
 
-import java.lang.management.ManagementFactory;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.io.File;
@@ -84,10 +83,7 @@ public class NativeFSLockFactory extends FSLockFactory {
     // our tests). On most systems, the name includes the process Id.
     // Also, remove any non-alphanumeric characters, so that the lock file will
     // be created for sure on all systems.
-    String randomLockName = "lucene-"
-        + ManagementFactory.getRuntimeMXBean().getName().replaceAll("[^a..zA..Z0..9]+","") + "-"
-        + Long.toString(new Random().nextInt(), Character.MAX_RADIX)
-        + "-test.lock";
+    String randomLockName = "lucene-" + Long.toString(new Random().nextInt(), Character.MAX_RADIX) + "-test.lock";
     
     Lock l = makeLock(randomLockName);
     try {
