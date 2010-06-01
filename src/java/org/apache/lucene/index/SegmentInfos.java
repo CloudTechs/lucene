@@ -399,35 +399,14 @@ public final class SegmentInfos extends Vector {
   public static long readCurrentVersion(Directory directory)
     throws CorruptIndexException, IOException {
 
-    return ((Long) new FindSegmentsFile(directory) {
-        protected Object doBody(String segmentFileName) throws CorruptIndexException, IOException {
-
-          IndexInput input = directory.openInput(segmentFileName);
-
-          int format = 0;
-          long version = 0;
-          try {
-            format = input.readInt();
-            if(format < 0){
-              if (format < CURRENT_FORMAT)
-                throw new CorruptIndexException("Unknown format version: " + format);
-              version = input.readLong(); // read version
-            }
-          }
-          finally {
-            input.close();
-          }
-     
-          if(format < 0)
-            return new Long(version);
-
-          // We cannot be sure about the format of the file.
-          // Therefore we have to read the whole file and cannot simply seek to the version entry.
-          SegmentInfos sis = new SegmentInfos();
-          sis.read(directory, segmentFileName);
-          return new Long(sis.getVersion());
-        }
-      }.run()).longValue();
+    // Fully read the segments file: this ensures that it's
+    // completely written so that if
+    // IndexWriter.prepareCommit has been called (but not
+    // yet commit), then the reader will still see itself as
+    // current:
+    SegmentInfos sis = new SegmentInfos();
+    sis.read(directory);
+    return sis.version;
   }
 
   /**

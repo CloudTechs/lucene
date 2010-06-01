@@ -14,6 +14,10 @@ Changes in runtime behavior
 
 Bug fixes
 
+* LUCENE-2046: IndexReader should not see the index as changed, after
+  IndexWriter.prepareCommit has been called but before
+  IndexWriter.commit is called. (Peter Keegan via Mike McCandless)
+
 * LUCENE-2119: Don't throw NegativeArraySizeException if you pass
   Integer.MAX_VALUE as nDocs to IndexSearcher search methods.  (Paul
   Taylor via Mike McCandless)
