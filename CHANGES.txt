@@ -5,6 +5,10 @@ $Id$
 
 Bug fixes
 
+* LUCENE-2119: Don't throw NegativeArraySizeException if you pass
+  Integer.MAX_VALUE as nDocs to IndexSearcher search methods.  (Paul
+  Taylor via Mike McCandless)
+
 * LUCENE-2142: FieldCacheImpl.getStringIndex no longer throws an
   exception when term count exceeds doc count.  (Mike McCandless)
   
