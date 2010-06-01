@@ -3,6 +3,15 @@ $Id$
 
 ======================= 2.9 branch (not yet released) ==================
 
+Changes in runtime behavior
+
+* LUCENE-2060: Changed ConcurrentMergeScheduler's default for
+  maxNumThreads from 3 to 1, because in practice we get the most gains
+  from running a single merge in the backround.  More than one
+  concurrent merge causes alot of thrashing (though it's possible on
+  SSD storage that there would be net gains).  (Jason Rutherglen, Mike
+  McCandless)
+
 Bug fixes
 
 * LUCENE-2119: Don't throw NegativeArraySizeException if you pass
