@@ -82,6 +82,9 @@ API Changes
 
 Optimizations
 
+* LUCENE-2161: Improve concurrency of IndexReader, especially in the
+  context of near real-time readers.  (Mike McCandless)
+
 * LUCENE-2360: Small speedup to recycling of reused per-doc RAM in
   IndexWriter (Robert Muir, Mike McCandless)
 

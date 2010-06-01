@@ -462,6 +462,9 @@ public class IndexWriter {
    *  loading a TermInfo.  The default value is 1.  Set this
    *  to -1 to skip loading the terms index entirely. */
   public IndexReader getReader(int termInfosIndexDivisor) throws IOException {
+
+    ensureOpen();
+
     if (infoStream != null) {
       message("flush at getReader");
     }
