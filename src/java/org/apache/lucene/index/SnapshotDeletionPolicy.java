@@ -73,6 +73,9 @@ public class SnapshotDeletionPolicy implements IndexDeletionPolicy {
    *  you release the snapshot. */
   // TODO 3.0: change this to return IndexCommit instead
   public synchronized IndexCommitPoint snapshot() {
+    if (lastCommit == null) {
+      throw new IllegalStateException("no index commits to snapshot !");
+    }
     if (snapshot == null)
       snapshot = lastCommit.getSegmentsFileName();
     else

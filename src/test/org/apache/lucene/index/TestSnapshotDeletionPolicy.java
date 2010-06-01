@@ -1,6 +1,4 @@
-package org.apache.lucene;
-// Intentionally not in org.apache.lucene.index, to assert
-// that we do not require any package private access.
+package org.apache.lucene.index;
 
 /**
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -31,11 +29,6 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.store.MockRAMDirectory;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.index.IndexCommit;
-import org.apache.lucene.index.KeepOnlyLastCommitDeletionPolicy;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.TestIndexWriter;
-import org.apache.lucene.index.SnapshotDeletionPolicy;
 
 import org.apache.lucene.util.LuceneTestCase;
 import org.apache.lucene.util._TestUtil;
@@ -102,8 +95,8 @@ public class TestSnapshotDeletionPolicy extends LuceneTestCase
   }
 
   private void runTest(Directory dir) throws Exception {
-    // Run for ~7 seconds
-    final long stopTime = System.currentTimeMillis() + 7000;
+    // Run for ~1 seconds
+    final long stopTime = System.currentTimeMillis() + 1000;
 
     SnapshotDeletionPolicy dp = new SnapshotDeletionPolicy(new KeepOnlyLastCommitDeletionPolicy());
     final IndexWriter writer = new IndexWriter(dir, true, new StandardAnalyzer(), dp);
@@ -220,6 +213,18 @@ public class TestSnapshotDeletionPolicy extends LuceneTestCase
       Thread.sleep(1);
     } finally {
       input.close();
+    }
+  }
+
+  public void testNoCommits() throws Exception {
+    // Tests that if there were no commits when snapshot() is called, then
+    // IllegalStateException is thrown rather than NPE.
+    SnapshotDeletionPolicy sdp = new SnapshotDeletionPolicy(new KeepOnlyLastCommitDeletionPolicy());
+    try {
+      sdp.snapshot();
+      fail("expected exception not hit");
+    } catch (IllegalStateException ise) {
+      // expected
     }
   }
 }
