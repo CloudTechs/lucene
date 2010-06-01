@@ -24,6 +24,9 @@ Bug fixes
 
 * LUCENE-2142: FieldCacheImpl.getStringIndex no longer throws an
   exception when term count exceeds doc count.  (Mike McCandless)
+
+* LUCENE-2104: NativeFSLock.release() would silently fail if the lock is held by 
+  another thread/process.  (Shai Erera via Uwe Schindler)
   
 * LUCENE-2283: Use shared memory pool for term vector and stored
   fields buffers. This memory will be reclaimed if needed according to
