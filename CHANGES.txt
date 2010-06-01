@@ -12,6 +12,9 @@ Bug fixes
 * LUCENE-2142: FieldCacheImpl.getStringIndex no longer throws an
   exception when term count exceeds doc count.  (Mike McCandless)
   
+* LUCENE-2104: NativeFSLock.release() would silently fail if the lock is held by 
+  another thread/process.  (Shai Erera via Uwe Schindler)
+  
 * LUCENE-2283: Use shared memory pool for term vector and stored
   fields buffers. This memory will be reclaimed if needed according to
   the configured RAM Buffer Size for the IndexWriter.  This also fixes
@@ -101,7 +104,7 @@ Bug fixes
  * LUCENE-2257: Increase max number of unique terms in one segment to
    termIndexInterval (default 128) * ~2.1 billion = ~274 billion.
    (Tom Burton-West via Mike McCandless)
-  
+
  * LUCENE-2260: Fixed AttributeSource to not hold a strong
    reference to the Attribute/AttributeImpl classes which prevents
    unloading of custom attributes loaded by other classloaders
