@@ -5,6 +5,10 @@ $Id$
 
 Changes in runtime behavior
 
+* LUCENE-2421: NativeFSLockFactory does not throw LockReleaseFailedException if 
+  it cannot delete the lock file, since obtaining the lock does not fail if the 
+  file is there. (Shai Erera)
+
 * LUCENE-2060: Changed ConcurrentMergeScheduler's default for
   maxNumThreads from 3 to 1, because in practice we get the most gains
   from running a single merge in the backround.  More than one
