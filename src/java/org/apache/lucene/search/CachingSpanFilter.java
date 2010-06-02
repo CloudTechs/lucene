@@ -20,8 +20,6 @@ import org.apache.lucene.index.IndexReader;
 
 import java.io.IOException;
 import java.util.BitSet;
-import java.util.Map;
-import java.util.WeakHashMap;
 
 /**
  * Wraps another SpanFilter's result and caches it.  The purpose is to allow
@@ -33,13 +31,31 @@ public class CachingSpanFilter extends SpanFilter {
   /**
    * A transient Filter cache.
    */
-  protected transient Map cache;
+  private final CachingWrapperFilter.FilterCache cache;
 
   /**
+   * New deletions always result in a cache miss, by default
+   * ({@link CachingWrapperFilter.DeletesMode#RECACHE}.
    * @param filter Filter to cache results of
    */
   public CachingSpanFilter(SpanFilter filter) {
+    this(filter, CachingWrapperFilter.DeletesMode.RECACHE);
+  }
+
+  /**
+   * @param filter Filter to cache results of
+   * @param deletesMode See {@link CachingWrapperFilter.DeletesMode}
+   */
+  public CachingSpanFilter(SpanFilter filter, CachingWrapperFilter.DeletesMode deletesMode) {
     this.filter = filter;
+    if (deletesMode == CachingWrapperFilter.DeletesMode.DYNAMIC) {
+      throw new IllegalArgumentException("DeletesMode.DYNAMIC is not supported");
+    }
+    this.cache = new CachingWrapperFilter.FilterCache(deletesMode) {
+      protected Object mergeDeletes(final IndexReader r, final Object value) {
+        throw new IllegalStateException("DeletesMode.DYNAMIC is not supported");
+      }
+    };
   }
 
   /**
@@ -55,19 +71,24 @@ public class CachingSpanFilter extends SpanFilter {
     return result != null ? result.getDocIdSet() : null;
   }
   
+  // for testing
+  int hitCount, missCount;
+
   private SpanFilterResult getCachedResult(IndexReader reader) throws IOException {
-    SpanFilterResult result = null;
-    if (cache == null) {
-      cache = new WeakHashMap();
+
+    final Object coreKey = reader.getFieldCacheKey();
+    final Object delCoreKey = reader.hasDeletions() ? reader.getDeletesCacheKey() : coreKey;
+
+    SpanFilterResult result = (SpanFilterResult) cache.get(reader, coreKey, delCoreKey);
+    if (result != null) {
+      hitCount++;
+      return result;
     }
 
-    synchronized (cache) {  // check cache
-      result = (SpanFilterResult) cache.get(reader);
-      if (result == null) {
-        result = filter.bitSpans(reader);
-        cache.put(reader, result);
-      }
-    }
+    missCount++;
+    result = filter.bitSpans(reader);
+
+    cache.put(coreKey, delCoreKey, result);
     return result;
   }
 

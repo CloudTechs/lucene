@@ -1349,6 +1349,10 @@ public class SegmentReader extends IndexReader implements Cloneable {
     return core.freqStream;
   }
 
+  public Object getDeletesCacheKey() {
+    return deletedDocs;
+  }
+
   public long getUniqueTermCount() {
     return core.getTermsReader().size();
   }
