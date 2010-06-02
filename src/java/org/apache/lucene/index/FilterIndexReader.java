@@ -288,4 +288,12 @@ public class FilterIndexReader extends IndexReader {
   public Object getFieldCacheKey() {
     return in.getFieldCacheKey();
   }
+
+  /** If the subclass of FilteredIndexReader modifies the
+   *  deleted docs, you must override this method to provide
+   *  a different key */
+  @Override
+  public Object getDeletesCacheKey() {
+    return in.getDeletesCacheKey();
+  }
 }

@@ -1149,6 +1149,12 @@ public abstract class IndexReader implements Cloneable,Closeable {
     return this;
   }
 
+  /** Expert.  Warning: this returns null if the reader has
+   *  no deletions */
+  public Object getDeletesCacheKey() {
+    return this;
+  }
+
   /** Returns the number of unique terms (across all fields)
    *  in this reader.
    *

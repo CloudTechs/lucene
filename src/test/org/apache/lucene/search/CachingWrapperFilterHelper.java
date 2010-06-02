@@ -18,10 +18,8 @@ package org.apache.lucene.search;
  */
 
 import java.io.IOException;
-import java.util.BitSet;
-import java.util.WeakHashMap;
 
-import junit.framework.TestCase;
+import junit.framework.Assert;
 
 import org.apache.lucene.index.IndexReader;
 
@@ -44,30 +42,18 @@ public class CachingWrapperFilterHelper extends CachingWrapperFilter {
   }
   
   @Override
-  public DocIdSet getDocIdSet(IndexReader reader) throws IOException {
-    if (cache == null) {
-      cache = new WeakHashMap();
-    }
-    
-    synchronized (cache) {  // check cache
-      DocIdSet cached = (DocIdSet) cache.get(reader);
-      if (shouldHaveCache) {
-        TestCase.assertNotNull("Cache should have data ", cached);
-      } else {
-        TestCase.assertNull("Cache should be null " + cached , cached);
-      }
-      if (cached != null) {
-        return cached;
-      }
+  public synchronized DocIdSet getDocIdSet(IndexReader reader) throws IOException {
+
+    final int saveMissCount = missCount;
+    DocIdSet docIdSet = super.getDocIdSet(reader);
+
+    if (shouldHaveCache) {
+      Assert.assertEquals("Cache should have data ", saveMissCount, missCount);
+    } else {
+      Assert.assertTrue("Cache should be null " + docIdSet, missCount > saveMissCount);
     }
 
-    final DocIdSet bits = filter.getDocIdSet(reader);
-
-    synchronized (cache) {  // update cache
-      cache.put(reader, bits);
-    }
-
-    return bits;
+    return docIdSet;
   }
 
   @Override
