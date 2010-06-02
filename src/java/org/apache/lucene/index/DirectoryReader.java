@@ -32,10 +32,10 @@ import java.util.Set;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.FieldSelector;
 import org.apache.lucene.search.DefaultSimilarity;
-import org.apache.lucene.store.AlreadyClosedException;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.Lock;
 import org.apache.lucene.store.LockObtainFailedException;
+import org.apache.lucene.search.FieldCache; // not great (circular); used only to purge FieldCache entry on close
 
 /** 
  * An IndexReader which reads indexes with multiple segments.
@@ -830,6 +830,12 @@ class DirectoryReader extends IndexReader implements Cloneable {
         if (ioe == null) ioe = e;
       }
     }
+
+    // NOTE: only needed in case someone had asked for
+    // FieldCache for top-level reader (which is generally
+    // not a good idea):
+    FieldCache.DEFAULT.purge(this);
+
     // throw the first exception
     if (ioe != null) throw ioe;
   }

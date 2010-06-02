@@ -37,6 +37,7 @@ import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.store.IndexOutput;
 import org.apache.lucene.util.BitVector;
 import org.apache.lucene.util.CloseableThreadLocal;
+import org.apache.lucene.search.FieldCache; // not great (circular); used only to purge FieldCache entry on close
 
 /** @version $Id */
 /**
@@ -92,13 +93,15 @@ public class SegmentReader extends IndexReader implements Cloneable {
     final int readBufferSize;
     final int termsIndexDivisor;
 
+    private final SegmentReader origInstance;
+
     TermInfosReader tis;
     FieldsReader fieldsReaderOrig;
     TermVectorsReader termVectorsReaderOrig;
     CompoundFileReader cfsReader;
     CompoundFileReader storeCFSReader;
 
-    CoreReaders(Directory dir, SegmentInfo si, int readBufferSize, int termsIndexDivisor) throws IOException {
+    CoreReaders(SegmentReader origInstance, Directory dir, SegmentInfo si, int readBufferSize, int termsIndexDivisor) throws IOException {
       segment = si.name;
       this.readBufferSize = readBufferSize;
       this.dir = dir;
@@ -139,6 +142,12 @@ public class SegmentReader extends IndexReader implements Cloneable {
           decRef();
         }
       }
+
+      // Must assign this at the end -- if we hit an
+      // exception above core, we don't want to attempt to
+      // purge the FieldCache (will hit NPE because core is
+      // not assigned yet).
+      this.origInstance = origInstance;
     }
 
     synchronized TermVectorsReader getTermVectorsReaderOrig() {
@@ -231,6 +240,11 @@ public class SegmentReader extends IndexReader implements Cloneable {
   
         if (storeCFSReader != null) {
           storeCFSReader.close();
+        }
+
+        // Force FieldCache to evict our entries at this point
+        if (freqStream != null) {
+          FieldCache.DEFAULT.purge(origInstance);
         }
       }
     }
@@ -573,7 +587,7 @@ public class SegmentReader extends IndexReader implements Cloneable {
     boolean success = false;
 
     try {
-      instance.core = new CoreReaders(dir, si, readBufferSize, termInfosIndexDivisor);
+      instance.core = new CoreReaders(instance, dir, si, readBufferSize, termInfosIndexDivisor);
       if (doOpenStores) {
         instance.core.openDocStores(si);
       }
