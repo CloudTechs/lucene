@@ -20,6 +20,7 @@ package org.apache.lucene.index;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.FieldSelector;
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.search.FieldCache; // not great (circular); used only to purge FieldCache entry on close
 
 import java.io.IOException;
 import java.util.Collection;
@@ -216,8 +217,14 @@ public class FilterIndexReader extends IndexReader {
   
   protected void doCommit(Map commitUserData) throws IOException { in.commit(commitUserData); }
   
-  protected void doClose() throws IOException { in.close(); }
+  protected void doClose() throws IOException {
+    in.close();
 
+    // NOTE: only needed in case someone had asked for
+    // FieldCache for top-level reader (which is generally
+    // not a good idea):
+    FieldCache.DEFAULT.purge(this);
+  }
 
   public Collection getFieldNames(IndexReader.FieldOption fieldNames) {
     ensureOpen();
@@ -241,5 +248,12 @@ public class FilterIndexReader extends IndexReader {
   
   public IndexReader[] getSequentialSubReaders() {
     return in.getSequentialSubReaders();
+  }
+
+  /** If the subclass of FilteredIndexReader modifies the
+   *  contents of the FieldCache, you must override this
+   *  method to provide a different key */
+  public Object getFieldCacheKey() {
+    return in.getFieldCacheKey();
   }
 }

@@ -68,6 +68,14 @@ class FieldCacheImpl implements ExtendedFieldCache {
   public void purgeAllCaches() {
     init();
   }
+
+  public void purge(IndexReader r) {
+    Iterator it = caches.values().iterator();
+    while(it.hasNext()) {
+      Cache c = (Cache) it.next();
+      c.purge(r);
+    }
+  }
   
   public CacheEntry[] getCacheEntries() {
     List result = new ArrayList(17);
@@ -182,6 +190,14 @@ class FieldCacheImpl implements ExtendedFieldCache {
     
     protected abstract Object createValue(IndexReader reader, Entry key)
         throws IOException;
+
+    /** Remove this reader from the cache, if present. */
+    public void purge(IndexReader r) {
+      Object readerKey = r.getFieldCacheKey();
+      synchronized(readerCache) {
+        readerCache.remove(readerKey);
+      }
+    }
 
     public Object get(IndexReader reader, Entry key) throws IOException {
       Map innerCache;

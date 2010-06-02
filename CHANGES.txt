@@ -3,6 +3,12 @@ $Id$
 
 ======================= 2.9 branch (not yet released) ==================
 
+Changes in backwards compatibility policy
+
+* LUCENE-2135: Added FieldCache.purge(IndexReader) method to the
+  interface.  Anyone implementing FieldCache externally will need to
+  fix their code to implement this, on upgrading.  (Mike McCandless)
+
 Changes in runtime behavior
 
 * LUCENE-2421: NativeFSLockFactory does not throw LockReleaseFailedException if 
@@ -86,6 +92,10 @@ API Changes
   of package-private. (Shai Erera via Mike McCandless)
 
 Optimizations
+
+* LUCENE-2135: On IndexReader.close, forcefully evict any entries from
+  the FieldCache rather than waiting for the WeakHashMap to release
+  the reference (Mike McCandless)
 
 * LUCENE-2161: Improve concurrency of IndexReader, especially in the
   context of near real-time readers.  (Mike McCandless)
