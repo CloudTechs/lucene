@@ -33,6 +33,7 @@ import org.apache.lucene.document.Field.TermVector;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.MockRAMDirectory;
 import org.apache.lucene.store.AlreadyClosedException;
@@ -887,6 +888,28 @@ public class TestIndexWriterReader extends LuceneTestCase {
     assertEquals(0, r.numDocs());
     r.close();
 
+    w.close();
+    dir.close();
+  }
+  public void testSegmentWarmer() throws Exception {
+    Directory dir = new MockRAMDirectory();
+    IndexWriter w = new IndexWriter(dir, new WhitespaceAnalyzer(), IndexWriter.MaxFieldLength.UNLIMITED);
+    w.setMaxBufferedDocs(2);
+    w.getReader().close();
+    w.setMergedSegmentWarmer(new IndexWriter.IndexReaderWarmer() {
+        public void warm(IndexReader r) throws IOException {
+          final IndexSearcher s = new IndexSearcher(r);
+          final TopDocs hits = s.search(new TermQuery(new Term("foo", "bar")), 10);
+          assertEquals(20, hits.totalHits);
+        }
+      });
+    
+    Document doc = new Document();
+    doc.add(new Field("foo", "bar", Field.Store.YES, Field.Index.NOT_ANALYZED));
+    for(int i=0;i<20;i++) {
+      w.addDocument(doc);
+    }
+    w.waitForMerges();
     w.close();
     dir.close();
   }

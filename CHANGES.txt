@@ -97,6 +97,11 @@ Bug fixes
 * LUCENE-2424: Fix FieldDoc.toString to actually return its fields
   (Stephen Green via Mike McCandless)
 
+* LUCENE-2311: Always pass a "fully loaded" (terms index & doc stores)
+  SegmentsReader to IndexWriter's mergedSegmentWarmer (if set), so
+  that warming is free to do whatever it needs to.  (Earwin Burrfoot
+  via Mike McCandless)
+
 API Changes
 
 * LUCENE-2281: added doBeforeFlush to IndexWriter to allow extensions to perform
