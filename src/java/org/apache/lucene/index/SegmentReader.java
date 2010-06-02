@@ -243,7 +243,7 @@ public class SegmentReader extends IndexReader implements Cloneable {
         }
 
         // Force FieldCache to evict our entries at this point
-        if (freqStream != null) {
+        if (origInstance != null) {
           FieldCache.DEFAULT.purge(origInstance);
         }
       }
