@@ -91,6 +91,11 @@ API Changes
   operations before flush starts. Also exposed doAfterFlush as protected instead
   of package-private. (Shai Erera via Mike McCandless)
 
+* LUCENE-2356: Add IndexWriter.set/getReaderTermsIndexDivisor, to set
+  what IndexWriter passes for termsIndexDivisor to the readers it
+  opens internally when applying deletions or creating a
+  near-real-time reader.  (Earwin Burrfoot via Mike McCandless)
+
 Optimizations
 
 * LUCENE-2135: On IndexReader.close, forcefully evict any entries from

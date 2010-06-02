@@ -372,6 +372,8 @@ public class IndexWriter {
   private Thread writeThread;                     // non-null if any thread holds write lock
   final ReaderPool readerPool = new ReaderPool();
   private int upgradeCount;
+
+  private int readerTermsIndexDivisor = IndexReader.DEFAULT_TERMS_INDEX_DIVISOR;
   
   // This is a "write once" variable (like the organic dye
   // on a DVD-R that may or may not be heated by a laser and
@@ -445,7 +447,7 @@ public class IndexWriter {
    * @throws IOException
    */
   public IndexReader getReader() throws IOException {
-    return getReader(IndexReader.DEFAULT_TERMS_INDEX_DIVISOR);
+    return getReader(readerTermsIndexDivisor);
   }
 
   /** Expert: like {@link #getReader}, except you can
@@ -668,8 +670,9 @@ public class IndexWriter {
      * @throws IOException
      */
     public synchronized SegmentReader get(SegmentInfo info, boolean doOpenStores) throws IOException {
-      return get(info, doOpenStores, BufferedIndexInput.BUFFER_SIZE, IndexReader.DEFAULT_TERMS_INDEX_DIVISOR);
+      return get(info, doOpenStores, BufferedIndexInput.BUFFER_SIZE, readerTermsIndexDivisor);
     }
+
     /**
      * Obtain a SegmentReader from the readerPool.  The reader
      * must be returned by calling {@link #release(SegmentReader)}
@@ -1790,6 +1793,28 @@ public class IndexWriter {
   public int getMaxFieldLength() {
     ensureOpen();
     return maxFieldLength;
+  }
+
+  /** Sets the termsIndexDivisor passed to any readers that
+   *  IndexWriter opens, for example when applying deletes
+   *  or creating a near-real-time reader in {@link
+   *  IndexWriter#getReader}.  Default value is {@link
+   *  IndexReader#DEFAULT_TERMS_INDEX_DIVISOR}. */
+  public void setReaderTermsIndexDivisor(int divisor) {
+    ensureOpen();
+    if (divisor <= 0) {
+      throw new IllegalArgumentException("divisor must be >= 1 (got " + divisor + ")");
+    }
+    readerTermsIndexDivisor = divisor;
+    if (infoStream != null) {
+      message("setReaderTermsIndexDivisor " + readerTermsIndexDivisor);
+    }
+  }
+
+  /** @see #setReaderTermsIndexDivisor() */
+  public int getReaderTermsIndexDivisor() {
+    ensureOpen();
+    return readerTermsIndexDivisor;
   }
 
   /** Determines the minimal number of documents required

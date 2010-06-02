@@ -222,6 +222,7 @@ public class TestIndexWriterReader extends LuceneTestCase {
     Directory dir1 = new MockRAMDirectory();
     IndexWriter writer = new IndexWriter(dir1, new WhitespaceAnalyzer(),
         IndexWriter.MaxFieldLength.LIMITED);
+    writer.setReaderTermsIndexDivisor(2);
     writer.setInfoStream(infoStream);
     // create the index
     createIndexNoClose(!optimize, "index1", writer);
