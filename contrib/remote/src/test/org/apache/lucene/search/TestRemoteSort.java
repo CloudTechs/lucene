@@ -450,7 +450,7 @@ public class TestRemoteSort extends LuceneTestCase implements Serializable {
     return (Searchable) Naming.lookup ("//localhost:" + port + "/SortedSearchable");
   }
 
-  private int port = -1;
+  private static int port = -1;
 
   private void startServer () throws Exception {
     // construct an index
