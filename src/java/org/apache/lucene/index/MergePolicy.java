@@ -81,6 +81,7 @@ public abstract class MergePolicy {
     int maxNumSegmentsOptimize;     // used by IndexWriter
     SegmentReader[] readers;        // used by IndexWriter
     SegmentReader[] readersClone;   // used by IndexWriter
+    List mergeFiles;                // used by IndexWriter
     final SegmentInfos segments;
     final boolean useCompoundFile;
     boolean aborted;

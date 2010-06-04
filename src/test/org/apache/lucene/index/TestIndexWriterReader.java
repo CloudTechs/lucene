@@ -618,7 +618,7 @@ public class TestIndexWriterReader extends LuceneTestCase {
     writer.setMergeFactor(2);
     writer.setMaxBufferedDocs(2);
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 100; i++) {
       writer.addDocument(createDocument(i, "test", 4));
     }
     ((ConcurrentMergeScheduler) writer.getMergeScheduler()).sync();
