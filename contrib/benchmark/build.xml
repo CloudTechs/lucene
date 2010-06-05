@@ -71,7 +71,7 @@
         </delete>
 
     </target>
-    <target name="extract-reuters" depends="check-files,compile-core" unless="reuters.extracted">
+    <target name="extract-reuters" depends="check-files,compile-core" unless="reuters.extracted" if="build.this.contrib">
         <mkdir dir="${working.dir}/reuters-out"/>
         <java classname="org.apache.lucene.benchmark.utils.ExtractReuters" maxmemory="1024M" fork="true">
             <classpath refid="run.classpath"/>
