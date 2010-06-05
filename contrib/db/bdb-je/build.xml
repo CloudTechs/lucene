@@ -23,13 +23,12 @@
 
   <property name="je.version" value="3.3.69" />
 
+  <property name="javac.source" value="1.5" />
+  <property name="javac.target" value="1.5" />
+
   <path id="je.jar">
     <pathelement location="lib/je-${je.version}/lib/je-${je.version}.jar" />
   </path>
-
-  <available classname="com.sleepycat.je.Database" property="je.jar.exists">
-    <classpath refid="je.jar" />
-  </available>
 
   <pathconvert property="project.classpath" targetos="unix" refid="je.jar" />
 
@@ -46,7 +45,13 @@
     <pathelement location="${build.dir}/classes/java"/>
   </path>
 
-  <target name="get-je-jar" unless="je.jar.exists">
+  <target name="checkJAR" if="build.this.contrib">
+    <available classname="com.sleepycat.je.Database" property="je.jar.exists">
+      <classpath refid="je.jar" />
+    </available>
+  </target>
+
+  <target name="get-je-jar" unless="je.jar.exists" if="build.this.contrib">
     <mkdir dir="lib" />
     <get src="http://download.oracle.com/berkeley-db/je-${je.version}.zip"
          dest="lib/je-${je.version}.zip" />
@@ -57,6 +62,6 @@
     </unzip>
   </target>
 
-  <target name="check-and-get-je-jar" depends="get-je-jar" />
-  <target name="init" depends="contrib-build.init,check-and-get-je-jar" />
+  <target name="check-and-get-je-jar" depends="get-je-jar" if="build.this.contrib" />
+  <target name="init" depends="contrib-build.init,checkJAR,check-and-get-je-jar" />
 </project>

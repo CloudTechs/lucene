@@ -33,7 +33,7 @@
                refid="additional.dependencies"
   />
 
-  <target name="compile-core" depends="common.compile-core">
+  <target name="compile-core" depends="contrib-build.compile-core">
     <copy todir="${build.dir}/classes/java">
       <fileset dir="src/java" includes="**/*.xml"/>
     </copy>

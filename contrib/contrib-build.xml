@@ -31,7 +31,37 @@
   <available property="lucene.jar.present" type="file" file="${lucene.jar}"/>
   <available property="lucene.tests.present" type="dir"
              file="${common.dir}/build/classes/test" />
-  <available property="contrib.has.tests" type="dir" file="src/test" />
+  
+  <condition property="build.this.contrib">
+    <or>
+      <equals arg1="1.4" arg2="${javac.source}" />
+      <equals arg1="1.4" arg2="${javac.target}" />
+      <isset property="build-1-5-contrib" />
+    </or>
+  </condition>
+  
+  <condition property="fail.this.contrib">
+    <not>
+      <or>
+        <isset property="build.this.contrib" />
+        <isset property="force.jdk14.build" />
+      </or>
+    </not>
+  </condition>
+  
+  <condition property="contrib.has.tests">
+    <and>
+      <isset property="build.this.contrib" />
+      <available type="dir" file="src/test" />
+    </and>
+  </condition>
+  
+  <condition property="pom.xml.present">
+    <and>
+      <isset property="build.this.contrib" />
+      <available type="file" file="${pom.xml}" />
+    </and>
+  </condition>
   
   <path id="classpath">
    <pathelement path="${lucene.jar}"/>
@@ -59,22 +89,33 @@
   <target name="build-lucene-tests" unless="lucene.tests.present">
     <ant dir="${common.dir}" target="compile-test" inheritAll="false"/>
   </target>
-
   
-  <target name="init" depends="common.init,build-lucene,build-lucene-tests"/>
+  <target name="warn-jdk14-contrib" unless="build.this.contrib">
+    <echo message="Contrib '${name}' needs at least JDK 1.5 to build. BUILD DISABLED!" level="warning" />
+  </target>
+  
+  <target name="fail-jdk14-contrib" if="fail.this.contrib">
+    <fail message="Contrib '${name}' needs at least JDK 1.5 to build. If you only want to compile Java 1.4 compatible contribs, add '-Dforce.jdk14.build=true' to command line."/>
+  </target>
+
+  <target name="init" depends="common.init,fail-jdk14-contrib,warn-jdk14-contrib,build-lucene,build-lucene-tests"/>
+  
+  <target name="compile-core" if="build.this.contrib">
+    <antcall target="common.compile-core" inheritRefs="true" />
+  </target>
+  <target name="jar-core" if="build.this.contrib">
+    <antcall target="common.jar-core" inheritRefs="true" />
+  </target>
+  <target name="jar-src" if="build.this.contrib">
+    <antcall target="common.jar-src" inheritRefs="true" />
+  </target>
   <target name="compile-test" depends="init" if="contrib.has.tests">
     <antcall target="common.compile-test" inheritRefs="true" />
   </target>
   <target name="test" depends="init" if="contrib.has.tests">
     <antcall target="common.test" inheritRefs="true" />
   </target>
-  <target name="build-artifacts-and-tests" depends="jar, compile-test" />
-	
-  <available 
-    type="file" 
-    file="${pom.xml}" 
-    property="pom.xml.present">
-  </available>
+  <target name="build-artifacts-and-tests" depends="jar, compile-test" if="build.this.contrib" />
 			
   <target name="dist-maven" if="pom.xml.present" depends="compile-core, jar-src">
     <sequential>
@@ -89,7 +130,7 @@
     </sequential>
   </target>
 
-  <target name="javadocs">
+  <target name="javadocs" if="build.this.contrib">
    	<sequential>
        <mkdir dir="${javadoc.dir}/contrib-${name}"/>
        <invoke-javadoc
@@ -104,7 +145,7 @@
     </sequential>
   </target>	
 
-  <target name="javadocs-index.html" description="Generate line for index.html of JavaDocs">
+  <target name="javadocs-index.html" description="Generate line for index.html of JavaDocs" if="build.this.contrib">
     <echo file="${javadoc.dir}/index.html" append="true">
 <![CDATA[
   <li><a href="contrib-${name}/index.html">${name}</a></li>

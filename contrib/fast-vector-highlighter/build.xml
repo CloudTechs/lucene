@@ -37,7 +37,7 @@
     <pathelement path="${project.classpath}"/>
   </path>
 
-  <target name="compile-core" depends="build-analyzers, common.compile-core" />
+  <target name="compile-core" depends="build-analyzers, contrib-build.compile-core" />
 
   <target name="build-analyzers" unless="analyzers.jar.present">
     <echo>Fast Vector Highlighter building dependency ${analyzers.jar}</echo>

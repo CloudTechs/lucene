@@ -43,7 +43,7 @@
     </subant>
   </target>
 
-  <target name="init" depends="common.init,compile-misc"/>
+  <target name="init" depends="contrib-build.init,compile-misc"/>
 
   <target name="compile" depends="init">
     <antcall target="common.compile" inheritRefs="true" />

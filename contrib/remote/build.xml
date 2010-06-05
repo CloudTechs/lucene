@@ -26,7 +26,7 @@
 	<import file="../contrib-build.xml"/>
 	
 	<!-- Overrides common.compile-core to add rmic -->
-	<target name="compile-core" depends="common.compile-core" description="Compiles core classes, including rmic">
+	<target name="compile-core" depends="contrib-build.compile-core" description="Compiles core classes, including rmic">
 		<rmic classname="org.apache.lucene.search.RemoteSearchable" base="${build.dir}/classes/java" stubversion="1.2">
 			<classpath refid="classpath" />
 		</rmic>

@@ -37,7 +37,7 @@
     <pathelement path="${project.classpath}"/>
   </path>
 
-  <target name="compile-core" depends="build-misc, common.compile-core" />
+  <target name="compile-core" depends="build-misc, contrib-build.compile-core" />
 
   <target name="build-misc" unless="memory.jar.present">
     <echo>Misc building dependency ${misc.jar}</echo>

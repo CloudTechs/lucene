@@ -129,6 +129,13 @@ Optimizations
 * LUCENE-2360: Small speedup to recycling of reused per-doc RAM in
   IndexWriter (Robert Muir, Mike McCandless)
 
+Build
+
+* LUCENE-2488: Support build with JDK 1.4 and exclude Java 1.5 contrib
+  modules on request (pass '-Dforce.jdk14.build=true') when
+  compiling/testing/packaging. This marks the benchmark contrib also
+  as Java 1.5, as it depends on fast-vector-highlighter. (Uwe Schindler)
+
 ======================= Release 2.9.2 2010-02-26 =======================
 
 Bug fixes

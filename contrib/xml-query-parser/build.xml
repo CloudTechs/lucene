@@ -44,7 +44,7 @@
     <pathelement path="${build.dir}/${final.name}.jar"/>
   </path>
 
-  <target name="compile-core" depends="build-queries, common.compile-core" />
+  <target name="compile-core" depends="build-queries, contrib-build.compile-core" />
 
   <target name="build-queries" unless="queries.jar.present">
     <echo>XML Parser building dependency ${queries.jar}</echo>

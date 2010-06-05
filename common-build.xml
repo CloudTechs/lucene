@@ -107,9 +107,7 @@
   <property name="svnversion.exe" value="svnversion" />
   <property name="svn.exe" value="svn" />
   
-  <condition property="build-1-5-contrib">
-     <equals arg1="1.5" arg2="${ant.java.version}" />
-  </condition>
+  <available property="build-1-5-contrib" classname="java.lang.StringBuilder" />
   
   <property name="clover.db.dir" location="${common.dir}/build/test/clover/db"/>
   <property name="clover.report.dir" location="${common.dir}/build/test/clover/reports"/>

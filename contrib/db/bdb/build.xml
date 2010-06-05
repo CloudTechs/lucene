@@ -23,14 +23,13 @@
 
   <property name="db.version" value="4.7.25" />
 
+  <property name="javac.source" value="1.5" />
+  <property name="javac.target" value="1.5" />
+
   <path id="db.jar">
     <pathelement location="lib/db-${db.version}.jar" />
   </path>
-
-  <available classname="com.sleepycat.db.internal.Db" property="db.jar.exists">
-    <classpath refid="db.jar" />
-  </available>
-
+  
   <pathconvert property="project.classpath" targetos="unix" refid="db.jar" />
 
   <property name="build.dir" location="../../../build/contrib/db/bdb" />
@@ -46,13 +45,19 @@
     <pathelement location="${build.dir}/classes/java"/>
   </path>
 
-  <target name="get-db-jar" unless="db.jar.exists">
+  <target name="checkJAR" if="build.this.contrib">
+    <available classname="com.sleepycat.db.internal.Db" property="db.jar.exists">
+      <classpath refid="db.jar" />
+    </available>
+  </target>
+
+  <target name="get-db-jar" unless="db.jar.exists" if="build.this.contrib">
     <mkdir dir="lib" />
     <get src="http://downloads.osafoundation.org/db/db-${db.version}.jar"
          dest="lib/db-${db.version}.jar" />
   </target>
 
-  <target name="sanity-load-lib" depends="compile-test">
+  <target name="sanity-load-lib" depends="compile-test" if="build.this.contrib">
     <java classname="org.apache.lucene.store.db.SanityLoadLibrary"
           classpathref="junit.classpath"
           fork="true"
@@ -75,10 +80,10 @@
   </target>
   <target name="test" depends="sanity-load-lib,warn-no-lib"
                       unless="no-bdb-lib">
-    <antcall target="common.test" inheritAll="true" inheritRefs="true" />
+    <antcall target="contrib-build.test" inheritAll="true" inheritRefs="true" />
   </target>
 
   <target name="check-and-get-db-jar" depends="get-db-jar" />
-  <target name="init" depends="contrib-build.init,check-and-get-db-jar" />
+  <target name="init" depends="contrib-build.init,checkJAR,check-and-get-db-jar" />
 
 </project>
