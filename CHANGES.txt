@@ -108,6 +108,9 @@ API Changes
 
 Optimizations
 
+* LUCENE-2494: Use CompletionService in ParallelMultiSearcher instead of
+  simple polling for resutls. (Edward Drapkin, Simon Willnauer) 
+
 * LUCENE-2135: On IndexReader.close, forcefully evict any entries from
   the FieldCache rather than waiting for the WeakHashMap to release
   the reference (Mike McCandless)
