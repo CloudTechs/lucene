@@ -1041,4 +1041,22 @@ public class TestSort extends LuceneTestCase implements Serializable {
     }
   }
 
+  public void testLUCENE2142() throws IOException {
+    RAMDirectory indexStore = new RAMDirectory ();
+    IndexWriter writer = new IndexWriter (indexStore, new SimpleAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
+    for (int i=0; i<5; i++) {
+        Document doc = new Document();
+        doc.add (new Field ("string", "a"+i, Field.Store.NO, Field.Index.NOT_ANALYZED));
+        doc.add (new Field ("string", "b"+i, Field.Store.NO, Field.Index.NOT_ANALYZED));
+        writer.addDocument (doc);
+    }
+    writer.optimize(); // enforce one segment to have a higher unique term count in all cases
+    writer.close();
+    sort.setSort(new SortField[]{
+        new SortField("string", SortField.STRING),
+        SortField.FIELD_DOC });
+    // this should not throw AIOOBE or RuntimeEx
+    new IndexSearcher (indexStore, true).search(new MatchAllDocsQuery(), null, 500, sort);
+  }
+
 }
