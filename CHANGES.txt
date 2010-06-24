@@ -1,6 +1,14 @@
 Lucene Change Log
 $Id$
 
+======================= 3.0 branch (not yet released) ==================
+
+Bug fixes
+
+* LUCENE-2142 (correct fix): FieldCacheImpl.getStringIndex no longer
+  throws an exception when term count exceeds doc count.
+  (Mike McCandless, Uwe Schindler)
+
 ======================= Release 3.0.2 2010-06-18 =======================
 
 Changes in backwards compatibility policy
