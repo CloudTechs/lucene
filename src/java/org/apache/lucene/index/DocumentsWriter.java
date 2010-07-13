@@ -510,6 +510,7 @@ final class DocumentsWriter {
         }
 
         deletesInRAM.clear();
+        deletesFlushed.clear();
 
         openFiles.clear();
 

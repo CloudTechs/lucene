@@ -9,6 +9,10 @@ Bug fixes
   throws an exception when term count exceeds doc count.
   (Mike McCandless, Uwe Schindler)
 
+* LUCENE-2536: IndexWriter.rollback was failing to properly rollback
+  buffered deletions against segments that were flushed (Mark Harwood
+  via Mike McCandless)
+
 ======================= Release 2.9.3 2010-06-18 =======================
 
 Changes in backwards compatibility policy
