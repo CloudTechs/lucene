@@ -13,6 +13,10 @@ Bug fixes
    contain field names with non-ascii characters.  (Mike Streeton via
    Mike McCandless)
 
+3. LUCENE-2536: IndexWriter.rollback was failing to properly rollback
+   buffered deletions against segments that were flushed (Mark Harwood
+   via Mike McCandless)
+
 ======================= Release 2.4.1 2009-03-09 =======================
 
 Bug fixes
