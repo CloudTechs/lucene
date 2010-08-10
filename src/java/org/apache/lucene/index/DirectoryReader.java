@@ -55,7 +55,6 @@ class DirectoryReader extends IndexReader implements Cloneable {
   private final int termInfosIndexDivisor;
 
   private boolean rollbackHasChanges;
-  private SegmentInfos rollbackSegmentInfos;
 
   private SegmentReader[] subReaders;
   private int[] starts;                           // 1st docno for each segment
@@ -780,7 +779,6 @@ class DirectoryReader extends IndexReader implements Cloneable {
 
   void startCommit() {
     rollbackHasChanges = hasChanges;
-    rollbackSegmentInfos = (SegmentInfos) segmentInfos.clone();
     for (int i = 0; i < subReaders.length; i++) {
       subReaders[i].startCommit();
     }
@@ -788,14 +786,6 @@ class DirectoryReader extends IndexReader implements Cloneable {
 
   void rollbackCommit() {
     hasChanges = rollbackHasChanges;
-    for (int i = 0; i < segmentInfos.size(); i++) {
-      // Rollback each segmentInfo.  Because the
-      // SegmentReader holds a reference to the
-      // SegmentInfo we can't [easily] just replace
-      // segmentInfos, so we reset it in place instead:
-      segmentInfos.info(i).reset(rollbackSegmentInfos.info(i));
-    }
-    rollbackSegmentInfos = null;
     for (int i = 0; i < subReaders.length; i++) {
       subReaders[i].rollbackCommit();
     }
