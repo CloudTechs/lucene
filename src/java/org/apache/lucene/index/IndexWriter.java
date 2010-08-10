@@ -554,7 +554,7 @@ public class IndexWriter {
 
       final boolean pooled = readerMap.containsKey(sr.getSegmentInfo());
 
-      assert !pooled | readerMap.get(sr.getSegmentInfo()) == sr;
+      assert !pooled || readerMap.get(sr.getSegmentInfo()) == sr;
 
       // Drop caller's ref; for an external reader (not
       // pooled), this decRef will close it
@@ -562,29 +562,31 @@ public class IndexWriter {
 
       if (pooled && (drop || (!poolReaders && sr.getRefCount() == 1))) {
 
+        // We invoke deleter.checkpoint below, so we must be
+        // sync'd on IW if there are changes:
+        // TODO: java 5
+        // assert !sr.hasChanges || Thread.holdsLock(IndexWriter.this);
+
+        // Discard (don't save) changes when we are dropping
+        // the reader; this is used only on the sub-readers
+        // after a successful merge.
+        sr.hasChanges &= !drop;
+
+        final boolean hasChanges = sr.hasChanges;
+
+        // Drop our ref -- this will commit any pending
+        // changes to the dir
+        sr.close();
+
         // We are the last ref to this reader; since we're
         // not pooling readers, we release it:
         readerMap.remove(sr.getSegmentInfo());
 
-        // TODO: java 5
-        // assert !sr.hasChanges || Thread.holdsLock(IndexWriter.this);
-
-        // Drop our ref -- this will commit any pending
-        // changes to the dir
-        boolean success = false;
-        try {
-          sr.close();
-          success = true;
-        } finally {
-          if (!success && sr.hasChanges) {
-            // Abandon the changes & retry closing:
-            sr.hasChanges = false;
-            try {
-              sr.close();
-            } catch (Throwable ignore) {
-              // Keep throwing original exception
-            }
-          }
+        if (hasChanges) {
+          // Must checkpoint w/ deleter, because this
+          // segment reader will have created new _X_N.del
+          // file.
+          deleter.checkpoint(segmentInfos, false);
         }
       }
     }
@@ -599,16 +601,12 @@ public class IndexWriter {
         SegmentReader sr = (SegmentReader) ent.getValue();
         if (sr.hasChanges) {
           assert infoIsLive(sr.getSegmentInfo());
-          sr.startCommit();
-          boolean success = false;
-          try {
-            sr.doCommit(null);
-            success = true;
-          } finally {
-            if (!success) {
-              sr.rollbackCommit();
-            }
-          }
+          sr.doCommit(null);
+
+          // Must checkpoint w/ deleter, because this
+          // segment reader will have created new _X_N.del
+          // file.
+          deleter.checkpoint(segmentInfos, false);
         }
 
         iter.remove();
@@ -633,16 +631,12 @@ public class IndexWriter {
         SegmentReader sr = (SegmentReader) ent.getValue();
         if (sr.hasChanges) {
           assert infoIsLive(sr.getSegmentInfo());
-          sr.startCommit();
-          boolean success = false;
-          try {
-            sr.doCommit(null);
-            success = true;
-          } finally {
-            if (!success) {
-              sr.rollbackCommit();
-            }
-          }
+          sr.doCommit(null);
+
+          // Must checkpoint w/ deleter, because this
+          // segment reader will have created new _X_N.del
+          // file.
+          deleter.checkpoint(segmentInfos, false);
         }
       }
     }
@@ -5165,7 +5159,7 @@ public class IndexWriter {
           for (int i=0;i<numSegments;i++) {
             if (merge.readers[i] != null) {
               try {
-                readerPool.release(merge.readers[i], true);
+                readerPool.release(merge.readers[i], false);
               } catch (Throwable t) {
               }
             }
@@ -5292,32 +5286,14 @@ public class IndexWriter {
   private final synchronized boolean applyDeletes() throws CorruptIndexException, IOException {
     assert testPoint("startApplyDeletes");
     flushDeletesCount++;
-    SegmentInfos rollback = (SegmentInfos) segmentInfos.clone();
     boolean success = false;
     boolean changed;
     try {
       changed = docWriter.applyDeletes(segmentInfos);
       success = true;
     } finally {
-      if (!success) {
-        if (infoStream != null)
-          message("hit exception flushing deletes");
-
-        // Carefully remove any partially written .del
-        // files
-        final int size = rollback.size();
-        for(int i=0;i<size;i++) {
-          final String newDelFileName = segmentInfos.info(i).getDelFileName();
-          final String delFileName = rollback.info(i).getDelFileName();
-          if (newDelFileName != null && !newDelFileName.equals(delFileName))
-            deleter.deleteFile(newDelFileName);
-        }
-
-        // Fully replace the segmentInfos since flushed
-        // deletes could have changed any of the
-        // SegmentInfo instances:
-        segmentInfos.clear();
-        segmentInfos.addAll(rollback);
+      if (!success && infoStream != null) {
+        message("hit exception flushing deletes");
       }
     }
 
@@ -5522,31 +5498,38 @@ public class IndexWriter {
             return;
           }
 
+
           // First, we clone & incref the segmentInfos we intend
           // to sync, then, without locking, we sync() each file
           // referenced by toSync, in the background.  Multiple
           // threads can be doing this at once, if say a large
           // merge and a small merge finish at the same time:
-
+        
           if (infoStream != null)
             message("startCommit index=" + segString(segmentInfos) + " changeCount=" + changeCount);
-          
+        
           readerPool.commit();
-          
+        
           toSync = (SegmentInfos) segmentInfos.clone();
-
+        
           if (commitUserData != null)
             toSync.setUserData(commitUserData);
-
+        
           deleter.incRef(toSync, false);
           myChangeCount = changeCount;
-
+        
           Iterator it = toSync.files(directory, false).iterator();
           while(it.hasNext()) {
             String fileName = (String) it.next();
             assert directory.fileExists(fileName): "file " + fileName + " does not exist";
-          }
 
+            // If this trips it means we are missing a call to
+            // .checkpoint somewhere, because by the time we
+            // are called, deleter should know about every
+            // file referenced by the current head
+            // segmentInfos:
+            assert deleter.exists(fileName);
+          }
         } finally {
           resumeAddIndexes();
         }

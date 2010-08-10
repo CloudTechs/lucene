@@ -27,6 +27,9 @@ Bug fixes
   and float were not affected.
   (Yonik Seeley, Uwe Schindler)
 
+* LUCENE-2593: Fixed certain rare cases where a disk full could lead
+  to a corrupted index (Robert Muir, Mike McCandless)
+
 ======================= Release 2.9.3 2010-06-18 =======================
 
 Changes in backwards compatibility policy
