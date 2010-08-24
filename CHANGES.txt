@@ -29,6 +29,9 @@ Bug fixes
 
 * LUCENE-2593: Fixed certain rare cases where a disk full could lead
   to a corrupted index (Robert Muir, Mike McCandless)
+  
+* LUCENE-2620: Fixed a bug in WildcardQuery where too many asterisks
+  would result in unbearably slow performance.  (Nick Barkas via Robert Muir)
 
 ======================= Release 3.0.2 2010-06-18 =======================
 
