@@ -56,7 +56,12 @@ import org.apache.lucene.index.IndexWriter;
  *       href="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6265734">Sun
  *       JRE bug</a> this is a poor choice for Windows, but
  *       on all other platforms this is the preferred
- *       choice.
+ *       choice. Applications using {@link Thread#interrupt()} or
+ *       <code>Future#cancel(boolean)</code> (on Java 1.5) should use
+ *       {@link SimpleFSDirectory} instead. See {@link NIOFSDirectory} java doc
+ *       for details.
+ *        
+ *        
  *
  *  <li> {@link MMapDirectory} uses memory-mapped IO when
  *       reading. This is a good choice if you have plenty
@@ -82,6 +87,11 @@ import org.apache.lucene.index.IndexWriter;
  *       an important limitation to be aware of. This class supplies a
  *       (possibly dangerous) workaround mentioned in the bug report,
  *       which may fail on non-Sun JVMs.
+ *       
+ *       Applications using {@link Thread#interrupt()} or
+ *       <code>Future#cancel(boolean)</code> (on Java 1.5) should use
+ *       {@link SimpleFSDirectory} instead. See {@link MMapDirectory}
+ *       java doc for details.
  * </ul>
  *
  * Unfortunately, because of system peculiarities, there is
@@ -393,7 +403,9 @@ public class FSDirectory extends Directory {
    *
    *  <p>Currently this returns {@link NIOFSDirectory}
    *  on non-Windows JREs and {@link SimpleFSDirectory}
-   *  on Windows.
+   *  on Windows. It is highly recommended that you consult the
+   *  implementation's documentation for your platform before
+   *  using this method.
    *
    * <p><b>NOTE</b>: this method may suddenly change which
    * implementation is returned from release to release, in

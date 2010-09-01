@@ -37,6 +37,17 @@ import java.nio.channels.FileChannel;
  * synchronized.  See <a
  * href="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6265734">here</a>
  * for details.
+ * </p>
+ * <p>
+ * <font color="red"><b>NOTE:</b> Accessing this class either directly or
+ * indirectly from a thread while it's interrupted can close the
+ * underlying file descriptor immediately if at the same time the thread is
+ * blocked on IO. The file descriptor will remain closed and subsequent access
+ * to {@link NIOFSDirectory} will throw a {@link ClosedChannelException}. If
+ * your application uses either {@link Thread#interrupt()} or
+ * <code>Future#cancel(boolean)</code> (on Java 1.5) you should use
+ * {@link SimpleFSDirectory} in favor of {@link NIOFSDirectory}.</font>
+ * </p>
  */
 public class NIOFSDirectory extends FSDirectory {
 
