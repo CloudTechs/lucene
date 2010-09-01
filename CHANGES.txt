@@ -36,6 +36,12 @@ Bug fixes
 * LUCENE-2627: Fixed bug in MMapDirectory chunking when a file is an
   exact multiple of the chunk size.  (Robert Muir)
 
+Documentation
+
+* LUCENE-2239: Documented limitations in NIOFSDirectory and MMapDirectory due 
+  to Java NOI behavior when a Thread is interrupted while blocking on IO.
+  (Simon Willnauer, Robert Muir)
+
 ======================= Release 3.0.2 2010-06-18 =======================
 
 Changes in backwards compatibility policy
