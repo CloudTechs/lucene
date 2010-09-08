@@ -36,6 +36,9 @@ Bug fixes
 * LUCENE-2627: Fixed bug in MMapDirectory chunking when a file is an
   exact multiple of the chunk size.  (Robert Muir)
 
+* LUCENE-2634: isCurrent on an NRT reader was failing to return false
+  if the writer had just committed (Nikolay Zamosenchuk via Mike McCandless)
+
 Documentation
 
 * LUCENE-2239: Documented limitations in NIOFSDirectory and MMapDirectory due 
