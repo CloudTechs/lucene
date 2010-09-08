@@ -5809,6 +5809,10 @@ public class IndexWriter {
       // if any structural changes (new segments), we are
       // stale
       return false;
+    } else if (infos.getGeneration() != segmentInfos.getGeneration()) {
+      // if any commit took place since we were opened, we
+      // are stale
+      return false;
     } else {
       return !docWriter.anyChanges();
     }
