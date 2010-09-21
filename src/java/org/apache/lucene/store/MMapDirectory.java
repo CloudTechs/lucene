@@ -245,6 +245,8 @@ public class MMapDirectory extends FSDirectory {
     }
 
     public Object clone() {
+      if (buffer == null)
+        throw new AlreadyClosedException("MMapIndexInput already closed");
       MMapIndexInput clone = (MMapIndexInput)super.clone();
       clone.isClone = true;
       clone.buffer = buffer.duplicate();
@@ -252,9 +254,9 @@ public class MMapDirectory extends FSDirectory {
     }
 
     public void close() throws IOException {
-      if (isClone || buffer == null) return;
       // unmap the buffer (if enabled) and at least unset it for GC
       try {
+        if (isClone || buffer == null) return;
         cleanMapping(buffer);
       } finally {
         buffer = null;
@@ -361,6 +363,8 @@ public class MMapDirectory extends FSDirectory {
     }
   
     public Object clone() {
+      if (buffers == null)
+        throw new AlreadyClosedException("MultiMMapIndexInput already closed");
       MultiMMapIndexInput clone = (MultiMMapIndexInput)super.clone();
       clone.isClone = true;
       clone.buffers = new ByteBuffer[buffers.length];
@@ -381,8 +385,8 @@ public class MMapDirectory extends FSDirectory {
     }
   
     public void close() throws IOException {
-      if (isClone || buffers == null) return;
       try {
+        if (isClone || buffers == null) return;
         for (int bufNr = 0; bufNr < buffers.length; bufNr++) {
           // unmap the buffer (if enabled) and at least unset it for GC
           try {
