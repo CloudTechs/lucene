@@ -3,6 +3,12 @@ $Id$
 
 ======================= 2.9 branch (not yet released) ==================
 
+Changes in runtime behavior
+
+* LUCENE-2689: NativeFSLockFactory no longer attempts to acquire a
+  test lock just before the real lock is acquired.  (Surinder Pal
+  Singh Bindra via Mike McCandless)
+
 Bug fixes
 
 * LUCENE-2142 (correct fix): FieldCacheImpl.getStringIndex no longer
