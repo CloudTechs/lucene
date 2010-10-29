@@ -896,6 +896,7 @@ public class TestIndexWriter extends BaseTokenStreamTestCase {
         try {
           writer  = new IndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
         } catch (Exception e) {
+          e.printStackTrace(System.out);
           fail("writer failed to open on a crashed index");
         }
 
@@ -4805,6 +4806,98 @@ public class TestIndexWriter extends BaseTokenStreamTestCase {
     w.close();
 
     _TestUtil.checkIndex(dir);
+    dir.close();
+  }
+
+  private static class NoDeletionPolicy implements IndexDeletionPolicy {
+    public void onCommit(List commits) throws IOException {
+    }
+    public void onInit(List commits) throws IOException {
+    }
+  }
+
+  public void testFutureCommit() throws Exception {
+    Directory dir = new MockRAMDirectory();
+
+    IndexWriter w = new IndexWriter(dir, new WhitespaceAnalyzer(), new NoDeletionPolicy(), IndexWriter.MaxFieldLength.UNLIMITED);
+    Document doc = new Document();
+    w.addDocument(doc);
+
+    // commit to "first"
+    Map commitData = new HashMap();
+    commitData.put("tag", "first");
+    w.commit(commitData);
+
+    // commit to "second"
+    w.addDocument(doc);
+    commitData.put("tag", "second");
+    w.commit(commitData);
+    w.close();
+
+    // open "first" with IndexWriter
+    IndexCommit commit = null;
+    Iterator it = IndexReader.listCommits(dir).iterator();
+    while(it.hasNext()) {
+      IndexCommit c = (IndexCommit) it.next();
+      final String tag = (String) c.getUserData().get("tag");
+      if ("first".equals(tag)) {
+        commit = c;
+        break;
+      }
+    }
+
+    assertNotNull(commit);
+
+    w = new IndexWriter(dir, new WhitespaceAnalyzer(), new NoDeletionPolicy(), IndexWriter.MaxFieldLength.UNLIMITED, commit);
+
+    assertEquals(1, w.numDocs());
+    
+    // commit IndexWriter to "third"
+    w.addDocument(doc);
+    commitData.put("tag", "third");
+    w.commit(commitData);
+    w.close();
+
+    // make sure "second" commit is still there
+    commit = null;
+    it = IndexReader.listCommits(dir).iterator();
+    while(it.hasNext()) {
+      IndexCommit c = (IndexCommit) it.next();
+      final String tag = (String) c.getUserData().get("tag");
+      if ("second".equals(tag)) {
+        commit = c;
+        break;
+      }
+    }
+
+    assertNotNull(commit);
+
+    IndexReader r = IndexReader.open(commit, true);
+    assertEquals(2, r.numDocs());
+    r.close();
+
+    // open "second", w/ writeable IndexReader & commit
+    r = IndexReader.open(commit, new NoDeletionPolicy(), false);
+    assertEquals(2, r.numDocs());
+    r.deleteDocument(0);
+    r.deleteDocument(1);
+    commitData.put("tag", "fourth");
+    r.commit(commitData);
+    r.close();
+
+    // make sure "third" commit is still there
+    commit = null;
+    it = IndexReader.listCommits(dir).iterator();
+    while(it.hasNext()) {
+      IndexCommit c = (IndexCommit) it.next();
+      final String tag = (String) c.getUserData().get("tag");
+      if ("third".equals(tag)) {
+        commit = c;
+        break;
+      }
+    }
+    assertNotNull(commit);
+
     dir.close();
   }
 }

@@ -15,6 +15,9 @@ Bug fixes
   throws an exception when term count exceeds doc count.
   (Mike McCandless, Uwe Schindler)
 
+* LUCENE-2513: when opening writable IndexReader on a not-current
+  commit, do not overwrite "future" commits.  (Mike McCandless)
+
 * LUCENE-2536: IndexWriter.rollback was failing to properly rollback
   buffered deletions against segments that were flushed (Mark Harwood
   via Mike McCandless)
