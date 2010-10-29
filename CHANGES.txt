@@ -61,6 +61,9 @@ Bug fixes
 * LUCENE-2235: Implement missing PerFieldAnalyzerWrapper.getOffsetGap().
   (Javier Godoy via Uwe Schindler)
 
+* LUCENE-2549: Fix TimeLimitingCollector#TimeExceededException to record
+  the absolute docid.  (Uwe Schindler)
+ 
 Documentation
 
 * LUCENE-2239: Documented limitations in NIOFSDirectory and MMapDirectory due 
