@@ -64,6 +64,10 @@ Bug fixes
 * LUCENE-2549: Fix TimeLimitingCollector#TimeExceededException to record
   the absolute docid.  (Uwe Schindler)
  
+* LUCENE-2533: fix FileSwitchDirectory.listAll to not return dups when
+  primary & secondary dirs share the same underlying directory.
+  (Michael McCandless)
+
 New features
 
 * LUCENE-2675: Add support for Lucene 3.0 stored field files also in 2.9.

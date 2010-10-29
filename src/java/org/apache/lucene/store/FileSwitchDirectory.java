@@ -19,8 +19,10 @@ package org.apache.lucene.store;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.HashSet;
 
 /**
  * Expert: A Directory instance that switches files between
@@ -72,12 +74,10 @@ public class FileSwitchDirectory extends Directory {
   }
   
   public String[] listAll() throws IOException {
-    String[] primaryFiles = primaryDir.listAll();
-    String[] secondaryFiles = secondaryDir.listAll();
-    String[] files = new String[primaryFiles.length + secondaryFiles.length];
-    System.arraycopy(primaryFiles, 0, files, 0, primaryFiles.length);
-    System.arraycopy(secondaryFiles, 0, files, primaryFiles.length, secondaryFiles.length);
-    return files;
+    Set files = new HashSet();
+    files.addAll(Arrays.asList(primaryDir.listAll()));
+    files.addAll(Arrays.asList(secondaryDir.listAll()));
+    return (String[]) files.toArray(new String[files.size()]);
   }
   
   public String[] list() throws IOException {
