@@ -48,6 +48,9 @@ Bug fixes
 * LUCENE-2650: Added extra safety to MMapIndexInput clones to prevent accessing
   an unmapped buffer if the input is closed (Mike McCandless, Uwe Schindler, Robert Muir) 
   
+* LUCENE-2384: Reset zzBuffer in StandardTokenizerImpl when lexer is reset.
+  (Ruben Laguna via Uwe Schindler, sub-issue of LUCENE-2074) 
+  
 Documentation
 
 * LUCENE-2239: Documented limitations in NIOFSDirectory and MMapDirectory due 

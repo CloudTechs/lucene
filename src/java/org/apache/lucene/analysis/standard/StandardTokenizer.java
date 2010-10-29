@@ -203,21 +203,10 @@ public final class StandardTokenizer extends Tokenizer {
     offsetAtt.setOffset(finalOffset, finalOffset);
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lucene.analysis.TokenStream#reset()
-   */
-  @Override
-  public void reset() throws IOException {
-    super.reset();
-    scanner.yyreset(input);
-  }
-
   @Override
   public void reset(Reader reader) throws IOException {
     super.reset(reader);
-    reset();
+    scanner.reset(reader);
   }
 
   /**
