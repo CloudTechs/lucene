@@ -128,6 +128,8 @@ public class TestBackwardsCompatibility extends LuceneTestCase
                              "23.nocfs",
                              "24.cfs",
                              "24.nocfs",
+                             "30.cfs",
+                             "30.nocfs",
   };
 
   public void testOptimizeOldIndex() throws IOException {

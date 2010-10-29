@@ -46,7 +46,18 @@ Bug fixes
   if the writer had just committed (Nikolay Zamosenchuk via Mike McCandless)
 
 * LUCENE-2650: Added extra safety to MMapIndexInput clones to prevent accessing
-  an unmapped buffer if the input is closed (Mike McCandless, Uwe Schindler, Robert Muir) 
+  an unmapped buffer if the input is closed (Mike McCandless, Uwe Schindler, Robert Muir)
+  
+New features
+
+* LUCENE-2675: Add support for Lucene 3.0 stored field files also in 2.9.
+  The file format did not change, only the version number was upgraded to mark
+  segments that have no compression. FieldsWriter still only writes 2.9 segments
+  as they could contain compressed fields. This cross-version index format
+  compatibility is provided here solely because Lucene 2.9 and 3.0 have the
+  same bugfix level, features, and the same index format with this slight
+  compression difference. In general, Lucene does not support reading newer
+  indexes with older library versions. (Uwe Schindler)
   
 Documentation
 
