@@ -58,6 +58,9 @@ Bug fixes
   fields could lead to invalid ArrayIndexOutOfBoundsExceptions.
   (Robert Muir, Mike McCandless)
 
+* LUCENE-2235: Implement missing PerFieldAnalyzerWrapper.getOffsetGap().
+  (Javier Godoy via Uwe Schindler)
+
 New features
 
 * LUCENE-2675: Add support for Lucene 3.0 stored field files also in 2.9.

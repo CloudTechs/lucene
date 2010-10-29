@@ -17,6 +17,8 @@ package org.apache.lucene.analysis;
  * limitations under the License.
  */
 
+import org.apache.lucene.document.Fieldable;
+
 import java.io.Reader;
 import java.io.IOException;
 import java.util.Map;
@@ -115,6 +117,14 @@ public class PerFieldAnalyzerWrapper extends Analyzer {
     if (analyzer == null)
       analyzer = defaultAnalyzer;
     return analyzer.getPositionIncrementGap(fieldName);
+  }
+
+  /** Return the offsetGap from the analyzer assigned to field */
+  public int getOffsetGap(Fieldable field) {
+    Analyzer analyzer = (Analyzer) analyzerMap.get(field.name());
+    if (analyzer == null)
+      analyzer = defaultAnalyzer;
+    return analyzer.getOffsetGap(field);
   }
   
   public String toString() {
