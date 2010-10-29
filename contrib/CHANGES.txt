@@ -13,6 +13,9 @@ Bug Fixes
  * LUCENE-2278: FastVectorHighlighter: Highlighted term is out of alignment
    in multi-valued NOT_ANALYZED field. (Koji Sekiguchi)
 
+ * LUCENE-2524: FastVectorHighlighter: use mod for getting colored tag.
+   (Koji Sekiguchi)
+
 Documentation
 
  * LUCENE-2055: Add documentation noting that the Dutch and French stemmers
