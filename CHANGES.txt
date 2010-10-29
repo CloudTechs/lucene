@@ -64,6 +64,10 @@ Bug fixes
 * LUCENE-2549: Fix TimeLimitingCollector#TimeExceededException to record
   the absolute docid.  (Uwe Schindler)
  
+* LUCENE-2533: fix FileSwitchDirectory.listAll to not return dups when
+  primary & secondary dirs share the same underlying directory.
+  (Michael McCandless)
+
 Documentation
 
 * LUCENE-2239: Documented limitations in NIOFSDirectory and MMapDirectory due 
