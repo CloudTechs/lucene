@@ -48,6 +48,9 @@ Bug fixes
 * LUCENE-2650: Added extra safety to MMapIndexInput clones to prevent accessing
   an unmapped buffer if the input is closed (Mike McCandless, Uwe Schindler, Robert Muir)
   
+* LUCENE-2384: Reset zzBuffer in StandardTokenizerImpl when lexer is reset.
+  (Ruben Laguna via Uwe Schindler, sub-issue of LUCENE-2074) 
+  
 New features
 
 * LUCENE-2675: Add support for Lucene 3.0 stored field files also in 2.9.

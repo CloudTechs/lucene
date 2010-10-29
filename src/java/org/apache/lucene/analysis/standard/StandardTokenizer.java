@@ -279,19 +279,9 @@ public class StandardTokenizer extends Tokenizer {
     return super.next();
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lucene.analysis.TokenStream#reset()
-   */
-  public void reset() throws IOException {
-    super.reset();
-    scanner.yyreset(input);
-  }
-
   public void reset(Reader reader) throws IOException {
     super.reset(reader);
-    reset();
+    scanner.reset(reader);
   }
 
   /**
