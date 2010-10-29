@@ -33,6 +33,10 @@ import java.util.Set;
  * not be stemmed at all. The used stemmer can be changed at runtime after the
  * filter object is created (as long as it is a {@link FrenchStemmer}).
  * </p>
+ * NOTE: This stemmer does not implement the Snowball algorithm correctly,
+ * especially involving case problems. It is recommended that you consider using
+ * the "French" stemmer in the snowball package instead. This stemmer will likely
+ * be deprecated in a future release.
  */
 public final class FrenchStemFilter extends TokenFilter {
 

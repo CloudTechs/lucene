@@ -10,6 +10,13 @@ Bug Fixes
  * LUCENE-2284: MatchAllDocsQueryNode toString() created an invalid XML tag.
    (Frank Wesemann via Robert Muir)
 
+Documentation
+
+ * LUCENE-2055: Add documentation noting that the Dutch and French stemmers
+   in contrib/analyzers do not implement the Snowball algorithm correctly,
+   and recommend to use the equivalents in contrib/snowball if possible. 
+   (Robert Muir, Uwe Schindler, Simon Willnauer)
+
 ======================= Release 3.0.2 2010-06-18 =======================
 
 No changes.
