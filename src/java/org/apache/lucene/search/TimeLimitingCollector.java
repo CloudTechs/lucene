@@ -110,7 +110,7 @@ public class TimeLimitingCollector extends Collector {
     public long getTimeElapsed() {
       return timeElapsed;
     }
-    /** Returns last doc that was collected when the search time exceeded. */
+    /** Returns last doc (absolute doc id) that was collected when the search time exceeded. */
     public int getLastDocCollected() {
       return lastDocCollected;
     }
@@ -128,6 +128,8 @@ public class TimeLimitingCollector extends Collector {
   private final long t0;
   private final long timeout;
   private final Collector collector;
+  
+  private int docBase;
 
   /**
    * Create a TimeLimitedCollector wrapper over another {@link Collector} with a specified timeout.
@@ -198,18 +200,19 @@ public class TimeLimitingCollector extends Collector {
     long time = TIMER_THREAD.getMilliseconds();
     if (timeout < time) {
       if (greedy) {
-        //System.out.println(this+"  greedy: before failing, collecting doc: "+doc+"  "+(time-t0));
+        //System.out.println(this+"  greedy: before failing, collecting doc: "+(docBase + doc)+"  "+(time-t0));
         collector.collect(doc);
       }
-      //System.out.println(this+"  failing on:  "+doc+"  "+(time-t0));
-      throw new TimeExceededException( timeout-t0, time-t0, doc );
+      //System.out.println(this+"  failing on:  "+(docBase + doc)+"  "+(time-t0));
+      throw new TimeExceededException( timeout-t0, time-t0, docBase + doc );
     }
-    //System.out.println(this+"  collecting: "+doc+"  "+(time-t0));
+    //System.out.println(this+"  collecting: "+(docBase + doc)+"  "+(time-t0));
     collector.collect(doc);
   }
   
   public void setNextReader(IndexReader reader, int base) throws IOException {
     collector.setNextReader(reader, base);
+    this.docBase = base;
   }
   
   public void setScorer(Scorer scorer) throws IOException {

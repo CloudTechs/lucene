@@ -61,6 +61,9 @@ Bug fixes
 * LUCENE-2235: Implement missing PerFieldAnalyzerWrapper.getOffsetGap().
   (Javier Godoy via Uwe Schindler)
 
+* LUCENE-2549: Fix TimeLimitingCollector#TimeExceededException to record
+  the absolute docid.  (Uwe Schindler)
+ 
 New features
 
 * LUCENE-2675: Add support for Lucene 3.0 stored field files also in 2.9.
