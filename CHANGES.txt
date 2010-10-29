@@ -58,6 +58,9 @@ Bug fixes
   fields could lead to invalid ArrayIndexOutOfBoundsExceptions.
   (Robert Muir, Mike McCandless)
 
+* LUCENE-2235: Implement missing PerFieldAnalyzerWrapper.getOffsetGap().
+  (Javier Godoy via Uwe Schindler)
+
 Documentation
 
 * LUCENE-2239: Documented limitations in NIOFSDirectory and MMapDirectory due 
