@@ -51,6 +51,10 @@ Bug fixes
 * LUCENE-2384: Reset zzBuffer in StandardTokenizerImpl when lexer is reset.
   (Ruben Laguna via Uwe Schindler, sub-issue of LUCENE-2074) 
   
+* LUCENE-2658: Exceptions while processing term vectors enabled for multiple
+  fields could lead to invalid ArrayIndexOutOfBoundsExceptions.
+  (Robert Muir, Mike McCandless)
+
 New features
 
 * LUCENE-2675: Add support for Lucene 3.0 stored field files also in 2.9.

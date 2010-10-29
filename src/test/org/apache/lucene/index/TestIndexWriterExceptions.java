@@ -28,11 +28,21 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.Field.TermVector;
 
 public class TestIndexWriterExceptions extends LuceneTestCase {
-
+  Random random;
   final private static boolean DEBUG = false;
-
+  
+  static final TermVector tvSettings[] = { 
+    TermVector.NO, TermVector.YES, TermVector.WITH_OFFSETS, 
+    TermVector.WITH_POSITIONS, TermVector.WITH_POSITIONS_OFFSETS 
+  };
+  
+  private TermVector randomTVSetting(Random random) {
+    return tvSettings[random.nextInt(tvSettings.length)];
+  }
+  
   private class IndexerThread extends Thread {
 
     IndexWriter writer;
@@ -49,17 +59,17 @@ public class TestIndexWriterExceptions extends LuceneTestCase {
 
       final Document doc = new Document();
 
-      doc.add(new Field("content1", "aaa bbb ccc ddd", Field.Store.YES, Field.Index.ANALYZED));
-      doc.add(new Field("content6", "aaa bbb ccc ddd", Field.Store.NO, Field.Index.ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS));
-      doc.add(new Field("content2", "aaa bbb ccc ddd", Field.Store.YES, Field.Index.NOT_ANALYZED));
+      doc.add(new Field("content1", "aaa bbb ccc ddd", Field.Store.YES, Field.Index.ANALYZED, randomTVSetting(random)));
+      doc.add(new Field("content6", "aaa bbb ccc ddd", Field.Store.NO, Field.Index.ANALYZED, randomTVSetting(random)));
+      doc.add(new Field("content2", "aaa bbb ccc ddd", Field.Store.YES, Field.Index.NOT_ANALYZED, randomTVSetting(random)));
       doc.add(new Field("content3", "aaa bbb ccc ddd", Field.Store.YES, Field.Index.NO));
 
-      doc.add(new Field("content4", "aaa bbb ccc ddd", Field.Store.NO, Field.Index.ANALYZED));
-      doc.add(new Field("content5", "aaa bbb ccc ddd", Field.Store.NO, Field.Index.NOT_ANALYZED));
+      doc.add(new Field("content4", "aaa bbb ccc ddd", Field.Store.NO, Field.Index.ANALYZED, randomTVSetting(random)));
+      doc.add(new Field("content5", "aaa bbb ccc ddd", Field.Store.NO, Field.Index.NOT_ANALYZED, randomTVSetting(random)));
 
-      doc.add(new Field("content7", "aaa bbb ccc ddd", Field.Store.NO, Field.Index.NOT_ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS));
+      doc.add(new Field("content7", "aaa bbb ccc ddd", Field.Store.NO, Field.Index.NOT_ANALYZED, randomTVSetting(random)));
 
-      final Field idField = new Field("id", "", Field.Store.YES, Field.Index.NOT_ANALYZED);
+      final Field idField = new Field("id", "", Field.Store.YES, Field.Index.NOT_ANALYZED, randomTVSetting(random));
       doc.add(idField);
 
       final long stopTime = System.currentTimeMillis() + 3000;
@@ -73,7 +83,7 @@ public class TestIndexWriterExceptions extends LuceneTestCase {
           writer.updateDocument(idTerm, doc);
         } catch (RuntimeException re) {
           if (DEBUG) {
-            System.out.println("EXC: ");
+            System.out.println(Thread.currentThread().getName() + ": EXC: ");
             re.printStackTrace(System.out);
           }
           try {
@@ -132,6 +142,7 @@ public class TestIndexWriterExceptions extends LuceneTestCase {
   public void testRandomExceptions() throws Throwable {
     MockRAMDirectory dir = new MockRAMDirectory();
 
+    random = newRandom();
     MockIndexWriter writer  = new MockIndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
     ((ConcurrentMergeScheduler) writer.getMergeScheduler()).setSuppressExceptions();
     //writer.setMaxBufferedDocs(10);
@@ -169,6 +180,7 @@ public class TestIndexWriterExceptions extends LuceneTestCase {
 
   public void testRandomExceptionsThreads() throws Throwable {
 
+    random = newRandom();
     MockRAMDirectory dir = new MockRAMDirectory();
     MockIndexWriter writer  = new MockIndexWriter(dir, new WhitespaceAnalyzer(), true, IndexWriter.MaxFieldLength.LIMITED);
     ((ConcurrentMergeScheduler) writer.getMergeScheduler()).setSuppressExceptions();
