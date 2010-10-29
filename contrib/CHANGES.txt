@@ -1,5 +1,12 @@
 Lucene contrib change Log
 
+======================= 2.9 branch (not yet released) ==================
+
+Bug Fixes
+
+ * LUCENE-2277: QueryNodeImpl threw ConcurrentModificationException on 
+   add(List<QueryNode>). (Frank Wesemann via Robert Muir)
+
 ======================= Release 2.9.3 2010-06-18 =======================
 
 No changes.
