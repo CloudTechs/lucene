@@ -17,6 +17,10 @@ Documentation
    and recommend to use the equivalents in contrib/snowball if possible. 
    (Robert Muir, Uwe Schindler, Simon Willnauer)
 
+ * LUCENE-2653: Add documentation noting that ThaiWordFilter will not work
+   as expected on all JRE's. For example, on an IBM JRE, it does nothing.
+   (Robert Muir)
+
 ======================= Release 3.0.2 2010-06-18 =======================
 
 No changes.
