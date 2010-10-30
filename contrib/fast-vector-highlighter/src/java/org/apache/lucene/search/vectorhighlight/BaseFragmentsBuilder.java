@@ -128,9 +128,10 @@ public abstract class BaseFragmentsBuilder implements FragmentsBuilder {
   protected String getFragmentSource( StringBuilder buffer, int[] index, String[] values,
       int startOffset, int endOffset ){
     while( buffer.length() < endOffset && index[0] < values.length ){
-      if( index[0] > 0 && values[index[0]].length() > 0 )
+      buffer.append( values[index[0]] );
+      if( values[index[0]].length() > 0 && index[0] + 1 < values.length )
         buffer.append( ' ' );
-      buffer.append( values[index[0]++] );
+      index[0]++;
     }
     int eo = buffer.length() < endOffset ? buffer.length() : endOffset;
     return buffer.substring( startOffset, eo );
@@ -139,9 +140,10 @@ public abstract class BaseFragmentsBuilder implements FragmentsBuilder {
   protected String getFragmentSource( StringBuilder buffer, int[] index, Field[] values,
       int startOffset, int endOffset ){
     while( buffer.length() < endOffset && index[0] < values.length ){
-      if( index[0] > 0 && values[index[0]].isTokenized() && values[index[0]].stringValue().length() > 0 )
+      buffer.append( values[index[0]].stringValue() );
+      if( values[index[0]].isTokenized() && values[index[0]].stringValue().length() > 0 && index[0] + 1 < values.length )
         buffer.append( ' ' );
-      buffer.append( values[index[0]++].stringValue() );
+      index[0]++;
     }
     int eo = buffer.length() < endOffset ? buffer.length() : endOffset;
     return buffer.substring( startOffset, eo );

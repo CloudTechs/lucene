@@ -61,6 +61,8 @@ public abstract class AbstractTestCase extends TestCase {
   protected QueryParser paB;
   
   protected static final String[] shortMVValues = {
+    "",
+    "",
     "a b c",
     "",   // empty data in multi valued field
     "d e"
@@ -314,6 +316,9 @@ public abstract class AbstractTestCase extends TestCase {
   }
   
   protected void makeIndexShortMV() throws Exception {
+    
+    // ""
+    // ""
 
     //  012345
     // "a b c"
