@@ -25,6 +25,7 @@ import java.io.PrintStream;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -108,6 +109,8 @@ final class IndexFileDeleter {
   final boolean startingCommitDeleted;
   private SegmentInfos lastSegmentInfos;
 
+  private final Set synced;
+
   /** Change to true to see details of reference counts when
    *  infoStream != null */
   public static boolean VERBOSE_REF_COUNTS = false;
@@ -130,11 +133,12 @@ final class IndexFileDeleter {
    * @throws CorruptIndexException if the index is corrupt
    * @throws IOException if there is a low-level IO error
    */
-  public IndexFileDeleter(Directory directory, IndexDeletionPolicy policy, SegmentInfos segmentInfos, PrintStream infoStream, DocumentsWriter docWriter)
+  public IndexFileDeleter(Directory directory, IndexDeletionPolicy policy, SegmentInfos segmentInfos, PrintStream infoStream, DocumentsWriter docWriter, Set synced)
     throws CorruptIndexException, IOException {
 
     this.docWriter = docWriter;
     this.infoStream = infoStream;
+    this.synced = synced;
 
     if (infoStream != null)
       message("init: current segments file is \"" + segmentInfos.getCurrentSegmentFileName() + "\"; deletionPolicy=" + policy);
@@ -488,6 +492,12 @@ final class IndexFileDeleter {
       // commit points nor by the in-memory SegmentInfos:
       deleteFile(fileName);
       refCounts.remove(fileName);
+
+      if (synced != null) {
+        synchronized(synced) {
+          synced.remove(fileName);
+        }
+      }
     }
   }
 

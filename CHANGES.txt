@@ -61,6 +61,9 @@ Bug fixes
 * LUCENE-2235: Implement missing PerFieldAnalyzerWrapper.getOffsetGap().
   (Javier Godoy via Uwe Schindler)
 
+* LUCENE-2328: Fixed memory leak in how IndexWriter/Reader tracked
+  already sync'd files. (Earwin Burrfoot via Mike McCandless)
+
 * LUCENE-2549: Fix TimeLimitingCollector#TimeExceededException to record
   the absolute docid.  (Uwe Schindler)
  

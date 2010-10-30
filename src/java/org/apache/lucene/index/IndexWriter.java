@@ -1624,7 +1624,7 @@ public class IndexWriter {
       // KeepOnlyLastCommitDeleter:
       deleter = new IndexFileDeleter(directory,
                                      deletionPolicy == null ? new KeepOnlyLastCommitDeletionPolicy() : deletionPolicy,
-                                     segmentInfos, infoStream, docWriter);
+                                     segmentInfos, infoStream, docWriter, synced);
 
       if (deleter.startingCommitDeleted)
         // Deletion policy deleted the "head" commit point.
@@ -5337,7 +5337,7 @@ public class IndexWriter {
   }
 
   // Files that have been sync'd already
-  private HashSet synced = new HashSet();
+  private final HashSet synced = new HashSet();
 
   // Files that are now being sync'd
   private HashSet syncing = new HashSet();

@@ -558,7 +558,7 @@ public class TestIndexWriter extends BaseTokenStreamTestCase {
       String[] startFiles = dir.listAll();
       SegmentInfos infos = new SegmentInfos();
       infos.read(dir);
-      new IndexFileDeleter(dir, new KeepOnlyLastCommitDeletionPolicy(), infos, null, null);
+      new IndexFileDeleter(dir, new KeepOnlyLastCommitDeletionPolicy(), infos, null, null, null);
       String[] endFiles = dir.listAll();
 
       Arrays.sort(startFiles);

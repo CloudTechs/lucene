@@ -716,7 +716,7 @@ class DirectoryReader extends IndexReader implements Cloneable {
       // KeepOnlyLastCommitDeleter:
       IndexFileDeleter deleter = new IndexFileDeleter(directory,
                                                       deletionPolicy == null ? new KeepOnlyLastCommitDeletionPolicy() : deletionPolicy,
-                                                      segmentInfos, null, null);
+                                                      segmentInfos, null, null, synced);
       segmentInfos.updateGeneration(deleter.getLastSegmentInfos());
 
       // Checkpoint the state we are about to change, in
