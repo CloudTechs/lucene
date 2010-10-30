@@ -524,7 +524,8 @@ public class Token extends AttributeImpl
     Token t = (Token)super.clone();
     // Do a deep clone
     if (termBuffer != null) {
-      t.termBuffer = (char[]) termBuffer.clone();
+      t.termBuffer = new char[this.termLength];
+      System.arraycopy(this.termBuffer, 0, t.termBuffer, 0, this.termLength);
     }
     if (payload != null) {
       t.payload = (Payload) payload.clone();

@@ -198,6 +198,9 @@ Optimizations
 * LUCENE-2360: Small speedup to recycling of reused per-doc RAM in
   IndexWriter (Robert Muir, Mike McCandless)
 
+* LUCENE-2556: Improve memory usage after cloning TermAttribute.
+  (Adriano Crestani via Uwe Schindler)
+
 ======================= Release 3.0.1 2010-02-26 =======================
 
 Changes in backwards compatibility policy
