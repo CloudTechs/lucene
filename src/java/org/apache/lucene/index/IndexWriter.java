@@ -1805,7 +1805,7 @@ public class IndexWriter {
     }
   }
 
-  /** @see #setReaderTermsIndexDivisor() */
+  /** @see #setReaderTermsIndexDivisor */
   public int getReaderTermsIndexDivisor() {
     ensureOpen();
     return readerTermsIndexDivisor;
