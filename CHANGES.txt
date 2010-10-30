@@ -86,7 +86,7 @@ Optimizations
 Documentation
 
 * LUCENE-2239: Documented limitations in NIOFSDirectory and MMapDirectory due 
-  to Java NOI behavior when a Thread is interrupted while blocking on IO.
+  to Java NIO behavior when a Thread is interrupted while blocking on IO.
   (Simon Willnauer, Robert Muir)
 
 ======================= Release 3.0.2 2010-06-18 =======================
