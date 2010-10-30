@@ -68,6 +68,10 @@ Bug fixes
   primary & secondary dirs share the same underlying directory.
   (Michael McCandless)
 
+* LUCENE-2365: IndexWriter.newestSegment (used normally for testing)
+  is fixed to return null if there are no segments.  (Karthick
+  Sankarachary via Mike McCandless)
+
 Documentation
 
 * LUCENE-2239: Documented limitations in NIOFSDirectory and MMapDirectory due 
