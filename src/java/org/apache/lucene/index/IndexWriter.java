@@ -1307,7 +1307,7 @@ public class IndexWriter implements Closeable {
     }
   }
 
-  /** @see #setReaderTermsIndexDivisor() */
+  /** @see #setReaderTermsIndexDivisor */
   public int getReaderTermsIndexDivisor() {
     ensureOpen();
     return readerTermsIndexDivisor;
