@@ -1126,7 +1126,7 @@ public class IndexWriter implements Closeable {
       // KeepOnlyLastCommitDeleter:
       deleter = new IndexFileDeleter(directory,
                                      deletionPolicy == null ? new KeepOnlyLastCommitDeletionPolicy() : deletionPolicy,
-                                     segmentInfos, infoStream, docWriter);
+                                     segmentInfos, infoStream, docWriter, synced);
 
       if (deleter.startingCommitDeleted)
         // Deletion policy deleted the "head" commit point.
@@ -4567,7 +4567,7 @@ public class IndexWriter implements Closeable {
   }
 
   // Files that have been sync'd already
-  private HashSet<String> synced = new HashSet<String>();
+  private final HashSet<String> synced = new HashSet<String>();
 
   // Files that are now being sync'd
   private HashSet<String> syncing = new HashSet<String>();
