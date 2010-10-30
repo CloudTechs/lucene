@@ -80,6 +80,9 @@ Optimizations
 * LUCENE-2556: Improve memory usage after cloning TermAttribute.
   (Adriano Crestani via Uwe Schindler)
 
+* LUCENE-2098: Improve the performance of BaseCharFilter, especially for
+  large documents.  (Robin Wojciki, Koji Sekiguchi, Robert Muir)
+
 New features
 
 * LUCENE-2675: Add support for Lucene 3.0 stored field files also in 2.9.
