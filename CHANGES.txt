@@ -75,6 +75,8 @@ Bug fixes
   is fixed to return null if there are no segments.  (Karthick
   Sankarachary via Mike McCandless)
 
+* LUCENE-2730: Fix two rare deadlock cases in IndexWriter (Mike McCandless)
+
 Optimizations
 
 * LUCENE-2556: Improve memory usage after cloning TermAttribute.
@@ -97,7 +99,7 @@ New features
 Documentation
 
 * LUCENE-2239: Documented limitations in NIOFSDirectory and MMapDirectory due to
-  Java NOI behavior when a Thread is interrupted while blocking on IO.
+  Java NIO behavior when a Thread is interrupted while blocking on IO.
   (Simon Willnauer, Robert Muir)
 
 ======================= Release 2.9.3 2010-06-18 =======================
