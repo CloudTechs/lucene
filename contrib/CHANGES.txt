@@ -16,8 +16,8 @@ Bug Fixes
  * LUCENE-2524: FastVectorHighlighter: use mod for getting colored tag.
    (Koji Sekiguchi)
 
-* LUCENE-2616: FastVectorHighlighter: out of alignment when the first value is
-  empty in multiValued field (Koji Sekiguchi)
+ * LUCENE-2616: FastVectorHighlighter: out of alignment when the first value is
+   empty in multiValued field (Koji Sekiguchi)
 
 Documentation
 
