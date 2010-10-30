@@ -72,6 +72,11 @@ Bug fixes
   is fixed to return null if there are no segments.  (Karthick
   Sankarachary via Mike McCandless)
 
+Optimizations
+
+* LUCENE-2556: Improve memory usage after cloning TermAttribute.
+  (Adriano Crestani via Uwe Schindler)
+
 New features
 
 * LUCENE-2675: Add support for Lucene 3.0 stored field files also in 2.9.
