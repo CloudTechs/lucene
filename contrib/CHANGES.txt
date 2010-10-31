@@ -18,6 +18,11 @@ Bug Fixes
 
  * LUCENE-2616: FastVectorHighlighter: out of alignment when the first value is
    empty in multiValued field (Koji Sekiguchi)
+   
+ * LUCENE-2731, LUCENE-2732: Fix (charset) problems in XML loading in
+   HyphenationCompoundWordTokenFilter (partial bugfix-only in 2.9 and 3.0,
+   full fix will be in later 3.1).
+   (Uwe Schinder)
 
 Documentation
 
