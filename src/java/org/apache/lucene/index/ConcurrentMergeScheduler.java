@@ -138,11 +138,21 @@ public class ConcurrentMergeScheduler extends MergeScheduler {
   }
 
   private synchronized int mergeThreadCount() {
+    return mergeThreadCount(false);
+  }
+
+  private synchronized int mergeThreadCount(boolean excludeDone) {
     int count = 0;
     final int numThreads = mergeThreads.size();
-    for(int i=0;i<numThreads;i++)
-      if (((MergeThread) mergeThreads.get(i)).isAlive())
-        count++;
+    for(int i=0;i<numThreads;i++) {
+      MergeThread t = (MergeThread) mergeThreads.get(i);
+      if (t.isAlive()) {
+        MergePolicy.OneMerge runningMerge = t.getRunningMerge();
+        if (!excludeDone || (runningMerge != null && !runningMerge.mergeDone)) {
+          count++;
+        }
+      }
+    }
     return count;
   }
 
@@ -193,7 +203,7 @@ public class ConcurrentMergeScheduler extends MergeScheduler {
       try {
         synchronized(this) {
           final MergeThread merger;
-          while (mergeThreadCount() >= maxThreadCount) {
+          while (mergeThreadCount(true) >= maxThreadCount) {
             if (verbose())
               message("    too many merge threads running; stalling...");
             try {
@@ -209,8 +219,6 @@ public class ConcurrentMergeScheduler extends MergeScheduler {
           if (verbose())
             message("  consider merge " + merge.segString(dir));
       
-          assert mergeThreadCount() < maxThreadCount;
-
           // OK to spawn a new merge thread to handle this
           // merge:
           merger = getMergeThread(writer, merge);

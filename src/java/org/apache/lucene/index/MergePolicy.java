@@ -87,6 +87,8 @@ public abstract class MergePolicy {
     boolean aborted;
     Throwable error;
 
+    volatile boolean mergeDone;     // used by IndexWriter
+
     public OneMerge(SegmentInfos segments, boolean useCompoundFile) {
       if (0 == segments.size())
         throw new RuntimeException("segments must include at least one segment");

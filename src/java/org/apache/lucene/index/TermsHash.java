@@ -44,8 +44,6 @@ final class TermsHash extends InvertedDocConsumer {
   final int postingsFreeChunk;
   final DocumentsWriter docWriter;
   
-  private TermsHash primaryTermsHash;
-
   private RawPostingList[] postingsFreeList = new RawPostingList[1];
   private int postingsFreeCount;
   private int postingsAllocCount;
@@ -79,7 +77,10 @@ final class TermsHash extends InvertedDocConsumer {
     consumer.setFieldInfos(fieldInfos);
   }
 
-  synchronized public void abort() {
+  // NOTE: do not make this sync'd; it's not necessary (DW
+  // ensures all other threads are idle), and it leads to
+  // deadlock
+  public void abort() {
     consumer.abort();
     if (nextTermsHash != null)
       nextTermsHash.abort();

@@ -5257,6 +5257,12 @@ public class IndexWriter {
       }
     }
 
+    merge.mergeDone = true;
+
+    synchronized(mergeScheduler) {
+      mergeScheduler.notifyAll();
+    }
+
     // Force a sync after commiting the merge.  Once this
     // sync completes then all index files referenced by the
     // current segmentInfos are on stable storage so if the
