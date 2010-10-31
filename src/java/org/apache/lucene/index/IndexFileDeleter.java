@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.Map;
+import java.util.Set;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -129,7 +130,7 @@ final class IndexFileDeleter {
    * @throws CorruptIndexException if the index is corrupt
    * @throws IOException if there is a low-level IO error
    */
-  public IndexFileDeleter(Directory directory, IndexDeletionPolicy policy, SegmentInfos segmentInfos, PrintStream infoStream, DocumentsWriter docWriter)
+  public IndexFileDeleter(Directory directory, IndexDeletionPolicy policy, SegmentInfos segmentInfos, PrintStream infoStream, DocumentsWriter docWriter, Set ignored)
     throws CorruptIndexException, IOException {
 
     this.docWriter = docWriter;

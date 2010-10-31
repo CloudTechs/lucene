@@ -1326,7 +1326,7 @@ public class IndexWriter {
       // KeepOnlyLastCommitDeleter:
       deleter = new IndexFileDeleter(directory,
                                      deletionPolicy == null ? new KeepOnlyLastCommitDeletionPolicy() : deletionPolicy,
-                                     segmentInfos, infoStream, docWriter);
+                                     segmentInfos, infoStream, docWriter, null);
 
       if (deleter.startingCommitDeleted)
         // Deletion policy deleted the "head" commit point.
