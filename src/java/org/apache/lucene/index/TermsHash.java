@@ -78,8 +78,11 @@ final class TermsHash extends InvertedDocConsumer {
     consumer.setFieldInfos(fieldInfos);
   }
 
+  // NOTE: do not make this sync'd; it's not necessary (DW
+  // ensures all other threads are idle), and it leads to
+  // deadlock
   @Override
-  synchronized public void abort() {
+  public void abort() {
     consumer.abort();
     if (nextTermsHash != null)
       nextTermsHash.abort();
@@ -159,24 +162,31 @@ final class TermsHash extends InvertedDocConsumer {
   }
 
   @Override
-  synchronized public boolean freeRAM() {
+  public boolean freeRAM() {
 
     if (!trackAllocations)
       return false;
 
     boolean any;
-    final int numToFree;
-    if (postingsFreeCount >= postingsFreeChunk)
-      numToFree = postingsFreeChunk;
-    else
-      numToFree = postingsFreeCount;
-    any = numToFree > 0;
+    long bytesFreed = 0;
+    synchronized(this) {
+      final int numToFree;
+      if (postingsFreeCount >= postingsFreeChunk)
+        numToFree = postingsFreeChunk;
+      else
+        numToFree = postingsFreeCount;
+      any = numToFree > 0;
+      if (any) {
+        Arrays.fill(postingsFreeList, postingsFreeCount-numToFree, postingsFreeCount, null);
+        postingsFreeCount -= numToFree;
+        postingsAllocCount -= numToFree;
+        bytesFreed = -numToFree * bytesPerPosting;
+        any = true;
+      }
+    }
+
     if (any) {
-      Arrays.fill(postingsFreeList, postingsFreeCount-numToFree, postingsFreeCount, null);
-      postingsFreeCount -= numToFree;
-      postingsAllocCount -= numToFree;
-      docWriter.bytesAllocated(-numToFree * bytesPerPosting);
-      any = true;
+      docWriter.bytesAllocated(bytesFreed);
     }
 
     if (nextTermsHash != null)
