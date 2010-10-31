@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Locale;
 import java.util.Set;
 
 import org.apache.lucene.analysis.CharArraySet;
@@ -181,7 +182,7 @@ public abstract class CompoundWordTokenFilterBase extends TokenFilter {
     Iterator iter=col.iterator();
     
     while (iter.hasNext()) {
-      target.add(((String)iter.next()).toLowerCase());
+      target.add(((String)iter.next()).toLowerCase(Locale.ENGLISH));
     }
   }
   

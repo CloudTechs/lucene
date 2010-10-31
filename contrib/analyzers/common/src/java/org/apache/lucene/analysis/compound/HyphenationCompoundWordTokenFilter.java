@@ -18,8 +18,6 @@ package org.apache.lucene.analysis.compound;
  */
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Set;
 
@@ -117,7 +115,7 @@ public class HyphenationCompoundWordTokenFilter extends
    */
   public static HyphenationTree getHyphenationTree(String hyphenationFilename)
       throws Exception {
-    return getHyphenationTree(new File(hyphenationFilename));
+    return getHyphenationTree(new InputSource(hyphenationFilename));
   }
 
   /**
@@ -129,8 +127,7 @@ public class HyphenationCompoundWordTokenFilter extends
    */
   public static HyphenationTree getHyphenationTree(File hyphenationFile)
       throws Exception {
-    return getHyphenationTree(new InputStreamReader(new FileInputStream(
-        hyphenationFile), "ISO-8859-1"));
+    return getHyphenationTree(new InputSource(hyphenationFile.toURL().toExternalForm()));
   }
 
   /**
@@ -142,10 +139,25 @@ public class HyphenationCompoundWordTokenFilter extends
    */
   public static HyphenationTree getHyphenationTree(Reader hyphenationReader)
       throws Exception {
+    final InputSource is = new InputSource(hyphenationReader);
+    // we need this to load the DTD in very old parsers (like the one in JDK 1.4).
+    // The DTD itsself is provided via EntityResolver, so it should always load, but
+    // some parsers still want to have a base URL (Crimson).
+    is.setSystemId("urn:java:" + HyphenationTree.class.getName());
+    return getHyphenationTree(is);
+  }
+
+  /**
+   * Create a hyphenator tree
+   * 
+   * @param hyphenationSource the InputSource pointing to the XML grammar
+   * @return An object representing the hyphenation patterns
+   * @throws Exception
+   */
+  public static HyphenationTree getHyphenationTree(InputSource hyphenationSource)
+      throws Exception {
     HyphenationTree tree = new HyphenationTree();
-
-    tree.loadPatterns(new InputSource(hyphenationReader));
-
+    tree.loadPatterns(hyphenationSource);
     return tree;
   }
 
