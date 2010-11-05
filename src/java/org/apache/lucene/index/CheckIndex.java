@@ -593,8 +593,10 @@ public class CheckIndex {
       final byte[] b = new byte[reader.maxDoc()];
       while (it.hasNext()) {
         final String fieldName = (String) it.next();
-        reader.norms(fieldName, b, 0);
-        ++status.totFields;
+        if (reader.hasNorms(fieldName)) {
+          reader.norms(fieldName, b, 0);
+          ++status.totFields;
+        }
       }
 
       msg("OK [" + status.totFields + " fields]");
