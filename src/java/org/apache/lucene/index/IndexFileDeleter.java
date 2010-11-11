@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.Map;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
@@ -122,7 +123,7 @@ final class IndexFileDeleter {
   }
   
   private void message(String message) {
-    infoStream.println("IFD [" + Thread.currentThread().getName() + "]: " + message);
+    infoStream.println("IFD [" + new Date() + "; " + Thread.currentThread().getName() + "]: " + message);
   }
 
   /**
@@ -539,8 +540,12 @@ final class IndexFileDeleter {
     final Iterator it = files.iterator();
     while(it.hasNext()) {
       final String fileName = (String) it.next();
-      if (!refCounts.containsKey(fileName))
+      if (!refCounts.containsKey(fileName)) {
+        if (infoStream != null) {
+          message("delete new file \"" + fileName + "\"");
+        }
         deleteFile(fileName);
+      }
     }
   }
 
@@ -633,6 +638,10 @@ final class IndexFileDeleter {
       isOptimized = segmentInfos.size() == 1 && !segmentInfos.info(0).hasDeletions();
 
       assert !segmentInfos.hasExternalSegments(directory);
+    }
+
+    public String toString() {
+      return "IndexFileDeleter.CommitPoint(" + segmentsFileName + ")";
     }
 
     public boolean isOptimized() {

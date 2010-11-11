@@ -42,6 +42,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Date;
 
 /**
   An <code>IndexWriter</code> creates and maintains an index.
@@ -821,7 +822,7 @@ public class IndexWriter {
    */
   public void message(String message) {
     if (infoStream != null)
-      infoStream.println("IW " + messageID + " [" + Thread.currentThread().getName() + "]: " + message);
+      infoStream.println("IW " + messageID + " [" + new Date() + "; " + Thread.currentThread().getName() + "]: " + message);
   }
 
   private synchronized void setMessageID(PrintStream infoStream) {
@@ -3342,6 +3343,10 @@ public class IndexWriter {
 
     boolean success = false;
 
+    if (infoStream != null ) {
+      message("rollback");
+    }
+
     docWriter.pauseAllThreads();
 
     try {
@@ -4226,11 +4231,13 @@ public class IndexWriter {
         notifyAll();
       }
 
-    } else if (infoStream != null)
-        message("commit: pendingCommit == null; skip");
+    } else if (infoStream != null) {
+      message("commit: pendingCommit == null; skip");
+    }
 
-    if (infoStream != null)
+    if (infoStream != null) {
       message("commit: done");
+    }
   }
 
   /**

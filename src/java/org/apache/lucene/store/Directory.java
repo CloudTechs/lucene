@@ -182,6 +182,10 @@ public abstract class Directory {
       return this.toString();
   }
 
+  public String toString() {
+    return super.toString() + " lockFactory=" + getLockFactory();
+  }
+
   /**
    * Copy contents of a directory src to a directory dest.
    * If a file in src already exists in dest then the

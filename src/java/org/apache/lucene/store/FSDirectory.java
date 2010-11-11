@@ -758,7 +758,7 @@ public class FSDirectory extends Directory {
 
   /** For debug output. */
   public String toString() {
-    return this.getClass().getName() + "@" + directory;
+    return this.getClass().getName() + "@" + directory + " lockFactory=" + getLockFactory();
   }
 
   /**

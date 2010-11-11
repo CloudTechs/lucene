@@ -934,6 +934,10 @@ class DirectoryReader extends IndexReader implements Cloneable {
       isOptimized = infos.size() == 1 && !infos.info(0).hasDeletions();
     }
 
+    public String toString() {
+      return "DirectoryReader.ReaderCommit(" + segmentsFileName + ")";
+    }
+
     public boolean isOptimized() {
       return isOptimized;
     }
