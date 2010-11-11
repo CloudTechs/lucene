@@ -952,6 +952,11 @@ class DirectoryReader extends IndexReader implements Cloneable {
     }
 
     @Override
+    public String toString() {
+      return "DirectoryReader.ReaderCommit(" + segmentsFileName + ")";
+    }
+
+    @Override
     public boolean isOptimized() {
       return isOptimized;
     }

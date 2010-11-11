@@ -96,6 +96,12 @@ public class SnapshotDeletionPolicy implements IndexDeletionPolicy {
     MyCommitPoint(IndexCommit cp) {
       this.cp = cp;
     }
+
+    @Override
+    public String toString() {
+      return "SnapshotDeletionPolicy.SnapshotCommitPoint(" + cp + ")";
+    }
+
     @Override
     public String getSegmentsFileName() {
       return cp.getSegmentsFileName();
