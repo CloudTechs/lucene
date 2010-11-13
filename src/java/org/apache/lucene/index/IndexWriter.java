@@ -4561,7 +4561,7 @@ public class IndexWriter {
 
     assert mergeReader.numDeletedDocs() == delCount;
 
-    mergeReader.hasChanges = delCount >= 0;
+    mergeReader.hasChanges = delCount > 0;
   }
 
   /* FIXME if we want to support non-contiguous segment merges */
