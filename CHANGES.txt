@@ -81,6 +81,10 @@ Bug fixes
   not the number that have norms enabled, on the "test: field
   norms..." output.  (Mark Kristensson via Mike McCandless)
 
+* LUCENE-2759: Fixed two near-real-time cases where doc store files
+  may be opened for read even though they are still open for write.
+  (Mike McCandless)
+
 Optimizations
 
 * LUCENE-2556: Improve memory usage after cloning TermAttribute.

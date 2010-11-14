@@ -538,6 +538,9 @@ final class DocumentsWriter {
     } finally {
       aborting = false;
       notifyAll();
+      if (infoStream != null) {
+        message("docWriter: done abort; abortedFiles=" + abortedFiles);
+      }
     }
   }
 
@@ -659,6 +662,10 @@ final class DocumentsWriter {
     assert waitQueue.waitingBytes == 0;
 
     return flushState.numDocs;
+  }
+
+  Collection getFlushedFiles() {
+    return flushState.flushedFiles;
   }
 
   /** Build compound file for the segment we just flushed */

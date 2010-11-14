@@ -53,6 +53,13 @@ final class TermVectorsTermsWriter extends TermsHashConsumer {
 
   synchronized void flush(Map threadsAndFields, final SegmentWriteState state) throws IOException {
 
+    if (state.numDocsInStore > 0) {
+      // It's possible that all documents seen in this segment
+      // hit non-aborting exceptions, in which case we will
+      // not have yet init'd the TermVectorsWriter:
+      initTermVectorsWriter();
+    }
+
     if (tvx != null) {
 
       if (state.numDocsInStore > 0)

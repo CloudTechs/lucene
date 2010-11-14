@@ -477,15 +477,16 @@ public class IndexWriter {
     // this method is called:
     poolReaders = true;
 
-    flush(true, true, false);
-    
     // Prevent segmentInfos from changing while opening the
     // reader; in theory we could do similar retry logic,
     // just like we do when loading segments_N
+    IndexReader r;
     synchronized(this) {
-      applyDeletes();
-      return new ReadOnlyDirectoryReader(this, segmentInfos, termInfosIndexDivisor);
+      flush(false, true, true);
+      r = new ReadOnlyDirectoryReader(this, segmentInfos, termInfosIndexDivisor);
     }
+    maybeMerge();
+    return r;
   }
 
   /** Holds shared SegmentReader instances. IndexWriter uses
@@ -2299,6 +2300,10 @@ public class IndexWriter {
    */
   private synchronized boolean flushDocStores() throws IOException {
 
+    if (infoStream != null) {
+      message("flushDocStores segment=" + docWriter.getDocStoreSegment());
+    }
+
     boolean useCompoundDocStore = false;
 
     String docStoreSegment;
@@ -2311,6 +2316,10 @@ public class IndexWriter {
       if (!success && infoStream != null) {
         message("hit exception closing doc store segment");
       }
+    }
+
+    if (infoStream != null) {
+      message("flushDocStores files=" + docWriter.closedFiles());
     }
 
     useCompoundDocStore = mergePolicy.useCompoundDocStore(segmentInfos);
@@ -4373,6 +4382,9 @@ public class IndexWriter {
 
         try {
           flushedDocCount = docWriter.flush(flushDocStores);
+          if (infoStream != null) {
+            message("flushedFiles=" + docWriter.getFlushedFiles());
+          }
           success = true;
         } finally {
           if (!success) {
@@ -4858,6 +4870,13 @@ public class IndexWriter {
       }
     }
 
+    // if a mergedSegmentWarmer is installed, we must merge
+    // the doc stores because we will open a full
+    // SegmentReader on the merged segment:
+    if (!mergeDocStores && mergedSegmentWarmer != null && currentDocStoreSegment != null && lastDocStoreSegment != null && lastDocStoreSegment.equals(currentDocStoreSegment)) {
+      mergeDocStores = true;
+    }
+
     final int docStoreOffset;
     final String docStoreSegment;
     final boolean docStoreIsCompoundFile;
@@ -5132,7 +5151,14 @@ public class IndexWriter {
         deleter.incRef(merge.mergeFiles);
       }
 
-      if (poolReaders && mergedSegmentWarmer != null) {
+      final String currentDocStoreSegment = docWriter.getDocStoreSegment();
+      
+      // if the merged segment warmer was not installed when
+      // this merge was started, causing us to not force
+      // the docStores to close, we can't warm it now
+      final boolean canWarm = merge.info.getDocStoreSegment() == null || currentDocStoreSegment == null || !merge.info.getDocStoreSegment().equals(currentDocStoreSegment);
+
+      if (poolReaders && mergedSegmentWarmer != null && canWarm) {
         // Load terms index & doc stores so the segment
         // warmer can run searches, load documents/term
         // vectors
