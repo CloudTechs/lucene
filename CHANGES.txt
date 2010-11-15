@@ -85,6 +85,10 @@ Bug fixes
   may be opened for read even though they are still open for write.
   (Mike McCandless)
 
+* LUCENE-2618: Fix rare thread safety issue whereby
+  IndexWriter.optimize could sometimes return even though the index
+  wasn't fully optimized (Mike McCandless)
+
 Optimizations
 
 * LUCENE-2556: Improve memory usage after cloning TermAttribute.

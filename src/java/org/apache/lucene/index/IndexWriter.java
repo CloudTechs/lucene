@@ -342,6 +342,7 @@ public class IndexWriter {
   private IndexFileDeleter deleter;
 
   private Set segmentsToOptimize = new HashSet();           // used by optimize to note those needing optimization
+  private int optimizeMaxNumSegments;
 
   private Lock writeLock;
 
@@ -2871,6 +2872,7 @@ public class IndexWriter {
     synchronized(this) {
       resetMergeExceptions();
       segmentsToOptimize = new HashSet();
+      optimizeMaxNumSegments = maxNumSegments;
       final int numSegments = segmentInfos.size();
       for(int i=0;i<numSegments;i++)
         segmentsToOptimize.add(segmentInfos.info(i));
@@ -3078,8 +3080,9 @@ public class IndexWriter {
     throws CorruptIndexException, IOException {
     assert !optimize || maxNumSegmentsOptimize > 0;
 
-    if (stopMerges)
+    if (stopMerges) {
       return;
+    }
 
     // Do not start new merges if we've hit OOME
     if (hitOOM) {
@@ -4625,8 +4628,10 @@ public class IndexWriter {
     // disk, updating SegmentInfo, etc.:
     readerPool.clear(merge.segments);
 
-    if (merge.optimize)
+    if (merge.optimize) {
+      // cascade the optimize:
       segmentsToOptimize.add(merge.info);
+    }
     return true;
   }
   
@@ -4738,12 +4743,19 @@ public class IndexWriter {
     boolean isExternal = false;
     for(int i=0;i<count;i++) {
       final SegmentInfo info = merge.segments.info(i);
-      if (mergingSegments.contains(info))
+      if (mergingSegments.contains(info)) {
         return false;
-      if (segmentInfos.indexOf(info) == -1)
+      }
+      if (segmentInfos.indexOf(info) == -1) {
         return false;
-      if (info.dir != directory)
+      }
+      if (info.dir != directory) {
         isExternal = true;
+      }
+      if (segmentsToOptimize.contains(info)) {
+        merge.optimize = true;
+        merge.maxNumSegmentsOptimize = optimizeMaxNumSegments;
+      }
     }
 
     ensureContiguousMerge(merge);
