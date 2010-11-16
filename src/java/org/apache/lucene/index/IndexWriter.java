@@ -4018,7 +4018,9 @@ public class IndexWriter {
           
           } finally {
 
-            deleter.decRef(files);
+            synchronized(this) {
+              deleter.decRef(files);
+            }
 
             if (!success) {
               if (infoStream != null)
@@ -5285,7 +5287,9 @@ public class IndexWriter {
       if (merge.isAborted()) {
         if (infoStream != null)
           message("abort merge after building CFS");
-        deleter.deleteFile(compoundFileName);
+        synchronized(this) {
+          deleter.deleteFile(compoundFileName);
+        }
         return 0;
       }
 
