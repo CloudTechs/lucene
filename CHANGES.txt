@@ -87,6 +87,10 @@ Bug fixes
   IndexWriter.optimize could sometimes return even though the index
   wasn't fully optimized (Mike McCandless)
 
+* LUCENE-2767: Fix thread safety issue in addIndexes(IndexReader[])
+  that could potentially result in index corruption.  (Mike
+  McCandless)
+
 Optimizations
 
 * LUCENE-2556: Improve memory usage after cloning TermAttribute.
