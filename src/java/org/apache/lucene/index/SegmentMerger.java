@@ -20,6 +20,8 @@ package org.apache.lucene.index;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import java.util.List;
 
@@ -171,13 +173,8 @@ final class SegmentMerger {
     }
   }
 
-  final List<String> createCompoundFile(String fileName)
-          throws IOException {
-    CompoundFileWriter cfsWriter =
-      new CompoundFileWriter(directory, fileName, checkAbort);
-
-    List<String> files =
-      new ArrayList<String>(IndexFileNames.COMPOUND_EXTENSIONS.length + 1);    
+  final Collection<String> getMergedFiles() throws IOException {
+    Set<String> fileSet = new HashSet<String>();
     
     // Basic files
     for (int i = 0; i < IndexFileNames.COMPOUND_EXTENSIONS.length; i++) {
@@ -188,14 +185,14 @@ final class SegmentMerger {
 
       if (mergeDocStores || (!ext.equals(IndexFileNames.FIELDS_EXTENSION) &&
                             !ext.equals(IndexFileNames.FIELDS_INDEX_EXTENSION)))
-        files.add(segment + "." + ext);
+        fileSet.add(segment + "." + ext);
     }
 
     // Fieldable norm files
     for (int i = 0; i < fieldInfos.size(); i++) {
       FieldInfo fi = fieldInfos.fieldInfo(i);
       if (fi.isIndexed && !fi.omitNorms) {
-        files.add(segment + "." + IndexFileNames.NORMS_EXTENSION);
+        fileSet.add(segment + "." + IndexFileNames.NORMS_EXTENSION);
         break;
       }
     }
@@ -203,9 +200,18 @@ final class SegmentMerger {
     // Vector files
     if (fieldInfos.hasVectors() && mergeDocStores) {
       for (int i = 0; i < IndexFileNames.VECTOR_EXTENSIONS.length; i++) {
-        files.add(segment + "." + IndexFileNames.VECTOR_EXTENSIONS[i]);
+        fileSet.add(segment + "." + IndexFileNames.VECTOR_EXTENSIONS[i]);
       }
     }
+
+    return fileSet;
+  }
+
+  final Collection<String> createCompoundFile(String fileName)
+          throws IOException {
+
+    Collection<String> files = getMergedFiles();
+    CompoundFileWriter cfsWriter = new CompoundFileWriter(directory, fileName, checkAbort);
 
     // Now merge all added files
     for (String file : files) {

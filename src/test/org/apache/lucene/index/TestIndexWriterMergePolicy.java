@@ -210,7 +210,7 @@ public class TestIndexWriterMergePolicy extends LuceneTestCase {
   }
 
   private void checkInvariants(IndexWriter writer) throws IOException {
-    _TestUtil.syncConcurrentMerges(writer);
+    writer.waitForMerges();
     int maxBufferedDocs = writer.getMaxBufferedDocs();
     int mergeFactor = writer.getMergeFactor();
     int maxMergeDocs = writer.getMaxMergeDocs();
@@ -252,7 +252,7 @@ public class TestIndexWriterMergePolicy extends LuceneTestCase {
         segmentCfsCount++;
       }
     }
-    assertEquals(segmentCount, segmentCfsCount);
+    assertEquals("index=" + writer.segString(), segmentCount, segmentCfsCount);
   }
 
   /*
