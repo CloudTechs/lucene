@@ -54,9 +54,16 @@ public class MockRAMDirectory extends RAMDirectory {
   // like super is called, then our members are initialized:
   Map openFiles;
 
+  // Only tracked if noDeleteOpenFile is true: if an attempt
+  // is made to delete an open file, we enroll it here.
+  Set openFilesDeleted;
+
   private synchronized void init() {
-    if (openFiles == null)
+    if (openFiles == null) {
       openFiles = new HashMap();
+      openFilesDeleted = new HashSet();
+    }
+      
     if (createdFiles == null)
       createdFiles = new HashSet();
     if (unSyncedFiles == null)
@@ -99,6 +106,7 @@ public class MockRAMDirectory extends RAMDirectory {
   public synchronized void crash() throws IOException {
     crashed = true;
     openFiles = new HashMap();
+    openFilesDeleted = new HashSet();
     Iterator it = unSyncedFiles.iterator();
     unSyncedFiles = new HashSet();
     int count = 0;
@@ -192,12 +200,19 @@ public class MockRAMDirectory extends RAMDirectory {
 
     if (unSyncedFiles.contains(name))
       unSyncedFiles.remove(name);
-    if (!forced) {
-      if (noDeleteOpenFile && openFiles.containsKey(name)) {
+    if (!forced && noDeleteOpenFile) {
+      if (openFiles.containsKey(name)) {
+        openFilesDeleted.add(name);
         throw new IOException("MockRAMDirectory: file \"" + name + "\" is still open: cannot delete");
+      } else {
+        openFilesDeleted.remove(name);
       }
     }
     super.deleteFile(name);
+  }
+
+  public synchronized Set getOpenDeletedFiles() {
+    return new HashSet(openFilesDeleted);
   }
 
   public synchronized IndexOutput createOutput(String name) throws IOException {
@@ -271,6 +286,7 @@ public class MockRAMDirectory extends RAMDirectory {
   public synchronized void close() {
     if (openFiles == null) {
       openFiles = new HashMap();
+      openFilesDeleted = new HashSet();
     }
     if (noDeleteOpenFile && openFiles.size() > 0) {
       // RuntimeException instead of IOException because

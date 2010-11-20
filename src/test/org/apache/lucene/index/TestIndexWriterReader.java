@@ -699,7 +699,7 @@ public class TestIndexWriterReader extends LuceneTestCase {
 
   // Stress test reopen during addIndexes
   public void testDuringAddIndexes() throws Exception {
-    Directory dir1 = new MockRAMDirectory();
+    MockRAMDirectory dir1 = new MockRAMDirectory();
     final IndexWriter writer = new IndexWriter(dir1, new WhitespaceAnalyzer(),
                                                IndexWriter.MaxFieldLength.LIMITED);
     writer.setInfoStream(infoStream);
@@ -758,10 +758,12 @@ public class TestIndexWriterReader extends LuceneTestCase {
     }
 
     assertEquals(0, excs.size());
+    r.close();
+    assertEquals(0, dir1.getOpenDeletedFiles().size());
+
     writer.close();
 
     _TestUtil.checkIndex(dir1);
-    r.close();
     dir1.close();
   }
 

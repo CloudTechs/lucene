@@ -9,6 +9,13 @@ Changes in runtime behavior
   test lock just before the real lock is acquired.  (Surinder Pal
   Singh Bindra via Mike McCandless)
 
+* LUCENE-2762: Fixed bug in IndexWriter causing it to hold open file
+  handles against deleted files when compound-file was enabled (the
+  default) and readers are pooled.  As a result of this the peak
+  worst-case free disk space required during optimize is now 3X the
+  index size, when compound file is enabled (else 2X).  (Mike
+  McCandless)
+  
 Bug fixes
 
 * LUCENE-2142 (correct fix): FieldCacheImpl.getStringIndex no longer
@@ -91,6 +98,13 @@ Bug fixes
 
 * LUCENE-2767: Fix thread safety issue in addIndexes(IndexReader[])
   that could potentially result in index corruption.  (Mike
+  McCandless)
+
+* LUCENE-2762: Fixed bug in IndexWriter causing it to hold open file
+  handles against deleted files when compound-file was enabled (the
+  default) and readers are pooled.  As a result of this the peak
+  worst-case free disk space required during optimize is now 3X the
+  index size, when compound file is enabled (else 2X).  (Mike
   McCandless)
 
 Optimizations

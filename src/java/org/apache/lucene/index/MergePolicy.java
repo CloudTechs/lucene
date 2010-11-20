@@ -74,14 +74,12 @@ public abstract class MergePolicy {
     SegmentInfo info;               // used by IndexWriter
     boolean mergeDocStores;         // used by IndexWriter
     boolean optimize;               // used by IndexWriter
-    boolean increfDone;             // used by IndexWriter
     boolean registerDone;           // used by IndexWriter
     long mergeGen;                  // used by IndexWriter
     boolean isExternal;             // used by IndexWriter
     int maxNumSegmentsOptimize;     // used by IndexWriter
     SegmentReader[] readers;        // used by IndexWriter
     SegmentReader[] readersClone;   // used by IndexWriter
-    List mergeFiles;                // used by IndexWriter
     final SegmentInfos segments;
     final boolean useCompoundFile;
     boolean aborted;

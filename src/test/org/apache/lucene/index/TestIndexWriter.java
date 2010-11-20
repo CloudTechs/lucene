@@ -447,13 +447,13 @@ public class TestIndexWriter extends BaseTokenStreamTestCase {
 
           if (done) {
             // Javadocs state that temp free Directory space
-            // required is at most 2X total input size of
+            // required is at most 3X total input size of
             // indices so let's make sure:
             assertTrue("max free Directory space required exceeded 1X the total input index sizes during " + methodName +
                        ": max temp usage = " + (dir.getMaxUsedSizeInBytes()-startDiskUsage) + " bytes; " +
                        "starting disk usage = " + startDiskUsage + " bytes; " +
                        "input index disk usage = " + inputDiskUsage + " bytes",
-                       (dir.getMaxUsedSizeInBytes()-startDiskUsage) < 2*(startDiskUsage + inputDiskUsage));
+                       (dir.getMaxUsedSizeInBytes()-startDiskUsage) < 3*(startDiskUsage + inputDiskUsage));
           }
 
           // Make sure we don't hit disk full during close below:
@@ -721,6 +721,12 @@ public class TestIndexWriter extends BaseTokenStreamTestCase {
       for(int j=0;j<500;j++) {
         addDocWithIndex(writer, j);
       }
+
+      // force one extra segment w/ different doc store so
+      // we see the doc stores get merged
+      writer.commit();
+      addDocWithIndex(writer, 500);
+
       writer.close();
 
       long startDiskUsage = 0;
@@ -735,8 +741,8 @@ public class TestIndexWriter extends BaseTokenStreamTestCase {
       writer.close();
       long maxDiskUsage = dir.getMaxUsedSizeInBytes();
 
-      assertTrue("optimized used too much temporary space: starting usage was " + startDiskUsage + " bytes; max temp usage was " + maxDiskUsage + " but should have been " + (2*startDiskUsage) + " (= 2X starting usage)",
-                 maxDiskUsage <= 2*startDiskUsage);
+      assertTrue("optimized used too much temporary space: starting usage was " + startDiskUsage + " bytes; max temp usage was " + maxDiskUsage + " but should have been " + (4*startDiskUsage) + " (= 4X starting usage)",
+                 maxDiskUsage <= 4*startDiskUsage);
       dir.close();
     }
 
@@ -1166,15 +1172,15 @@ public class TestIndexWriter extends BaseTokenStreamTestCase {
       long endDiskUsage = dir.getMaxUsedSizeInBytes();
 
       // Ending index is 50X as large as starting index; due
-      // to 2X disk usage normally we allow 100X max
+      // to 3X disk usage normally we allow 150X max
       // transient usage.  If something is wrong w/ deleter
       // and it doesn't delete intermediate segments then it
-      // will exceed this 100X:
+      // will exceed this 150X:
       // System.out.println("start " + startDiskUsage + "; mid " + midDiskUsage + ";end " + endDiskUsage);
       assertTrue("writer used too much space while adding documents when autoCommit=false: mid=" + midDiskUsage + " start=" + startDiskUsage + " end=" + endDiskUsage,
-                 midDiskUsage < 100*startDiskUsage);
+                 midDiskUsage < 150*startDiskUsage);
       assertTrue("writer used too much space after close when autoCommit=false endDiskUsage=" + endDiskUsage + " startDiskUsage=" + startDiskUsage,
-                 endDiskUsage < 100*startDiskUsage);
+                 endDiskUsage < 150*startDiskUsage);
     }
 
 

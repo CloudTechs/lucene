@@ -49,6 +49,7 @@ public class MockRAMInputStream extends RAMInputStream {
         if (v != null) {
           if (v.intValue() == 1) {
             dir.openFiles.remove(name);
+            dir.openFilesDeleted.remove(name);
           } else {
             v = new Integer(v.intValue()-1);
             dir.openFiles.put(name, v);

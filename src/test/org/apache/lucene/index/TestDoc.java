@@ -183,7 +183,7 @@ public class TestDoc extends LuceneTestCase {
       merger.closeReaders();
       
       if (useCompoundFile) {
-        List filesToDelete = merger.createCompoundFile(merged + ".cfs");
+        Collection filesToDelete = merger.createCompoundFile(merged + ".cfs");
         for (Iterator iter = filesToDelete.iterator(); iter.hasNext();)
           si1.dir.deleteFile((String) iter.next());
       }
