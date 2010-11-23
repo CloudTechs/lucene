@@ -670,6 +670,7 @@ public class TestIndexWriter extends LuceneTestCase
         for(int i=0;i<19;i++)
           writer.addDocument(doc);
 
+        writer.commit();
         ((ConcurrentMergeScheduler) writer.getMergeScheduler()).sync();
         writer.commit();
 
