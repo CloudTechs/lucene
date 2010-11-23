@@ -661,7 +661,8 @@ public class TestIndexWriter extends BaseTokenStreamTestCase {
         for(int i=0;i<19;i++)
           writer.addDocument(doc);
 
-        ((ConcurrentMergeScheduler) writer.getMergeScheduler()).sync();
+        writer.commit();
+        writer.waitForMerges();
         writer.commit();
 
         SegmentInfos sis = new SegmentInfos();
