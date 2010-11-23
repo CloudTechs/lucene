@@ -652,7 +652,8 @@ public class TestIndexWriter extends LuceneTestCase {
         for(int i=0;i<19;i++)
           writer.addDocument(doc);
 
-        ((ConcurrentMergeScheduler) writer.getMergeScheduler()).sync();
+        writer.commit();
+        writer.waitForMerges();
         writer.commit();
 
         SegmentInfos sis = new SegmentInfos();
