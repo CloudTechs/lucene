@@ -105,6 +105,9 @@ Bug fixes
   index size, when compound file is enabled (else 2X).  (Mike
   McCandless)
 
+* LUCENE-2216: OpenBitSet.hashCode returned different hash codes for
+  sets that only differed by trailing zeros. (Dawid Weiss, yonik)
+
 Optimizations
 
 * LUCENE-2556: Improve memory usage after cloning TermAttribute.
