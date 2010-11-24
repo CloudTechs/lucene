@@ -15,6 +15,13 @@ Changes in runtime behavior
   worst-case free disk space required during optimize is now 3X the
   index size, when compound file is enabled (else 2X).  (Mike
   McCandless)
+
+* LUCENE-2773: LogMergePolicy accepts a double noCFSRatio (default =
+  0.1), which means any time a merged segment is greater than 10% of
+  the index size, it will be left in non-compound format even if
+  compound format is on.  This change was made to reduce peak
+  transient disk usage during optimize which increased due to
+  LUCENE-2762.  (Mike McCandless)
   
 Bug fixes
 
@@ -107,6 +114,15 @@ Bug fixes
 
 * LUCENE-2216: OpenBitSet.hashCode returned different hash codes for
   sets that only differed by trailing zeros. (Dawid Weiss, yonik)
+
+API Changes
+
+* LUCENE-2773: LogMergePolicy accepts a double noCFSRatio (default =
+  0.1), which means any time a merged segment is greater than 10% of
+  the index size, it will be left in non-compound format even if
+  compound format is on.  This change was made to reduce peak
+  transient disk usage during optimize which increased due to
+  LUCENE-2762.  (Mike McCandless)
 
 Optimizations
 
