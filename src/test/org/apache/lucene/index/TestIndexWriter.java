@@ -4828,4 +4828,38 @@ public class TestIndexWriter extends LuceneTestCase {
 
     dir.close();
   }
+
+  public void testNoUnwantedTVFiles() throws Exception {
+
+    Directory dir = new MockRAMDirectory();
+    IndexWriter indexWriter = new IndexWriter(dir, new WhitespaceAnalyzer(), IndexWriter.MaxFieldLength.UNLIMITED);
+    indexWriter.setRAMBufferSizeMB(0.01);
+    indexWriter.setUseCompoundFile(false);
+
+    String BIG="alskjhlaksjghlaksjfhalksvjepgjioefgjnsdfjgefgjhelkgjhqewlrkhgwlekgrhwelkgjhwelkgrhwlkejg";
+    BIG=BIG+BIG+BIG+BIG;
+
+    for (int i=0; i<2; i++) {
+      Document doc = new Document();
+      doc.add(new Field("id", Integer.toString(i)+BIG, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
+      doc.add(new Field("str", Integer.toString(i)+BIG, Field.Store.YES, Field.Index.NOT_ANALYZED));
+      doc.add(new Field("str2", Integer.toString(i)+BIG, Field.Store.YES, Field.Index.ANALYZED));
+      doc.add(new Field("str3", Integer.toString(i)+BIG, Field.Store.YES, Field.Index.ANALYZED_NO_NORMS));
+      indexWriter.addDocument(doc);
+    }
+
+    indexWriter.close();
+
+    _TestUtil.checkIndex(dir);
+
+    assertNoUnreferencedFiles(dir, "no tv files");
+    String[] files = dir.listAll();
+    for(String file : files) {
+      assertTrue(!file.endsWith(IndexFileNames.VECTORS_FIELDS_EXTENSION));
+      assertTrue(!file.endsWith(IndexFileNames.VECTORS_INDEX_EXTENSION));
+      assertTrue(!file.endsWith(IndexFileNames.VECTORS_DOCUMENTS_EXTENSION));
+    }
+
+    dir.close();
+  }
 }
