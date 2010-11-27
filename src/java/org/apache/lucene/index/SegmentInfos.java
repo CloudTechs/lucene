@@ -675,9 +675,7 @@ public final class SegmentInfos extends Vector<SegmentInfo> {
 
         try {
           Object v = doBody(segmentFileName);
-          if (exc != null) {
-            message("success on " + segmentFileName);
-          }
+          message("success on " + segmentFileName);
           return v;
         } catch (IOException err) {
 

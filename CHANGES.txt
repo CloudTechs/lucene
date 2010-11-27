@@ -115,6 +115,9 @@ Bug fixes
 * LUCENE-2216: OpenBitSet.hashCode returned different hash codes for
   sets that only differed by trailing zeros. (Dawid Weiss, yonik)
 
+* LUCENE-2782: Fix rare potential thread hazard with
+  IndexWriter.commit (Mike McCandless)
+
 API Changes
 
 * LUCENE-2773: LogMergePolicy accepts a double noCFSRatio (default =

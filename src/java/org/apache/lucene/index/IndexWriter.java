@@ -4716,6 +4716,7 @@ public class IndexWriter implements Closeable {
         try {
 
           assert lastCommitChangeCount <= changeCount;
+          myChangeCount = changeCount;
 
           if (changeCount == lastCommitChangeCount) {
             if (infoStream != null)
@@ -4735,13 +4736,29 @@ public class IndexWriter implements Closeable {
         
           readerPool.commit();
         
+          // It's possible another flush (that did not close
+          // the open do stores) snuck in after the flush we
+          // just did, so we remove any tail segments
+          // referencing the open doc store from the
+          // SegmentInfos we are about to sync (the main
+          // SegmentInfos will keep them):
           toSync = (SegmentInfos) segmentInfos.clone();
-        
+          final String dss = docWriter.getDocStoreSegment();
+          if (dss != null) {
+            while(true) {
+              final String dss2 = toSync.info(toSync.size()-1).getDocStoreSegment();
+              if (dss2 == null || !dss2.equals(dss)) {
+                break;
+              }
+              toSync.remove(toSync.size()-1);
+              changeCount++;
+            }
+          }
+
           if (commitUserData != null)
             toSync.setUserData(commitUserData);
         
           deleter.incRef(toSync, false);
-          myChangeCount = changeCount;
         
           Collection<String> files = toSync.files(directory, false);
           for(final String fileName: files) {
