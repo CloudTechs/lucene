@@ -1,6 +1,6 @@
 Lucene contrib change Log
 
-======================= 2.9 branch (not yet released) ==================
+======================= Release 2.9.4 2010-12-05 =======================
 
 Bug Fixes
 

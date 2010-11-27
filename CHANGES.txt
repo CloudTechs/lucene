@@ -1,7 +1,7 @@
 Lucene Change Log
 $Id$
 
-======================= 2.9 branch (not yet released) ==================
+======================= Release 2.9.4 2010-12-05 =======================
 
 Changes in runtime behavior
 
