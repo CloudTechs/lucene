@@ -90,8 +90,8 @@ public class MemoryIndexTest extends BaseTokenStreamTestCase {
    * and run all the queries against it.
    */
   public void assertAgainstRAMDirectory() throws Exception {
-    StringBuilder fooField = new StringBuilder();
-    StringBuilder termField = new StringBuilder();
+    StringBuffer fooField = new StringBuffer();
+    StringBuffer termField = new StringBuffer();
  
     // add up to 250 terms to field "foo"
     for (int i = 0; i < random.nextInt(250); i++) {

@@ -87,7 +87,7 @@ public class PatternAnalyzerTest extends BaseTokenStreamTestCase {
    * Test PatternAnalyzer against a large document.
    */
   public void testHugeDocument() throws IOException {
-    StringBuilder document = new StringBuilder();
+    StringBuffer document = new StringBuffer();
     // 5000 a's
     char largeWord[] = new char[5000];
     Arrays.fill(largeWord, 'a');
