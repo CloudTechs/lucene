@@ -58,7 +58,7 @@ public class Algorithm {
     String taskPackage = PerfTask.class.getPackage().getName() + ".";
     
     Class paramClass[] = {PerfRunData.class};
-    PerfRunData paramObj[] = {runData};
+    Object paramObj[] = {runData};
     
     while (stok.nextToken() != StreamTokenizer.TT_EOF) { 
       switch(stok.ttype) {
