@@ -63,7 +63,7 @@ Bug fixes
   if the writer had just committed (Nikolay Zamosenchuk via Mike McCandless)
 
 * LUCENE-2650: Added extra safety to MMapIndexInput clones to prevent accessing
-  an unmapped buffer if the input is closed (Mike McCandless, Uwe Schindler, Robert Muir) 
+  an unmapped buffer if the input is closed (Mike McCandless, Uwe Schindler, Robert Muir)
   
 * LUCENE-2384: Reset zzBuffer in StandardTokenizerImpl when lexer is reset.
   (Ruben Laguna via Uwe Schindler, sub-issue of LUCENE-2074) 
@@ -88,6 +88,8 @@ Bug fixes
 * LUCENE-2365: IndexWriter.newestSegment (used normally for testing)
   is fixed to return null if there are no segments.  (Karthick
   Sankarachary via Mike McCandless)
+
+* LUCENE-2730: Fix two rare deadlock cases in IndexWriter (Mike McCandless)
 
 * LUCENE-2744: CheckIndex was stating total number of fields,
   not the number that have norms enabled, on the "test: field
@@ -137,8 +139,8 @@ Optimizations
 
 Documentation
 
-* LUCENE-2239: Documented limitations in NIOFSDirectory and MMapDirectory due 
-  to Java NIO behavior when a Thread is interrupted while blocking on IO.
+* LUCENE-2239: Documented limitations in NIOFSDirectory and MMapDirectory due to
+  Java NIO behavior when a Thread is interrupted while blocking on IO.
   (Simon Willnauer, Robert Muir)
 
 ======================= Release 3.0.2 2010-06-18 =======================
