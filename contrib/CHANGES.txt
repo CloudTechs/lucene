@@ -1,5 +1,9 @@
 Lucene contrib change Log
 
+======================= 3.0 branch (not yet released) ==================
+
+No changes.
+
 ======================= Release 3.0.3 2010-12-03 =======================
 
 Bug Fixes
