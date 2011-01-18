@@ -22,11 +22,13 @@ import org.apache.lucene.store.IndexOutput;
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.util.BitVector;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Set;
 
 /**
  * Information about a segment such as it's name, directory, and files related
@@ -570,7 +572,7 @@ public final class SegmentInfo {
     return hasProx;
   }
 
-  private void addIfExists(List files, String fileName) throws IOException {
+  private void addIfExists(Set files, String fileName) throws IOException {
     if (dir.fileExists(fileName))
       files.add(fileName);
   }
@@ -588,16 +590,16 @@ public final class SegmentInfo {
       return files;
     }
     
-    files = new ArrayList();
+    Set filesSet = new HashSet();
     
     boolean useCompoundFile = getUseCompoundFile();
 
     if (useCompoundFile) {
-      files.add(name + "." + IndexFileNames.COMPOUND_FILE_EXTENSION);
+      filesSet.add(name + "." + IndexFileNames.COMPOUND_FILE_EXTENSION);
     } else {
       final String[] exts = IndexFileNames.NON_STORE_INDEX_EXTENSIONS;
       for(int i=0;i<exts.length;i++)
-        addIfExists(files, name + "." + exts[i]);
+        addIfExists(filesSet, name + "." + exts[i]);
     }
 
     if (docStoreOffset != -1) {
@@ -605,23 +607,23 @@ public final class SegmentInfo {
       // vectors) with other segments
       assert docStoreSegment != null;
       if (docStoreIsCompoundFile) {
-        files.add(docStoreSegment + "." + IndexFileNames.COMPOUND_FILE_STORE_EXTENSION);
+        filesSet.add(docStoreSegment + "." + IndexFileNames.COMPOUND_FILE_STORE_EXTENSION);
       } else {
         final String[] exts = IndexFileNames.STORE_INDEX_EXTENSIONS;
         for(int i=0;i<exts.length;i++)
-          addIfExists(files, docStoreSegment + "." + exts[i]);
+          addIfExists(filesSet, docStoreSegment + "." + exts[i]);
       }
     } else if (!useCompoundFile) {
       // We are not sharing, and, these files were not
       // included in the compound file
       final String[] exts = IndexFileNames.STORE_INDEX_EXTENSIONS;
       for(int i=0;i<exts.length;i++)
-        addIfExists(files, name + "." + exts[i]);
+        addIfExists(filesSet, name + "." + exts[i]);
     }
 
     String delFileName = IndexFileNames.fileNameFromGeneration(name, "." + IndexFileNames.DELETES_EXTENSION, delGen);
     if (delFileName != null && (delGen >= YES || dir.fileExists(delFileName))) {
-      files.add(delFileName);
+      filesSet.add(delFileName);
     }
 
     // Careful logic for norms files    
@@ -630,14 +632,14 @@ public final class SegmentInfo {
         long gen = normGen[i];
         if (gen >= YES) {
           // Definitely a separate norm file, with generation:
-          files.add(IndexFileNames.fileNameFromGeneration(name, "." + IndexFileNames.SEPARATE_NORMS_EXTENSION + i, gen));
+          filesSet.add(IndexFileNames.fileNameFromGeneration(name, "." + IndexFileNames.SEPARATE_NORMS_EXTENSION + i, gen));
         } else if (NO == gen) {
           // No separate norms but maybe plain norms
           // in the non compound file case:
           if (!hasSingleNormFile && !useCompoundFile) {
             String fileName = name + "." + IndexFileNames.PLAIN_NORMS_EXTENSION + i;
             if (dir.fileExists(fileName)) {
-              files.add(fileName);
+              filesSet.add(fileName);
             }
           }
         } else if (CHECK_DIR == gen) {
@@ -649,7 +651,7 @@ public final class SegmentInfo {
             fileName = name + "." + IndexFileNames.PLAIN_NORMS_EXTENSION + i;
           }
           if (fileName != null && dir.fileExists(fileName)) {
-            files.add(fileName);
+            filesSet.add(fileName);
           }
         }
       }
@@ -667,11 +669,11 @@ public final class SegmentInfo {
       for(int i=0;i<allFiles.length;i++) {
         String fileName = allFiles[i];
         if (filter.accept(null, fileName) && fileName.length() > prefixLength && Character.isDigit(fileName.charAt(prefixLength)) && fileName.startsWith(prefix)) {
-          files.add(fileName);
+          filesSet.add(fileName);
         }
       }
     }
-    return files;
+    return files = new ArrayList(filesSet);
   }
 
   /* Called whenever any change is made that affects which

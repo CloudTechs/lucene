@@ -3,7 +3,10 @@ $Id$
 
 ======================= 2.9 branch (not yet released) ==================
 
-No changes.
+Bug fixes
+
+* LUCENE-2584: SegmentInfo.files() could hit ConcurrentModificationException if
+  called by multiple threads. (Alexander Kanarsky via Shai Erera)
 
 ======================= Release 2.9.4 2010-12-03 =======================
 
