@@ -2,7 +2,12 @@ Lucene contrib change Log
 
 ======================= 3.0 branch (not yet released) ==================
 
-No changes.
+Bug Fixes
+
+ * LUCENE-2855: contrib queryparser was using CharSequence as key in some internal 
+   Map instances, which was leading to incorrect behavior, since some CharSequence
+   implementors do not override hashcode and equals methods. Now the internal Maps 
+   are using String instead.
 
 ======================= Release 3.0.3 2010-12-03 =======================
 
