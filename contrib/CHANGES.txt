@@ -9,6 +9,9 @@ Bug Fixes
    implementors do not override hashcode and equals methods. Now the internal Maps 
    are using String instead.
 
+ * LUCENE-2874: Highlighting overlapping tokens outputted doubled words.
+   (Pierre Gossé via Robert Muir)
+
 ====================== Release 2.9.4 2010-12-03 =======================
 
 Bug Fixes

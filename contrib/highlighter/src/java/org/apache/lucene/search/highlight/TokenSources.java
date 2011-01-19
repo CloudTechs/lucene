@@ -225,11 +225,10 @@ public class TokenSources
                 {
                     Token t1=(Token) o1;
                     Token t2=(Token) o2;
-                    if(t1.startOffset()>t2.endOffset())
-                        return 1;
-                    if(t1.startOffset()<t2.startOffset())
-                        return -1;
-                    return 0;
+                  if (t1.startOffset() == t2.startOffset())
+                    return t1.endOffset() - t2.endOffset();
+                  else
+                    return t1.startOffset() - t2.startOffset();
                 }});
         }
         return new StoredTokenStream(tokensInOriginalOrder);
