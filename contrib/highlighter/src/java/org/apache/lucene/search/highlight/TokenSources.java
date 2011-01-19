@@ -222,11 +222,10 @@ public class TokenSources
             tokensInOriginalOrder= unsortedTokens.toArray(new Token[unsortedTokens.size()]);
             Arrays.sort(tokensInOriginalOrder, new Comparator<Token>(){
                 public int compare(Token t1, Token t2) {
-                    if(t1.startOffset()>t2.endOffset())
-                        return 1;
-                    if(t1.startOffset()<t2.startOffset())
-                        return -1;
-                    return 0;
+                  if (t1.startOffset() == t2.startOffset())
+                    return t1.endOffset() - t2.endOffset();
+                  else
+                    return t1.startOffset() - t2.startOffset();
                 }});
         }
         return new StoredTokenStream(tokensInOriginalOrder);
